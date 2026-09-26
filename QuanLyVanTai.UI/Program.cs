@@ -29,17 +29,22 @@ namespace QuanLyVanTai.UI
                 .UseSqlServer(connectionString)
                 .Options;
 
-            // Kiểm tra kết nối SQL Server
-            using (var db = new AppDbContext(options))
+            // Tự động kiểm tra và áp dụng Migration sinh Database/bảng nếu chưa có
+            try
             {
-                if (db.Database.CanConnect())
+                using (var db = new AppDbContext(options))
                 {
-                    MessageBox.Show("Kết nối SQL Server thành công!");
+                    db.Database.Migrate();
                 }
-                else
-                {
-                    MessageBox.Show("Không kết nối được SQL Server!");
-                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Không thể khởi tạo hoặc kết nối CSDL SQL Server:\n{ex.Message}\n\nVui lòng kiểm tra lại chuỗi kết nối trong appsettings.json và đảm bảo SQL Server đang chạy.",
+                    "Lỗi Cơ Sở Dữ Liệu",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
             }
 
             // Mở Form chính
