@@ -48,7 +48,7 @@ namespace QuanLyVanTai.UI
             }
 
             // Mở Form chính
-            Application.Run(new Form1());
+            Application.Run(new FormMain());
         }
     }
 }
