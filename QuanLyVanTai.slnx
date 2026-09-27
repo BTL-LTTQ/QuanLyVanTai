@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="Core/Core.csproj" Id="ef2bd1a2-0fcb-4bb7-a3cf-5c50e5013765" />
   <Project Path="QuanLyVanTai.BLL/QuanLyVanTai.BLL.csproj" />
   <Project Path="QuanLyVanTai.DAL/QuanLyVanTai.DAL.csproj" />
   <Project Path="QuanLyVanTai.UI/QuanLyVanTai.UI.csproj" />
