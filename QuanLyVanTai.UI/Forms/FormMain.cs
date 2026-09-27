@@ -4,6 +4,7 @@ namespace QuanLyVanTai.UI
     {
         public FormMain()
         {
+            this.Font = ThemeConfig.MainFont;
             InitializeComponent();
         }
 
