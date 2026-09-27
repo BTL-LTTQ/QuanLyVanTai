@@ -1,4 +1,4 @@
-﻿namespace QuanLyVanTai.UI.UserControls
+namespace QuanLyVanTai.UI.UserControls
 {
     partial class BaseManagementForm
     {
@@ -137,12 +137,12 @@
 
         #endregion
 
-        private Panel pnlToolbar;
+        protected internal Panel pnlToolbar;
         protected internal FontAwesome.Sharp.IconButton btnCancel;
         protected internal FontAwesome.Sharp.IconButton btnAdd;
         protected internal FontAwesome.Sharp.IconButton btnDelete;
         protected internal FontAwesome.Sharp.IconButton btnEdit;
         protected internal DataGridView dgvData;
-        private FontAwesome.Sharp.IconButton btnSave;
+        protected internal FontAwesome.Sharp.IconButton btnSave;
     }
 }
