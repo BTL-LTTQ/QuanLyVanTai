@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- General & Titles -->
+  <data name="AppTitle" xml:space="preserve">
+    <value>TRANSPORT MANAGEMENT SYSTEM</value>
+  </data>
+  <data name="AppSubtitle" xml:space="preserve">
+    <value>Safe, convenient &amp; modern passenger transportation solution</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+
+  <!-- Tabs -->
+  <data name="TabLogin" xml:space="preserve">
+    <value>Login</value>
+  </data>
+  <data name="TabRegister" xml:space="preserve">
+    <value>Register</value>
+  </data>
+  <data name="TabForgotPassword" xml:space="preserve">
+    <value>Forgot Password</value>
+  </data>
+
+  <!-- Login Form -->
+  <data name="Username" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="UsernameOrEmail" xml:space="preserve">
+    <value>Username or Email</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="RememberMe" xml:space="preserve">
+    <value>Remember me</value>
+  </data>
+  <data name="ForgotPasswordLink" xml:space="preserve">
+    <value>Forgot password?</value>
+  </data>
+  <data name="BtnLogin" xml:space="preserve">
+    <value>SIGN IN</value>
+  </data>
+  <data name="NoAccountPrompt" xml:space="preserve">
+    <value>Don't have an account?</value>
+  </data>
+  <data name="RegisterNow" xml:space="preserve">
+    <value>Register now</value>
+  </data>
+
+  <!-- Register Form -->
+  <data name="FullName" xml:space="preserve">
+    <value>Full Name</value>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>Email Address</value>
+  </data>
+  <data name="PhoneNumber" xml:space="preserve">
+    <value>Phone Number</value>
+  </data>
+  <data name="ConfirmPassword" xml:space="preserve">
+    <value>Confirm Password</value>
+  </data>
+  <data name="SecurityQuestion" xml:space="preserve">
+    <value>Security Question</value>
+  </data>
+  <data name="SecurityAnswer" xml:space="preserve">
+    <value>Security Answer</value>
+  </data>
+  <data name="BtnRegister" xml:space="preserve">
+    <value>REGISTER ACCOUNT</value>
+  </data>
+  <data name="HaveAccountPrompt" xml:space="preserve">
+    <value>Already have an account?</value>
+  </data>
+  <data name="LoginNow" xml:space="preserve">
+    <value>Log in</value>
+  </data>
+
+  <!-- Forgot Password Form -->
+  <data name="RecoveryMethod" xml:space="preserve">
+    <value>Recovery Method:</value>
+  </data>
+  <data name="MethodEmail" xml:space="preserve">
+    <value>Verify via Email (OTP Code)</value>
+  </data>
+  <data name="MethodQuestion" xml:space="preserve">
+    <value>Via Security Question</value>
+  </data>
+  <data name="SendOtp" xml:space="preserve">
+    <value>Send OTP</value>
+  </data>
+  <data name="OtpCode" xml:space="preserve">
+    <value>OTP Code (6 digits)</value>
+  </data>
+  <data name="CheckQuestion" xml:space="preserve">
+    <value>Check Question</value>
+  </data>
+  <data name="NewPassword" xml:space="preserve">
+    <value>New Password</value>
+  </data>
+  <data name="ConfirmNewPassword" xml:space="preserve">
+    <value>Confirm New Password</value>
+  </data>
+  <data name="BtnResetPassword" xml:space="preserve">
+    <value>RESET PASSWORD</value>
+  </data>
+  <data name="BackToLogin" xml:space="preserve">
+    <value>Back to Login</value>
+  </data>
+
+  <!-- Security Questions -->
+  <data name="Question1" xml:space="preserve">
+    <value>What was the name of your first elementary school?</value>
+  </data>
+  <data name="Question2" xml:space="preserve">
+    <value>What was the name of your first pet?</value>
+  </data>
+  <data name="Question3" xml:space="preserve">
+    <value>In what city did your parents first meet?</value>
+  </data>
+  <data name="Question4" xml:space="preserve">
+    <value>What was your favorite childhood food?</value>
+  </data>
+
+  <!-- Validation Messages (ErrorProvider & Tooltip) -->
+  <data name="ValRequired" xml:space="preserve">
+    <value>This field is required.</value>
+  </data>
+  <data name="ValUsernameLength" xml:space="preserve">
+    <value>Username must be between 4 and 50 characters.</value>
+  </data>
+  <data name="ValUsernameFormat" xml:space="preserve">
+    <value>Username may only contain letters, digits, and underscores.</value>
+  </data>
+  <data name="ValPasswordLength" xml:space="preserve">
+    <value>Password must be at least 6 characters.</value>
+  </data>
+  <data name="ValPasswordMatch" xml:space="preserve">
+    <value>Passwords do not match.</value>
+  </data>
+  <data name="ValEmailFormat" xml:space="preserve">
+    <value>Invalid email format (e.g., name@gmail.com).</value>
+  </data>
+  <data name="ValPhoneFormat" xml:space="preserve">
+    <value>Phone number must be 10 digits starting with 0.</value>
+  </data>
+  <data name="ValSecurityQuestion" xml:space="preserve">
+    <value>Please select a security question.</value>
+  </data>
+  <data name="ValSecurityAnswer" xml:space="preserve">
+    <value>Please enter your security answer.</value>
+  </data>
+  <data name="ValOtpFormat" xml:space="preserve">
+    <value>OTP code must be 6 digits.</value>
+  </data>
+
+  <!-- Tooltips -->
+  <data name="TipUsername" xml:space="preserve">
+    <value>Enter your account username (4-50 characters, no special symbols)</value>
+  </data>
+  <data name="TipPassword" xml:space="preserve">
+    <value>Enter your confidential password (at least 6 characters)</value>
+  </data>
+  <data name="TipFullName" xml:space="preserve">
+    <value>Enter your full legal name</value>
+  </data>
+  <data name="TipEmail" xml:space="preserve">
+    <value>Enter a valid email address to receive reset codes</value>
+  </data>
+  <data name="TipPhone" xml:space="preserve">
+    <value>Enter a 10-digit contact phone number (starts with 0)</value>
+  </data>
+  <data name="TipConfirmPassword" xml:space="preserve">
+    <value>Re-enter the exact password entered above</value>
+  </data>
+  <data name="TipSecurityAnswer" xml:space="preserve">
+    <value>Remember this answer to recover your account</value>
+  </data>
+  <data name="TipOtp" xml:space="preserve">
+    <value>Enter the 6-digit verification code you received</value>
+  </data>
+</root>

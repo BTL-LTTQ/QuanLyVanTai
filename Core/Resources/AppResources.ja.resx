@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- General & Titles -->
+  <data name="AppTitle" xml:space="preserve">
+    <value>旅客輸送管理システム</value>
+  </data>
+  <data name="AppSubtitle" xml:space="preserve">
+    <value>安全・便利・現代的な旅客輸送ソリューション</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>言語</value>
+  </data>
+
+  <!-- Tabs -->
+  <data name="TabLogin" xml:space="preserve">
+    <value>ログイン</value>
+  </data>
+  <data name="TabRegister" xml:space="preserve">
+    <value>新規登録</value>
+  </data>
+  <data name="TabForgotPassword" xml:space="preserve">
+    <value>パスワード再設定</value>
+  </data>
+
+  <!-- Login Form -->
+  <data name="Username" xml:space="preserve">
+    <value>ユーザー名</value>
+  </data>
+  <data name="UsernameOrEmail" xml:space="preserve">
+    <value>ユーザー名またはメール</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>パスワード</value>
+  </data>
+  <data name="RememberMe" xml:space="preserve">
+    <value>ログイン状態を保持する</value>
+  </data>
+  <data name="ForgotPasswordLink" xml:space="preserve">
+    <value>パスワードをお忘れですか？</value>
+  </data>
+  <data name="BtnLogin" xml:space="preserve">
+    <value>ログイン</value>
+  </data>
+  <data name="NoAccountPrompt" xml:space="preserve">
+    <value>アカウントをお持ちでないですか？</value>
+  </data>
+  <data name="RegisterNow" xml:space="preserve">
+    <value>今すぐ登録</value>
+  </data>
+
+  <!-- Register Form -->
+  <data name="FullName" xml:space="preserve">
+    <value>氏名</value>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>メールアドレス</value>
+  </data>
+  <data name="PhoneNumber" xml:space="preserve">
+    <value>電話番号</value>
+  </data>
+  <data name="ConfirmPassword" xml:space="preserve">
+    <value>パスワード再確認</value>
+  </data>
+  <data name="SecurityQuestion" xml:space="preserve">
+    <value>秘密の質問</value>
+  </data>
+  <data name="SecurityAnswer" xml:space="preserve">
+    <value>秘密の質問の答え</value>
+  </data>
+  <data name="BtnRegister" xml:space="preserve">
+    <value>アカウントを登録</value>
+  </data>
+  <data name="HaveAccountPrompt" xml:space="preserve">
+    <value>すでにアカウントをお持ちですか？</value>
+  </data>
+  <data name="LoginNow" xml:space="preserve">
+    <value>ログインする</value>
+  </data>
+
+  <!-- Forgot Password Form -->
+  <data name="RecoveryMethod" xml:space="preserve">
+    <value>復旧方法:</value>
+  </data>
+  <data name="MethodEmail" xml:space="preserve">
+    <value>メール認証 (OTPコード)</value>
+  </data>
+  <data name="MethodQuestion" xml:space="preserve">
+    <value>秘密の質問で復旧</value>
+  </data>
+  <data name="SendOtp" xml:space="preserve">
+    <value>OTPを送信</value>
+  </data>
+  <data name="OtpCode" xml:space="preserve">
+    <value>OTPコード（6桁）</value>
+  </data>
+  <data name="CheckQuestion" xml:space="preserve">
+    <value>質問を確認</value>
+  </data>
+  <data name="NewPassword" xml:space="preserve">
+    <value>新しいパスワード</value>
+  </data>
+  <data name="ConfirmNewPassword" xml:space="preserve">
+    <value>新しいパスワード（確認）</value>
+  </data>
+  <data name="BtnResetPassword" xml:space="preserve">
+    <value>パスワードを再設定</value>
+  </data>
+  <data name="BackToLogin" xml:space="preserve">
+    <value>ログインに戻る</value>
+  </data>
+
+  <!-- Security Questions -->
+  <data name="Question1" xml:space="preserve">
+    <value>最初に入学した小学校の名前は何ですか？</value>
+  </data>
+  <data name="Question2" xml:space="preserve">
+    <value>最初に飼ったペットの名前は何ですか？</value>
+  </data>
+  <data name="Question3" xml:space="preserve">
+    <value>両親が初めて出会った都市はどこですか？</value>
+  </data>
+  <data name="Question4" xml:space="preserve">
+    <value>子供の頃に一番好きだった食べ物は何ですか？</value>
+  </data>
+
+  <!-- Validation Messages (ErrorProvider & Tooltip) -->
+  <data name="ValRequired" xml:space="preserve">
+    <value>この項目は必須です。</value>
+  </data>
+  <data name="ValUsernameLength" xml:space="preserve">
+    <value>ユーザー名は4〜50文字である必要があります。</value>
+  </data>
+  <data name="ValUsernameFormat" xml:space="preserve">
+    <value>ユーザー名は英数字とアンダースコアのみ使用可能です。</value>
+  </data>
+  <data name="ValPasswordLength" xml:space="preserve">
+    <value>パスワードは6文字以上必要です。</value>
+  </data>
+  <data name="ValPasswordMatch" xml:space="preserve">
+    <value>パスワードが一致しません。</value>
+  </data>
+  <data name="ValEmailFormat" xml:space="preserve">
+    <value>メールアドレスの形式が無効です（例: user@gmail.com）。</value>
+  </data>
+  <data name="ValPhoneFormat" xml:space="preserve">
+    <value>電話番号は0で始まる10桁である必要があります。</value>
+  </data>
+  <data name="ValSecurityQuestion" xml:space="preserve">
+    <value>秘密の質問を選択してください。</value>
+  </data>
+  <data name="ValSecurityAnswer" xml:space="preserve">
+    <value>秘密の答えを入力してください。</value>
+  </data>
+  <data name="ValOtpFormat" xml:space="preserve">
+    <value>OTPコードは6桁の数字である必要があります。</value>
+  </data>
+
+  <!-- Tooltips -->
+  <data name="TipUsername" xml:space="preserve">
+    <value>アカウント名を入力（4〜50文字、特殊文字不可）</value>
+  </data>
+  <data name="TipPassword" xml:space="preserve">
+    <value>パスワードを入力（6文字以上）</value>
+  </data>
+  <data name="TipFullName" xml:space="preserve">
+    <value>氏名を入力してください</value>
+  </data>
+  <data name="TipEmail" xml:space="preserve">
+    <value>パスワード再設定コードを受信できる有効なメールアドレス</value>
+  </data>
+  <data name="TipPhone" xml:space="preserve">
+    <value>連絡先電話番号10桁を入力（0から開始）</value>
+  </data>
+  <data name="TipConfirmPassword" xml:space="preserve">
+    <value>上記と同じパスワードを再入力してください</value>
+  </data>
+  <data name="TipSecurityAnswer" xml:space="preserve">
+    <value>パスワード再設定に使用するため覚えておいてください</value>
+  </data>
+  <data name="TipOtp" xml:space="preserve">
+    <value>受信した6桁の確認コードを入力してください</value>
+  </data>
+</root>

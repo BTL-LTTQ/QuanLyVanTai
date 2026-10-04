@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- Chung & Tiêu đề -->
+  <data name="AppTitle" xml:space="preserve">
+    <value>HỆ THỐNG QUẢN LÝ VẬN TẢI</value>
+  </data>
+  <data name="AppSubtitle" xml:space="preserve">
+    <value>Giải pháp vận tải hành khách an toàn, tiện lợi &amp; hiện đại</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Ngôn ngữ</value>
+  </data>
+
+  <!-- Tabs -->
+  <data name="TabLogin" xml:space="preserve">
+    <value>Đăng nhập</value>
+  </data>
+  <data name="TabRegister" xml:space="preserve">
+    <value>Đăng ký</value>
+  </data>
+  <data name="TabForgotPassword" xml:space="preserve">
+    <value>Quên mật khẩu</value>
+  </data>
+
+  <!-- Login Form -->
+  <data name="Username" xml:space="preserve">
+    <value>Tên đăng nhập</value>
+  </data>
+  <data name="UsernameOrEmail" xml:space="preserve">
+    <value>Tên đăng nhập hoặc Email</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Mật khẩu</value>
+  </data>
+  <data name="RememberMe" xml:space="preserve">
+    <value>Ghi nhớ đăng nhập</value>
+  </data>
+  <data name="ForgotPasswordLink" xml:space="preserve">
+    <value>Quên mật khẩu?</value>
+  </data>
+  <data name="BtnLogin" xml:space="preserve">
+    <value>ĐĂNG NHẬP</value>
+  </data>
+  <data name="NoAccountPrompt" xml:space="preserve">
+    <value>Chưa có tài khoản?</value>
+  </data>
+  <data name="RegisterNow" xml:space="preserve">
+    <value>Đăng ký ngay</value>
+  </data>
+
+  <!-- Register Form -->
+  <data name="FullName" xml:space="preserve">
+    <value>Họ và tên</value>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>Địa chỉ Email</value>
+  </data>
+  <data name="PhoneNumber" xml:space="preserve">
+    <value>Số điện thoại</value>
+  </data>
+  <data name="ConfirmPassword" xml:space="preserve">
+    <value>Xác nhận mật khẩu</value>
+  </data>
+  <data name="SecurityQuestion" xml:space="preserve">
+    <value>Câu hỏi bảo mật</value>
+  </data>
+  <data name="SecurityAnswer" xml:space="preserve">
+    <value>Câu trả lời bí mật</value>
+  </data>
+  <data name="BtnRegister" xml:space="preserve">
+    <value>ĐĂNG KÝ TÀI KHOẢN</value>
+  </data>
+  <data name="HaveAccountPrompt" xml:space="preserve">
+    <value>Đã có tài khoản?</value>
+  </data>
+  <data name="LoginNow" xml:space="preserve">
+    <value>Đăng nhập ngay</value>
+  </data>
+
+  <!-- Forgot Password Form -->
+  <data name="RecoveryMethod" xml:space="preserve">
+    <value>Phương thức khôi phục:</value>
+  </data>
+  <data name="MethodEmail" xml:space="preserve">
+    <value>Xác thực qua Email (Mã OTP)</value>
+  </data>
+  <data name="MethodQuestion" xml:space="preserve">
+    <value>Qua câu hỏi bảo mật</value>
+  </data>
+  <data name="SendOtp" xml:space="preserve">
+    <value>Gửi mã OTP</value>
+  </data>
+  <data name="OtpCode" xml:space="preserve">
+    <value>Mã xác thực OTP (6 chữ số)</value>
+  </data>
+  <data name="CheckQuestion" xml:space="preserve">
+    <value>Kiểm tra câu hỏi</value>
+  </data>
+  <data name="NewPassword" xml:space="preserve">
+    <value>Mật khẩu mới</value>
+  </data>
+  <data name="ConfirmNewPassword" xml:space="preserve">
+    <value>Xác nhận mật khẩu mới</value>
+  </data>
+  <data name="BtnResetPassword" xml:space="preserve">
+    <value>ĐẶT LẠI MẬT KHẨU</value>
+  </data>
+  <data name="BackToLogin" xml:space="preserve">
+    <value>Quay lại Đăng nhập</value>
+  </data>
+
+  <!-- Security Questions -->
+  <data name="Question1" xml:space="preserve">
+    <value>Tên trường tiểu học đầu tiên của bạn là gì?</value>
+  </data>
+  <data name="Question2" xml:space="preserve">
+    <value>Tên thú cưng đầu tiên của bạn là gì?</value>
+  </data>
+  <data name="Question3" xml:space="preserve">
+    <value>Thành phố nơi cha mẹ bạn gặp nhau lần đầu?</value>
+  </data>
+  <data name="Question4" xml:space="preserve">
+    <value>Món ăn yêu thích nhất thời thơ ấu của bạn?</value>
+  </data>
+
+  <!-- Validation Messages (ErrorProvider & Tooltip) -->
+  <data name="ValRequired" xml:space="preserve">
+    <value>Vui lòng không để trống trường này.</value>
+  </data>
+  <data name="ValUsernameLength" xml:space="preserve">
+    <value>Tên đăng nhập phải từ 4 đến 50 ký tự.</value>
+  </data>
+  <data name="ValUsernameFormat" xml:space="preserve">
+    <value>Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới.</value>
+  </data>
+  <data name="ValPasswordLength" xml:space="preserve">
+    <value>Mật khẩu phải có tối thiểu 6 ký tự.</value>
+  </data>
+  <data name="ValPasswordMatch" xml:space="preserve">
+    <value>Mật khẩu xác nhận không trùng khớp.</value>
+  </data>
+  <data name="ValEmailFormat" xml:space="preserve">
+    <value>Định dạng email không hợp lệ (ví dụ: hoten@gmail.com).</value>
+  </data>
+  <data name="ValPhoneFormat" xml:space="preserve">
+    <value>Số điện thoại phải gồm 10 chữ số (bắt đầu bằng số 0).</value>
+  </data>
+  <data name="ValSecurityQuestion" xml:space="preserve">
+    <value>Vui lòng chọn một câu hỏi bảo mật.</value>
+  </data>
+  <data name="ValSecurityAnswer" xml:space="preserve">
+    <value>Vui lòng nhập câu trả lời bảo mật.</value>
+  </data>
+  <data name="ValOtpFormat" xml:space="preserve">
+    <value>Mã OTP phải gồm 6 chữ số.</value>
+  </data>
+
+  <!-- Tooltips -->
+  <data name="TipUsername" xml:space="preserve">
+    <value>Nhập tên tài khoản của bạn (từ 4-50 ký tự, không chứa ký tự đặc biệt)</value>
+  </data>
+  <data name="TipPassword" xml:space="preserve">
+    <value>Nhập mật khẩu bí mật (tối thiểu 6 ký tự)</value>
+  </data>
+  <data name="TipFullName" xml:space="preserve">
+    <value>Nhập họ và tên đầy đủ của bạn</value>
+  </data>
+  <data name="TipEmail" xml:space="preserve">
+    <value>Nhập địa chỉ email hợp lệ để nhận mã khôi phục khi quên mật khẩu</value>
+  </data>
+  <data name="TipPhone" xml:space="preserve">
+    <value>Nhập số điện thoại liên hệ 10 số (bắt đầu bằng 0)</value>
+  </data>
+  <data name="TipConfirmPassword" xml:space="preserve">
+    <value>Nhập lại chính xác mật khẩu vừa nhập ở trên</value>
+  </data>
+  <data name="TipSecurityAnswer" xml:space="preserve">
+    <value>Ghi nhớ câu trả lời này để có thể khôi phục tài khoản</value>
+  </data>
+  <data name="TipOtp" xml:space="preserve">
+    <value>Nhập mã xác thực gồm 6 số đã được gửi</value>
+  </data>
+</root>
