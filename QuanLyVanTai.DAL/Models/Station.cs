@@ -1,10 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Core.Interfaces;
 
 namespace QuanLyVanTai.DAL.Models
 {
     [Table("Stations")]
-    public class Station
+    public class Station : ISoftDelete, IAuditable
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -30,7 +31,20 @@ namespace QuanLyVanTai.DAL.Models
         [MaxLength(30)]
         public string Status { get; set; } = "Active"; // Active, Inactive
 
+        // Tracking / Auditing
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [MaxLength(50)]
+        public string? CreatedBy { get; set; }
+
+        public DateTime? UpdatedAt { get; set; }
+        [MaxLength(50)]
+        public string? UpdatedBy { get; set; }
+
+        // Soft Delete
+        public bool IsDeleted { get; set; } = false;
+        public DateTime? DeletedAt { get; set; }
+        [MaxLength(50)]
+        public string? DeletedBy { get; set; }
 
         // Navigation Properties: Quan hệ N-N với Tuyến xe (1 Trạm thuộc nhiều Tuyến)
         public virtual ICollection<Route> Routes { get; set; } = new List<Route>();
