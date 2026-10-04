@@ -1,6 +1,8 @@
+using Core.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using QuanLyVanTai.DAL;
+using QuanLyVanTai.UI.Forms;
 
 namespace QuanLyVanTai.UI
 {
@@ -14,7 +16,14 @@ namespace QuanLyVanTai.UI
         {
             ApplicationConfiguration.Initialize();
 
-            // Đọc file appsettings.json
+            // 1. Nạp tùy chọn ngôn ngữ đã lưu của người dùng (Part 3)
+            var prefs = SessionManager.LoadPreferences();
+            if (!string.IsNullOrEmpty(prefs.Language))
+            {
+                CultureHelper.SetCulture(prefs.Language, savePreference: false);
+            }
+
+            // 2. Đọc file appsettings.json
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(AppContext.BaseDirectory)
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -47,8 +56,37 @@ namespace QuanLyVanTai.UI
                 return;
             }
 
-            // Mở Form chính
-            Application.Run(new FormMain());
+            // 3. Vòng lặp xác thực người dùng (Login -> Main -> Logout -> Login)
+            while (true)
+            {
+                using (var authForm = new FrmAuth())
+                {
+                    var authResult = authForm.ShowDialog();
+                    if (authResult != DialogResult.OK)
+                    {
+                        // Người dùng đóng form đăng nhập mà không xác thực thành công -> Thoát ứng dụng
+                        break;
+                    }
+                }
+
+                // Nếu đăng nhập thành công -> Mở FormMain
+                if (SessionManager.IsLoggedIn)
+                {
+                    Application.Run(new FormMain());
+
+                    // Khi FormMain đóng:
+                    // Nếu session đã bị xóa (do người dùng bấm Đăng xuất) -> quay lại mở FrmAuth
+                    // Nếu session vẫn còn (người dùng bấm nút X tắt ứng dụng) -> thoát vòng lặp
+                    if (SessionManager.IsLoggedIn)
+                    {
+                        break;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
         }
     }
 }
