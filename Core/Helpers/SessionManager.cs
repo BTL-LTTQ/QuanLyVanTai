@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace Core.Helpers
 {
-    public class UserSession
+    public class LoginSession
     {
         public int Id { get; set; }
         public string Username { get; set; } = string.Empty;
@@ -29,13 +29,13 @@ namespace Core.Helpers
 
         private static readonly string PreferencesFilePath = Path.Combine(AppDataFolder, "preferences.json");
 
-        public static UserSession? CurrentUser { get; private set; }
+        public static LoginSession? CurrentUser { get; private set; }
 
         public static bool IsLoggedIn => CurrentUser != null;
 
         public static void SetCurrentUser(int id, string username, string fullName, string? email, string? phoneNumber, string role)
         {
-            CurrentUser = new UserSession
+            CurrentUser = new LoginSession
             {
                 Id = id,
                 Username = username,
