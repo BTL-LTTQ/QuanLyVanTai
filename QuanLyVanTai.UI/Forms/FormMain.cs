@@ -13,8 +13,6 @@ namespace QuanLyVanTai.UI
     {
         private readonly PermissionService _permissionService = new();
         private readonly AuditLogService _auditLogService = new();
-        private readonly ComboBox cboCurrentRole = new();
-        private readonly Label lblRoleBadge = new();
         private Label lblUserGreeting = null!;
         private ComboBox cboMainLanguage = null!;
         private IconButton btnLogout = null!;
@@ -27,10 +25,8 @@ namespace QuanLyVanTai.UI
             this.Text = "Hệ Thống Quản Lý Vận Tải Hành Khách (BTL LTTQ)";
             this.WindowState = FormWindowState.Maximized;
 
-            SetupCanhBao();
-            SetupRoleSwitcher();
             ApplyTheme();
-// --- GỘP CHUNG VÀO TRONG CONSTRUCTOR ---
+            SetupCanhBao();
             UserSession.SessionChanged += OnSessionChanged;
             btnDong.Click += btnDong_Click;
 
@@ -42,11 +38,10 @@ namespace QuanLyVanTai.UI
 
             this.Load += FormMain_Load;
 
-            // Setup của nhánh main
             SetupHeaderAuthControls();
             CultureHelper.CultureChanged += OnCultureChanged;
             UpdateLocalizedTexts();
-        } // Đóng constructor (Đã xóa các dấu ngoặc dư thừa)
+        }
 
         // --- CÁC HÀM CỦA NHÁNH FEATURE ---
         private async void FormMain_Load(object? sender, EventArgs e)
@@ -63,68 +58,12 @@ namespace QuanLyVanTai.UI
                 System.Diagnostics.Debug.WriteLine($"DB Init: {ex.Message}");
             }
 
-            // Mở mặc định Form Quản lý Tuyến xe
-            OpenMenu(SystemMenus.Route, "QUẢN LÝ TUYẾN XE & LỘ TRÌNH", () => new UcManageRoute());
+            // Mở mặc định Dashboard
+            OpenMenu(SystemMenus.Route, "DASHBOARD - TRANG CHỦ", () => new UcDashboard());
         }
 
-        private void SetupRoleSwitcher()
-        {
-            // Thêm thanh chọn Role nhanh trên Header để test Phân Quyền Động & Chặn Mở Form
-            lblRoleBadge.Text = "👤 Đang đăng nhập:";
-            lblRoleBadge.ForeColor = Color.White;
-            lblRoleBadge.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-            lblRoleBadge.AutoSize = true;
-            lblRoleBadge.Location = new Point(pnlHeader.Width - 370, 26);
-            lblRoleBadge.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-
-            cboCurrentRole.Items.AddRange([
-                $"{SystemRoles.Admin} (Toàn quyền)",
-                $"{SystemRoles.Manager} (Quản lý)",
-                $"{SystemRoles.TicketStaff} (Nhân viên bán vé)"
-            ]);
-            cboCurrentRole.DropDownStyle = ComboBoxStyle.DropDownList;
-            cboCurrentRole.SelectedIndex = 0;
-            cboCurrentRole.Size = new Size(200, 30);
-            cboCurrentRole.Location = new Point(pnlHeader.Width - 225, 22);
-            cboCurrentRole.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            cboCurrentRole.Font = new Font("Segoe UI", 9.5F, FontStyle.Regular);
-
-            cboCurrentRole.SelectedIndexChanged += async (s, e) =>
-            {
-                string selectedRole = cboCurrentRole.SelectedIndex switch
-                {
-                    0 => SystemRoles.Admin,
-                    1 => SystemRoles.Manager,
-                    _ => SystemRoles.TicketStaff
-                };
-
-                string username = selectedRole switch
-                {
-                    SystemRoles.Admin => "admin",
-                    SystemRoles.Manager => "quanly",
-                    _ => "nhanvien"
-                };
-
-                UserSession.Login(
-                    userId: cboCurrentRole.SelectedIndex + 1,
-                    username: username,
-                    fullName: selectedRole,
-                    role: selectedRole
-                );
-
-                await _permissionService.LoadPermissionsToUserSessionAsync(selectedRole);
-
-                await _auditLogService.LogActionAsync(
-                    "Đăng nhập",
-                    "Hệ thống",
-                    null,
-                    $"Người dùng [{username}] chuyển đổi vai trò phiên làm việc sang [{selectedRole}]."
-                );
-            };
-
-            pnlHeader.Controls.Add(lblRoleBadge);
-            pnlHeader.Controls.Add(cboCurrentRole);
-        }
+        // Role switcher removed from header to avoid visual clutter.
+        // Session switching is now done through the proper login flow.
 
         private void OnSessionChanged()
         {
@@ -166,32 +105,26 @@ namespace QuanLyVanTai.UI
             lblUserGreeting = new Label
             {
                 AutoSize = false,
-                Size = new Size(280, 30),
+                Size = new Size(260, 36),
                 ForeColor = Color.White,
-                Font = ThemeConfig.MainFont,
+                Font = new Font("Segoe UI", 9.5F),
                 TextAlign = ContentAlignment.MiddleRight,
                 Anchor = AnchorStyles.Top | AnchorStyles.Right
             };
 
             var user = SessionManager.CurrentUser;
-            if (user != null)
-            {
-                lblUserGreeting.Text = $"👤 {user.FullName} ({user.Role})";
-            }
-            else
-            {
-                lblUserGreeting.Text = "👤 Khách (Guest)";
-            }
+            lblUserGreeting.Text = user != null
+                ? $"👤 {user.FullName} ({user.Role})"
+                : "👤 Khách (Guest)";
 
-            // 2. Chuyển đổi ngôn ngữ ở header
+            // 2. Combobox ngôn ngữ
             cboMainLanguage = new ComboBox
             {
-                Size = new Size(130, 30),
+                Size = new Size(135, 36),
                 DropDownStyle = ComboBoxStyle.DropDownList,
                 Font = new Font("Segoe UI", 9F),
                 Anchor = AnchorStyles.Top | AnchorStyles.Right
             };
-
             cboMainLanguage.DisplayMember = "DisplayName";
             cboMainLanguage.ValueMember = "Code";
             cboMainLanguage.DataSource = CultureHelper.SupportedCultures
@@ -201,44 +134,41 @@ namespace QuanLyVanTai.UI
             string current = CultureHelper.CurrentCulture.Name;
             var match = CultureHelper.SupportedCultures.FirstOrDefault(c => c.Code.Equals(current, StringComparison.OrdinalIgnoreCase));
             if (!string.IsNullOrEmpty(match.Code))
-            {
                 cboMainLanguage.SelectedValue = match.Code;
-            }
 
-            cboMainLanguage.SelectedIndexChanged += (s, e) => {
+            cboMainLanguage.SelectedIndexChanged += (s, e) =>
+            {
                 if (_isChangingLanguage || cboMainLanguage.SelectedValue == null) return;
-                string selectedLang = cboMainLanguage.SelectedValue.ToString()!;
-                CultureHelper.SetCulture(selectedLang, savePreference: true);
+                CultureHelper.SetCulture(cboMainLanguage.SelectedValue.ToString()!, savePreference: true);
             };
 
             // 3. Nút Đăng xuất
             btnLogout = new IconButton
             {
-                Size = new Size(120, 36),
+                Size = new Size(130, 40),
                 Anchor = AnchorStyles.Top | AnchorStyles.Right
             };
             ThemeConfig.StyleDangerButton(btnLogout, IconChar.RightFromBracket);
             btnLogout.Text = " Đăng xuất";
             btnLogout.Click += BtnLogout_Click;
 
-            // Định vị các control bên phải header
-            int top = 18;
-            int right = pnlHeader.Width - 140;
+            // Hàm định vị lại khi resize
+            void RepositionHeaderControls()
+            {
+                int vCenter = (pnlHeader.Height - 36) / 2;
+                int rightEdge = pnlHeader.Width - 16;
 
-            btnLogout.Location = new Point(right, top);
-            cboMainLanguage.Location = new Point(right - 145, top + 3);
-            lblUserGreeting.Location = new Point(right - 145 - 290, top + 3);
+                btnLogout.Location = new Point(rightEdge - btnLogout.Width, vCenter);
+                cboMainLanguage.Location = new Point(btnLogout.Left - cboMainLanguage.Width - 10, vCenter + 2);
+                lblUserGreeting.Location = new Point(cboMainLanguage.Left - lblUserGreeting.Width - 6, vCenter);
+            }
 
             pnlHeader.Controls.Add(lblUserGreeting);
             pnlHeader.Controls.Add(cboMainLanguage);
             pnlHeader.Controls.Add(btnLogout);
 
-            pnlHeader.Resize += (s, e) => {
-                int r = pnlHeader.Width - 140;
-                btnLogout.Location = new Point(r, top);
-                cboMainLanguage.Location = new Point(r - 145, top + 3);
-                lblUserGreeting.Location = new Point(r - 145 - 290, top + 3);
-            };
+            RepositionHeaderControls();
+            pnlHeader.Resize += (s, e) => RepositionHeaderControls();
         }
 
         private void BtnLogout_Click(object? sender, EventArgs e)
@@ -303,37 +233,29 @@ namespace QuanLyVanTai.UI
 
         private void ApplyTheme()
         {
-            pnlSidebar.BackColor = ThemeConfig.TextMain;
-            pnlHeader.BackColor = ThemeConfig.PrimaryColor;
-            lblTitle.Font = ThemeConfig.TitleFont;
+            // Content area
             pnlContent.BackColor = ThemeConfig.BackgroundColor;
 
-            void StyleSidebarButton(FontAwesome.Sharp.IconButton btn, FontAwesome.Sharp.IconChar icon)
+            // Apply FontAwesome icons to sidebar buttons (Dock/size already set in Designer)
+            void SetIcon(FontAwesome.Sharp.IconButton btn, FontAwesome.Sharp.IconChar icon)
             {
-                btn.BackColor = ThemeConfig.TextMain;
-                btn.ForeColor = Color.White;
                 btn.IconChar = icon;
-                btn.IconColor = Color.White;
-                btn.IconSize = 28;
-                btn.Font = ThemeConfig.MainFont;
-                btn.FlatStyle = FlatStyle.Flat;
-                btn.FlatAppearance.BorderSize = 0;
-                btn.Cursor = Cursors.Hand;
-                btn.TextImageRelation = TextImageRelation.ImageBeforeText;
-                btn.ImageAlign = ContentAlignment.MiddleLeft;
-                btn.Padding = new Padding(12, 0, 0, 0);
-btn.Height = 52;
+                btn.IconColor = Color.FromArgb(148, 163, 184); // slate-400
+                btn.IconSize = 20;
+                btn.Font = new Font("Segoe UI", 9.5F);
             }
 
-            // Cấu hình Icon cho menu (Text ngôn ngữ được xử lý ở UpdateLocalizedTexts)
-            StyleSidebarButton(btnTrangChu, FontAwesome.Sharp.IconChar.Route);
-            StyleSidebarButton(btnDichVu, FontAwesome.Sharp.IconChar.Bus);
-            StyleSidebarButton(btnNhanSu, FontAwesome.Sharp.IconChar.Users);
-            StyleSidebarButton(btnGiaVe, FontAwesome.Sharp.IconChar.Tag);
-            StyleSidebarButton(btnKhuyenMai, FontAwesome.Sharp.IconChar.Percent);
-            StyleSidebarButton(btnPhanQuyen, FontAwesome.Sharp.IconChar.ShieldHalved);
-            StyleSidebarButton(btnNhatKy, FontAwesome.Sharp.IconChar.ClockRotateLeft);
-            StyleSidebarButton(btnCaiDat, FontAwesome.Sharp.IconChar.Gear);
+            SetIcon(btnTrangChu, FontAwesome.Sharp.IconChar.Route);
+            SetIcon(btnDichVu,   FontAwesome.Sharp.IconChar.Bus);
+            SetIcon(btnNhanSu,   FontAwesome.Sharp.IconChar.Users);
+            SetIcon(btnGiaVe,    FontAwesome.Sharp.IconChar.Tag);
+            SetIcon(btnKhuyenMai,FontAwesome.Sharp.IconChar.Percent);
+            SetIcon(btnPhanQuyen,FontAwesome.Sharp.IconChar.ShieldHalved);
+            SetIcon(btnNhatKy,   FontAwesome.Sharp.IconChar.ClockRotateLeft);
+            SetIcon(btnCaiDat,   FontAwesome.Sharp.IconChar.Gear);
+
+            // Setup cảnh báo security panel
+            SetupCanhBao();
         }
 
         // ==========================================
@@ -386,9 +308,9 @@ btn.Height = 52;
         // ==========================================
         private void btnTrangChu_Click(object? sender, EventArgs e)
         {
-            string title = CultureHelper.CurrentCulture.Name.StartsWith("en") ? "HOME / ROUTE MANAGEMENT" :
-                           CultureHelper.CurrentCulture.Name.StartsWith("ja") ? "ホーム / 路線管理" : "QUẢN LÝ TUYẾN XE & LỘ TRÌNH";
-            OpenMenu(SystemMenus.Route, title, () => new UcManageRoute());
+            string title = CultureHelper.CurrentCulture.Name.StartsWith("en") ? "OPERATIONS DASHBOARD" :
+                           CultureHelper.CurrentCulture.Name.StartsWith("ja") ? "ダッシュボード" : "DASHBOARD - TRANG CHỦ";
+            OpenMenu(SystemMenus.Route, title, () => new UcDashboard());
         }
 
         private void btnDichVu_Click(object? sender, EventArgs e)
@@ -428,46 +350,31 @@ btn.Height = 52;
         // ==========================================
         private void SetupCanhBao()
         {
-            pnlCanhBao.Visible = false;
-            pnlCanhBao.BackColor = Color.White;
-            pnlCanhBao.BorderStyle = BorderStyle.FixedSingle;
-            pnlCanhBao.Size = new Size(500, 300);
-            pnlCanhBao.Location = new Point(
-                (this.ClientSize.Width - pnlCanhBao.Width) / 2,
-                (this.ClientSize.Height - pnlCanhBao.Height) / 2
-            );
-            pnlCanhBao.Anchor = AnchorStyles.None;
-
+            // Style for warning panel
             picCanhBao.Image = SystemIcons.Warning.ToBitmap();
-            picCanhBao.SizeMode = PictureBoxSizeMode.CenterImage;
-            picCanhBao.Size = new Size(70, 70);
-            picCanhBao.Location = new Point(215, 25);
 
             lblTieuDe.Text = "TRUY CẬP BỊ TỪ CHỐI";
             lblTieuDe.Font = new Font("Segoe UI", 14, FontStyle.Bold);
             lblTieuDe.ForeColor = ThemeConfig.DangerColor;
-            lblTieuDe.AutoSize = false;
-            lblTieuDe.TextAlign = ContentAlignment.MiddleCenter;
-            lblTieuDe.Size = new Size(460, 32);
-            lblTieuDe.Location = new Point(20, 100);
 
             lblNoiDung.Font = new Font("Segoe UI", 9.5F);
             lblNoiDung.ForeColor = Color.FromArgb(71, 85, 105);
-            lblNoiDung.AutoSize = false;
-            lblNoiDung.TextAlign = ContentAlignment.MiddleCenter;
-            lblNoiDung.Size = new Size(460, 75);
-            lblNoiDung.Location = new Point(20, 138);
 
-            btnDong.Text = " Đóng thông báo";
+            btnDong.Text = " Đóng";
             btnDong.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             btnDong.ForeColor = Color.White;
             btnDong.BackColor = ThemeConfig.PrimaryColor;
             btnDong.FlatStyle = FlatStyle.Flat;
             btnDong.FlatAppearance.BorderSize = 0;
-            btnDong.Size = new Size(150, 40);
-            btnDong.Location = new Point(175, 230);
 
-            pnlCanhBao.BringToFront();
+            // Center pnlCanhBao whenever pnlContent resizes
+            pnlContent.Resize += (s, e) =>
+            {
+                pnlCanhBao.Location = new Point(
+                    (pnlContent.Width - pnlCanhBao.Width) / 2,
+                    (pnlContent.Height - pnlCanhBao.Height) / 2
+                );
+            };
         }
 
         private void HienCanhBao(string noiDung)
