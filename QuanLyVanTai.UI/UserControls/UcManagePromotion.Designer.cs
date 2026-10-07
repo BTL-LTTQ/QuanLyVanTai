@@ -55,12 +55,13 @@
             dgvKhuyenMai.Size = new Size(754, 551);
             dgvKhuyenMai.TabIndex = 11;
             dgvKhuyenMai.Visible = false;
+            dgvKhuyenMai.ColumnHeadersVisible = true;
             dgvKhuyenMai.CellMouseClick += dgvKhuyenMai_CellMouseClick;
             dgvKhuyenMai.CellPainting += dgvKhuyenMai_CellPainting;
             // 
             // colTen
             // 
-            colTen.HeaderText = "Tên khuyến ";
+            colTen.HeaderText = "Tên Khuyến Mãi";
             colTen.MinimumWidth = 6;
             colTen.Name = "colTen";
             colTen.Width = 125;

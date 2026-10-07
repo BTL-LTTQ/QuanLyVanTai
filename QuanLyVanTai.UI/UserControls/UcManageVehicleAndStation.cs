@@ -177,7 +177,6 @@ namespace QuanLyVanTai.UI.UserControls
             btnVehExport.Location = new Point(420, 44);
 
             pnlVehiclesFilter.Controls.AddRange([txtVehKeyword, cboVehType, cboVehStatus, cboVehManufacturer, radVehAnd, radVehOr, btnVehReset, btnVehExport]);
-            tabVehicles.Controls.Add(pnlVehiclesFilter);
 
             // Split Container
             splitVehicles.Dock = DockStyle.Fill;
@@ -194,13 +193,18 @@ namespace QuanLyVanTai.UI.UserControls
             dgvVehicles.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgvVehicles.MultiSelect = false;
             dgvVehicles.RowHeadersVisible = false;
+            dgvVehicles.ColumnHeadersVisible = true;
             dgvVehicles.RowTemplate.Height = 42;
             dgvVehicles.ColumnHeadersHeight = 42;
+            dgvVehicles.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dgvVehicles.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             dgvVehicles.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(241, 245, 249);
             dgvVehicles.ColumnHeadersDefaultCellStyle.ForeColor = ThemeConfig.TextMain;
+            dgvVehicles.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dgvVehicles.EnableHeadersVisualStyles = false;
             dgvVehicles.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(248, 250, 252);
+            dgvVehicles.DefaultCellStyle.SelectionBackColor = Color.FromArgb(219, 234, 254);
+            dgvVehicles.DefaultCellStyle.SelectionForeColor = Color.Black;
 
             dgvVehicles.Columns.Add(new DataGridViewTextBoxColumn { Name = "colVehId", HeaderText = "ID", Visible = false });
             dgvVehicles.Columns.Add(new DataGridViewTextBoxColumn { Name = "colVehPlate", HeaderText = "Biển Số Xe", Width = 120, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
@@ -302,7 +306,9 @@ namespace QuanLyVanTai.UI.UserControls
             pnlVehDetail.Controls.AddRange([btnVehAdd, btnVehEdit, btnVehDelete, btnVehSave]);
             splitVehicles.Panel2.Controls.Add(pnlVehDetail);
 
-            tabVehicles.Controls.Add(splitVehicles);
+            // Add vào tab: Fill trước, DockStyle.Top sau
+            tabVehicles.Controls.Add(splitVehicles);      // Fill
+            tabVehicles.Controls.Add(pnlVehiclesFilter);  // Top — add sau nằm trên
         }
 
         // ==========================================
@@ -359,7 +365,6 @@ namespace QuanLyVanTai.UI.UserControls
             btnStExport.Location = new Point(420, 44);
 
             pnlStationsFilter.Controls.AddRange([txtStKeyword, cboStCity, cboStStatus, radStAnd, radStOr, btnStReset, btnStExport]);
-            tabStations.Controls.Add(pnlStationsFilter);
 
             // Split Container
             splitStations.Dock = DockStyle.Fill;
@@ -376,13 +381,18 @@ namespace QuanLyVanTai.UI.UserControls
             dgvStations.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgvStations.MultiSelect = false;
             dgvStations.RowHeadersVisible = false;
+            dgvStations.ColumnHeadersVisible = true;
             dgvStations.RowTemplate.Height = 42;
             dgvStations.ColumnHeadersHeight = 42;
+            dgvStations.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dgvStations.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             dgvStations.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(241, 245, 249);
             dgvStations.ColumnHeadersDefaultCellStyle.ForeColor = ThemeConfig.TextMain;
+            dgvStations.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dgvStations.EnableHeadersVisualStyles = false;
             dgvStations.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(248, 250, 252);
+            dgvStations.DefaultCellStyle.SelectionBackColor = Color.FromArgb(219, 234, 254);
+            dgvStations.DefaultCellStyle.SelectionForeColor = Color.Black;
 
             dgvStations.Columns.Add(new DataGridViewTextBoxColumn { Name = "colStId", HeaderText = "ID", Visible = false });
             dgvStations.Columns.Add(new DataGridViewTextBoxColumn { Name = "colStCode", HeaderText = "Mã Trạm", Width = 130, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
@@ -475,19 +485,25 @@ namespace QuanLyVanTai.UI.UserControls
             pnlStDetail.Controls.AddRange([btnStAdd, btnStEdit, btnStDelete, btnStSave]);
             splitStations.Panel2.Controls.Add(pnlStDetail);
 
-            tabStations.Controls.Add(splitStations);
+            // Add vào tab: Fill trước, DockStyle.Top sau
+            tabStations.Controls.Add(splitStations);      // Fill
+            tabStations.Controls.Add(pnlStationsFilter);  // Top — add sau nằm trên
         }
+
+        private bool _isVehRefreshing = false;
+        private bool _isStRefreshing = false;
+        private System.Windows.Forms.Timer? _vehDebounce;
+        private System.Windows.Forms.Timer? _stDebounce;
 
         private void WireEvents()
         {
-            // Vehicles Events
-            EventHandler triggerVehFilter = async (s, e) => await FilterVehiclesAsync();
-            txtVehKeyword.TextChanged += triggerVehFilter;
-            cboVehType.SelectedIndexChanged += triggerVehFilter;
-            cboVehStatus.SelectedIndexChanged += triggerVehFilter;
-            cboVehManufacturer.SelectedIndexChanged += triggerVehFilter;
-            radVehAnd.CheckedChanged += triggerVehFilter;
-            radVehOr.CheckedChanged += triggerVehFilter;
+            // Vehicles: debounce để tránh concurrent DbContext
+            txtVehKeyword.TextChanged += (s, e) => ScheduleVehRefresh();
+            cboVehType.SelectedIndexChanged += (s, e) => ScheduleVehRefresh();
+            cboVehStatus.SelectedIndexChanged += (s, e) => ScheduleVehRefresh();
+            cboVehManufacturer.SelectedIndexChanged += (s, e) => ScheduleVehRefresh();
+            radVehAnd.CheckedChanged += (s, e) => ScheduleVehRefresh();
+            radVehOr.CheckedChanged += (s, e) => ScheduleVehRefresh();
 
             btnVehReset.Click += (s, e) =>
             {
@@ -498,21 +514,21 @@ namespace QuanLyVanTai.UI.UserControls
                 radVehAnd.Checked = true;
             };
 
-            btnVehExport.Click += (s, e) => DataExportHelper.ExportDataGridViewWithDialog(dgvVehicles, "DanhSach_PhuongTien");
+            btnVehExport.Click += async (s, e) => await ExportVehiclesAsync();
 
             dgvVehicles.SelectionChanged += dgvVehicles_SelectionChanged;
             btnVehAdd.Click += (s, e) => StartVehAdd();
             btnVehEdit.Click += (s, e) => StartVehEdit();
             btnVehSave.Click += async (s, e) => await SaveVehicleAsync();
             btnVehDelete.Click += async (s, e) => await DeleteVehicleAsync();
+            btnVehCancel.Click += (s, e) => CancelVehEdit();
 
-            // Stations Events
-            EventHandler triggerStFilter = async (s, e) => await FilterStationsAsync();
-            txtStKeyword.TextChanged += triggerStFilter;
-            cboStCity.SelectedIndexChanged += triggerStFilter;
-            cboStStatus.SelectedIndexChanged += triggerStFilter;
-            radStAnd.CheckedChanged += triggerStFilter;
-            radStOr.CheckedChanged += triggerStFilter;
+            // Stations: debounce để tránh concurrent DbContext
+            txtStKeyword.TextChanged += (s, e) => ScheduleStRefresh();
+            cboStCity.SelectedIndexChanged += (s, e) => ScheduleStRefresh();
+            cboStStatus.SelectedIndexChanged += (s, e) => ScheduleStRefresh();
+            radStAnd.CheckedChanged += (s, e) => ScheduleStRefresh();
+            radStOr.CheckedChanged += (s, e) => ScheduleStRefresh();
 
             btnStReset.Click += (s, e) =>
             {
@@ -522,13 +538,44 @@ namespace QuanLyVanTai.UI.UserControls
                 radStAnd.Checked = true;
             };
 
-            btnStExport.Click += (s, e) => DataExportHelper.ExportDataGridViewWithDialog(dgvStations, "DanhSach_TramDung");
+            btnStExport.Click += async (s, e) => await ExportStationsAsync();
 
             dgvStations.SelectionChanged += dgvStations_SelectionChanged;
             btnStAdd.Click += (s, e) => StartStAdd();
             btnStEdit.Click += (s, e) => StartStEdit();
             btnStSave.Click += async (s, e) => await SaveStationAsync();
             btnStDelete.Click += async (s, e) => await DeleteStationAsync();
+            btnStCancel.Click += (s, e) => CancelStEdit();
+        }
+
+        private void ScheduleVehRefresh()
+        {
+            _vehDebounce?.Stop();
+            _vehDebounce?.Dispose();
+            _vehDebounce = new System.Windows.Forms.Timer { Interval = 300 };
+            _vehDebounce.Tick += async (s, e) =>
+            {
+                _vehDebounce?.Stop();
+                _vehDebounce?.Dispose();
+                _vehDebounce = null;
+                await FilterVehiclesAsync();
+            };
+            _vehDebounce.Start();
+        }
+
+        private void ScheduleStRefresh()
+        {
+            _stDebounce?.Stop();
+            _stDebounce?.Dispose();
+            _stDebounce = new System.Windows.Forms.Timer { Interval = 300 };
+            _stDebounce.Tick += async (s, e) =>
+            {
+                _stDebounce?.Stop();
+                _stDebounce?.Dispose();
+                _stDebounce = null;
+                await FilterStationsAsync();
+            };
+            _stDebounce.Start();
         }
 
         private void ApplySecurity()
@@ -564,30 +611,53 @@ namespace QuanLyVanTai.UI.UserControls
         // ==========================================
         private async Task FilterVehiclesAsync()
         {
-            var criteria = new VehicleFilterCriteria
+            if (_isVehRefreshing) return;
+            _isVehRefreshing = true;
+            try
             {
-                Keyword = txtVehKeyword.Text,
-                VehicleType = cboVehType.SelectedItem?.ToString(),
-                Status = cboVehStatus.SelectedItem?.ToString(),
-                Manufacturer = cboVehManufacturer.SelectedItem?.ToString(),
-                UseAndLogic = radVehAnd.Checked
-            };
+                var criteria = new VehicleFilterCriteria
+                {
+                    Keyword = txtVehKeyword.Text,
+                    VehicleType = cboVehType.SelectedItem?.ToString(),
+                    Status = cboVehStatus.SelectedItem?.ToString(),
+                    Manufacturer = cboVehManufacturer.SelectedItem?.ToString(),
+                    UseAndLogic = radVehAnd.Checked
+                };
 
-            var vehicles = await _vehicleService.SearchAndFilterVehiclesAsync(criteria);
-            dgvVehicles.Rows.Clear();
+                var vehicles = await _vehicleService.SearchAndFilterVehiclesAsync(criteria);
+                dgvVehicles.Rows.Clear();
 
-            foreach (var v in vehicles)
+                foreach (var v in vehicles)
+                {
+                    string routeName = v.Route != null ? $"{v.Route.RouteCode} ({v.Route.RouteName})" : "Chưa phân công";
+                    int idx = dgvVehicles.Rows.Add(
+                        v.Id,
+                        v.LicensePlate,
+                        v.VehicleType,
+                        v.TotalSeats,
+                        v.Manufacturer ?? "Chưa rõ",
+                        routeName,
+                        v.Status
+                    );
+
+                    // Màu trạng thái
+                    var statusCell = dgvVehicles.Rows[idx].Cells["colVehStatus"];
+                    statusCell.Style.ForeColor = v.Status switch
+                    {
+                        "Ready" => Color.FromArgb(16, 185, 129),
+                        "InTransit" => Color.FromArgb(59, 130, 246),
+                        _ => Color.FromArgb(239, 68, 68)
+                    };
+                    statusCell.Style.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+                }
+            }
+            catch (Exception ex)
             {
-                string routeName = v.Route != null ? $"{v.Route.RouteCode} ({v.Route.RouteName})" : "Chưa phân công";
-                dgvVehicles.Rows.Add(
-                    v.Id,
-                    v.LicensePlate,
-                    v.VehicleType,
-                    v.TotalSeats,
-                    v.Manufacturer ?? "Chưa rõ",
-                    routeName,
-                    v.Status
-                );
+                MessageBox.Show($"Lỗi tải dữ liệu phương tiện: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                _isVehRefreshing = false;
             }
         }
 
@@ -615,6 +685,7 @@ namespace QuanLyVanTai.UI.UserControls
             txtVehManufacturer.Clear();
             cboVehRoute.SelectedIndex = 0;
             btnVehSave.Enabled = true;
+            btnVehCancel.Enabled = true;
             txtVehLicense.Focus();
         }
 
@@ -625,6 +696,7 @@ namespace QuanLyVanTai.UI.UserControls
 
             _isVehAdding = false;
             btnVehSave.Enabled = true;
+            btnVehCancel.Enabled = true;
             txtVehLicense.Focus();
         }
 
@@ -721,28 +793,48 @@ namespace QuanLyVanTai.UI.UserControls
         // ==========================================
         private async Task FilterStationsAsync()
         {
-            var criteria = new StationFilterCriteria
+            if (_isStRefreshing) return;
+            _isStRefreshing = true;
+            try
             {
-                Keyword = txtStKeyword.Text,
-                City = cboStCity.SelectedItem?.ToString(),
-                Status = cboStStatus.SelectedItem?.ToString(),
-                UseAndLogic = radStAnd.Checked
-            };
+                var criteria = new StationFilterCriteria
+                {
+                    Keyword = txtStKeyword.Text,
+                    City = cboStCity.SelectedItem?.ToString(),
+                    Status = cboStStatus.SelectedItem?.ToString(),
+                    UseAndLogic = radStAnd.Checked
+                };
 
-            var stations = await _stationService.SearchAndFilterStationsAsync(criteria);
-            dgvStations.Rows.Clear();
+                var stations = await _stationService.SearchAndFilterStationsAsync(criteria);
+                dgvStations.Rows.Clear();
 
-            foreach (var s in stations)
+                foreach (var s in stations)
+                {
+                    int idx = dgvStations.Rows.Add(
+                        s.Id,
+                        s.StationCode,
+                        s.StationName,
+                        s.Address,
+                        s.City,
+                        s.Routes.Count,
+                        s.Status
+                    );
+
+                    // Màu trạng thái
+                    var statusCell = dgvStations.Rows[idx].Cells["colStStatus"];
+                    statusCell.Style.ForeColor = s.Status == "Active"
+                        ? Color.FromArgb(16, 185, 129)
+                        : Color.FromArgb(239, 68, 68);
+                    statusCell.Style.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+                }
+            }
+            catch (Exception ex)
             {
-                dgvStations.Rows.Add(
-                    s.Id,
-                    s.StationCode,
-                    s.StationName,
-                    s.Address,
-                    s.City,
-                    s.Routes.Count,
-                    s.Status
-                );
+                MessageBox.Show($"Lỗi tải dữ liệu trạm dừng: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                _isStRefreshing = false;
             }
         }
 
@@ -770,6 +862,7 @@ namespace QuanLyVanTai.UI.UserControls
             txtStName.Clear();
             txtStAddress.Clear();
             btnStSave.Enabled = true;
+            btnStCancel.Enabled = true;
             txtStCode.Focus();
         }
 
@@ -780,6 +873,7 @@ namespace QuanLyVanTai.UI.UserControls
 
             _isStAdding = false;
             btnStSave.Enabled = true;
+            btnStCancel.Enabled = true;
             txtStCode.Focus();
         }
 
@@ -862,6 +956,56 @@ namespace QuanLyVanTai.UI.UserControls
             else
             {
                 MessageBox.Show(msg, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void CancelVehEdit()
+        {
+            _isVehAdding = false;
+            _selectedVehId = null;
+            txtVehLicense.Clear();
+            txtVehManufacturer.Clear();
+            cboVehRoute.SelectedIndex = 0;
+            btnVehSave.Enabled = false;
+            btnVehCancel.Enabled = false;
+            dgvVehicles.ClearSelection();
+        }
+
+        private void CancelStEdit()
+        {
+            _isStAdding = false;
+            _selectedStId = null;
+            txtStCode.Clear();
+            txtStName.Clear();
+            txtStAddress.Clear();
+            btnStSave.Enabled = false;
+            btnStCancel.Enabled = false;
+            dgvStations.ClearSelection();
+        }
+
+        private async Task ExportVehiclesAsync()
+        {
+            btnVehExport.Enabled = false;
+            try
+            {
+                await DataExportHelper.ExportDataGridViewWithDialogAsync(dgvVehicles, "DanhSach_PhuongTien");
+            }
+            finally
+            {
+                AuthorizationGuard.ApplyControlSecurity(SystemMenus.Vehicle, btnExport: btnVehExport);
+            }
+        }
+
+        private async Task ExportStationsAsync()
+        {
+            btnStExport.Enabled = false;
+            try
+            {
+                await DataExportHelper.ExportDataGridViewWithDialogAsync(dgvStations, "DanhSach_TramDung");
+            }
+            finally
+            {
+                AuthorizationGuard.ApplyControlSecurity(SystemMenus.Station, btnExport: btnStExport);
             }
         }
     }

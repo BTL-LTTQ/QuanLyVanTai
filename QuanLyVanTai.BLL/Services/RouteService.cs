@@ -13,23 +13,13 @@ namespace QuanLyVanTai.BLL.Services
 
     public class RouteService
     {
-        private readonly AppDbContext _context;
+        // Mỗi operation tạo context riêng → tránh concurrent DbContext
+        private static AppDbContext CreateContext() => new AppDbContext();
 
-        public RouteService(AppDbContext context)
-        {
-            _context = context;
-        }
-
-        public RouteService() : this(new AppDbContext())
-        {
-        }
-
-        /// <summary>
-        /// Lấy tất cả tuyến xe kèm danh sách trạm dừng và xe phụ trách
-        /// </summary>
         public async Task<List<Route>> GetAllRoutesAsync(string? keyword = null)
         {
-            var query = _context.Routes
+            using var db = CreateContext();
+            var query = db.Routes
                 .Include(r => r.Stations)
                 .Include(r => r.Vehicles)
                 .AsNoTracking()
@@ -47,68 +37,51 @@ namespace QuanLyVanTai.BLL.Services
             return await query.OrderByDescending(r => r.Id).ToListAsync();
         }
 
-        /// <summary>
-        /// Lấy chi tiết tuyến xe theo ID bao gồm trạm dừng và phương tiện
-        /// </summary>
         public async Task<Route?> GetRouteByIdAsync(int id)
         {
-            return await _context.Routes
+            using var db = CreateContext();
+            return await db.Routes
                 .Include(r => r.Stations)
                 .Include(r => r.Vehicles)
                 .FirstOrDefaultAsync(r => r.Id == id);
         }
 
-        /// <summary>
-        /// Tạo mới tuyến xe liên kết đa bảng với Trạm dừng và Phương tiện (dùng Transaction)
-        /// </summary>
         public async Task<(bool Success, string Message, Route? Route)> CreateRouteAsync(
             Route route,
             List<int> stationIds,
             List<int> vehicleIds)
         {
-            // Kiểm tra trùng mã tuyến
-            bool exists = await _context.Routes.AnyAsync(r => r.RouteCode == route.RouteCode);
+            using var db = CreateContext();
+            bool exists = await db.Routes.AnyAsync(r => r.RouteCode == route.RouteCode);
             if (exists)
-            {
                 return (false, $"Mã tuyến '{route.RouteCode}' đã tồn tại trong hệ thống!", null);
-            }
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var transaction = await db.Database.BeginTransactionAsync();
             try
             {
-                // 1. Thêm tuyến xe
-                _context.Routes.Add(route);
-                await _context.SaveChangesAsync();
+                db.Routes.Add(route);
+                await db.SaveChangesAsync();
 
-                // 2. Liên kết các Trạm dừng (N-N)
                 if (stationIds.Count > 0)
                 {
-                    var stations = await _context.Stations
+                    var stations = await db.Stations
                         .Where(s => stationIds.Contains(s.Id))
                         .ToListAsync();
-
                     foreach (var st in stations)
-                    {
                         route.Stations.Add(st);
-                    }
                 }
 
-                // 3. Phân công các Phương tiện (1-N)
                 if (vehicleIds.Count > 0)
                 {
-                    var vehicles = await _context.Vehicles
+                    var vehicles = await db.Vehicles
                         .Where(v => vehicleIds.Contains(v.Id))
                         .ToListAsync();
-
                     foreach (var v in vehicles)
-                    {
                         v.RouteId = route.Id;
-                    }
                 }
 
-                await _context.SaveChangesAsync();
+                await db.SaveChangesAsync();
                 await transaction.CommitAsync();
-
                 return (true, "Thêm mới tuyến xe và liên kết dữ liệu thành công!", route);
             }
             catch (Exception ex)
@@ -118,28 +91,23 @@ namespace QuanLyVanTai.BLL.Services
             }
         }
 
-        /// <summary>
-        /// Cập nhật tuyến xe liên kết đa bảng (dùng Transaction)
-        /// </summary>
         public async Task<(bool Success, string Message)> UpdateRouteAsync(
             Route updatedRoute,
             List<int> stationIds,
             List<int> vehicleIds)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var db = CreateContext();
+            using var transaction = await db.Database.BeginTransactionAsync();
             try
             {
-                var existingRoute = await _context.Routes
+                var existingRoute = await db.Routes
                     .Include(r => r.Stations)
                     .Include(r => r.Vehicles)
                     .FirstOrDefaultAsync(r => r.Id == updatedRoute.Id);
 
                 if (existingRoute == null)
-                {
                     return (false, "Không tìm thấy tuyến xe cần cập nhật!");
-                }
 
-                // Cập nhật thông tin cơ bản
                 existingRoute.RouteCode = updatedRoute.RouteCode;
                 existingRoute.RouteName = updatedRoute.RouteName;
                 existingRoute.DistanceKm = updatedRoute.DistanceKm;
@@ -147,49 +115,34 @@ namespace QuanLyVanTai.BLL.Services
                 existingRoute.BasePrice = updatedRoute.BasePrice;
                 existingRoute.Status = updatedRoute.Status;
 
-                // Cập nhật quan hệ N-N với Station
                 existingRoute.Stations.Clear();
                 if (stationIds.Count > 0)
                 {
-                    var stations = await _context.Stations
+                    var stations = await db.Stations
                         .Where(s => stationIds.Contains(s.Id))
                         .ToListAsync();
                     foreach (var st in stations)
-                    {
                         existingRoute.Stations.Add(st);
-                    }
                 }
 
-                // Cập nhật phân công Phương tiện
-                // Gỡ các xe cũ không còn được chọn
-                var currentVehicles = await _context.Vehicles
+                var currentVehicles = await db.Vehicles
                     .Where(v => v.RouteId == existingRoute.Id)
                     .ToListAsync();
-
                 foreach (var v in currentVehicles)
-                {
                     if (!vehicleIds.Contains(v.Id))
-                    {
                         v.RouteId = null;
-                    }
-                }
 
-                // Gán xe mới
                 if (vehicleIds.Count > 0)
                 {
-                    var selectedVehicles = await _context.Vehicles
+                    var selectedVehicles = await db.Vehicles
                         .Where(v => vehicleIds.Contains(v.Id))
                         .ToListAsync();
-
                     foreach (var v in selectedVehicles)
-                    {
                         v.RouteId = existingRoute.Id;
-                    }
                 }
 
-                await _context.SaveChangesAsync();
+                await db.SaveChangesAsync();
                 await transaction.CommitAsync();
-
                 return (true, "Cập nhật thông tin tuyến xe thành công!");
             }
             catch (Exception ex)
@@ -199,76 +152,58 @@ namespace QuanLyVanTai.BLL.Services
             }
         }
 
-        /// <summary>
-        /// Xóa an toàn tuyến xe: Bắt buộc xác nhận, hỗ trợ Soft-delete hoặc Cascade dùng Transaction rollback khi lỗi
-        /// </summary>
         public async Task<(bool Success, string Message)> DeleteRouteAsync(int routeId, bool softDelete = true)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var db = CreateContext();
+            using var transaction = await db.Database.BeginTransactionAsync();
             try
             {
-                var route = await _context.Routes
+                var route = await db.Routes
                     .Include(r => r.Stations)
                     .Include(r => r.Vehicles)
                     .Include(r => r.Tickets)
                     .FirstOrDefaultAsync(r => r.Id == routeId);
 
                 if (route == null)
-                {
                     return (false, "Không tìm thấy tuyến xe cần xóa!");
-                }
 
-                // Kiểm tra ràng buộc vé nếu có
                 int ticketCount = route.Tickets.Count;
                 if (ticketCount > 0 && !softDelete)
-                {
-                    return (false, $"Không thể xóa vĩnh viễn: Tuyến xe đang có {ticketCount} vé liên quan! Vui lòng chọn Xóa mềm (Soft-delete).");
-                }
+                    return (false, $"Không thể xóa vĩnh viễn: Tuyến xe đang có {ticketCount} vé liên quan! Vui lòng chọn Xóa mềm.");
+
+                foreach (var v in route.Vehicles)
+                    v.RouteId = null;
 
                 if (softDelete)
                 {
-                    // Xóa mềm: Gán IsDeleted = true, ngắt phân công xe
-                    foreach (var v in route.Vehicles)
-                    {
-                        v.RouteId = null;
-                    }
-
-                    _context.Routes.Remove(route); // DbContext sẽ tự chuyển thành IsDeleted = true
-                    await _context.SaveChangesAsync();
-                    await transaction.CommitAsync();
-
-                    return (true, $"Đã xóa mềm Tuyến xe [{route.RouteCode}] thành công. Dữ liệu lịch sử và vé vẫn được bảo toàn!");
+                    db.Routes.Remove(route);
                 }
                 else
                 {
-                    // Xóa cứng cascade có Transaction
-                    foreach (var v in route.Vehicles)
-                    {
-                        v.RouteId = null;
-                    }
                     route.Stations.Clear();
-
-                    _context.Entry(route).State = EntityState.Deleted;
-                    await _context.SaveChangesAsync();
-                    await transaction.CommitAsync();
-
-                    return (true, $"Đã xóa vĩnh viễn Tuyến xe [{route.RouteCode}] khỏi hệ thống.");
+                    db.Entry(route).State = EntityState.Deleted;
                 }
+
+                await db.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                string msg = softDelete
+                    ? $"Đã xóa mềm Tuyến xe [{route.RouteCode}] thành công. Dữ liệu lịch sử và vé vẫn được bảo toàn!"
+                    : $"Đã xóa vĩnh viễn Tuyến xe [{route.RouteCode}] khỏi hệ thống.";
+                return (true, msg);
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return (false, $"Lỗi khi xóa tuyến xe (Hệ thống đã Rollback để bảo vệ dữ liệu): {ex.Message}");
+                return (false, $"Lỗi khi xóa tuyến xe (Đã Rollback để bảo vệ dữ liệu): {ex.Message}");
             }
         }
 
-        /// <summary>
-        /// Lấy lịch sử chỉnh sửa dữ liệu cho Tuyến xe cụ thể (ai đã sửa, sửa khi nào, giá trị cũ/mới)
-        /// </summary>
         public async Task<List<AuditLog>> GetRouteAuditHistoryAsync(int routeId)
         {
+            using var db = CreateContext();
             string idStr = routeId.ToString();
-            return await _context.AuditLogs
+            return await db.AuditLogs
                 .Where(a => a.EntityName == "Route" && a.RecordId == idStr)
                 .OrderByDescending(a => a.Timestamp)
                 .AsNoTracking()
