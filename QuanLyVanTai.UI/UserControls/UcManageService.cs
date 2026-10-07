@@ -9,7 +9,7 @@ using System.Linq;
 using System.Windows.Forms;
 using UserSession = Core.Security.UserSession;
 
-namespace QuanLyVanTai.UI
+namespace QuanLyVanTai.UI.UserControls
 {
     public partial class UcManageService : UserControl
     {

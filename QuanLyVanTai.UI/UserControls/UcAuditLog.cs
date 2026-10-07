@@ -85,7 +85,6 @@ namespace QuanLyVanTai.UI.UserControls
             dgvAuditLog.DefaultCellStyle.SelectionBackColor = Color.FromArgb(225, 235, 255);
             dgvAuditLog.DefaultCellStyle.SelectionForeColor = Color.Black;
 
-            // Highlight search
             DataGridViewHighlightHelper.AttachSearchHighlighter(dgvAuditLog, () => comboBox1.SelectedItem?.ToString() == "Tất cả" ? "" : comboBox1.SelectedItem?.ToString() ?? "");
         }
 
@@ -103,7 +102,6 @@ namespace QuanLyVanTai.UI.UserControls
 
             if (logs.Count == 0)
             {
-                // Thêm demo logs nếu mới khởi tạo
                 ThemLog(DateTime.Now.ToString("dd/MM/yyyy HH:mm"), UserSession.CurrentUsername, UserSession.CurrentRole, "Khởi chạy", "Hệ thống", UserSession.CurrentIpAddress);
             }
             else
@@ -122,22 +120,9 @@ namespace QuanLyVanTai.UI.UserControls
             }
         }
 
-        private void ThemLog(
-            string thoiGian,
-            string nguoiDung,
-            string vaiTro,
-            string hanhDong,
-            string doiTuong,
-            string diaChiIP)
+        private void ThemLog(string thoiGian, string nguoiDung, string vaiTro, string hanhDong, string doiTuong, string diaChiIP)
         {
-            dgvAuditLog.Rows.Add(
-                thoiGian,
-                nguoiDung,
-                vaiTro,
-                hanhDong,
-                doiTuong,
-                diaChiIP
-            );
+            dgvAuditLog.Rows.Add(thoiGian, nguoiDung, vaiTro, hanhDong, doiTuong, diaChiIP);
         }
 
         private void label3_Click(object sender, EventArgs e)
