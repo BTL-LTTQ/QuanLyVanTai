@@ -43,7 +43,14 @@ namespace QuanLyVanTai.UI
             {
                 using (var db = new AppDbContext(options))
                 {
-                    db.Database.Migrate();
+                    try
+                    {
+                        db.Database.Migrate();
+                    }
+                    catch
+                    {
+                        db.Database.EnsureCreated();
+                    }
                 }
             }
             catch (Exception ex)

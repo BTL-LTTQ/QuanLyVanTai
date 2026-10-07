@@ -1,10 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Core.Interfaces;
 
 namespace QuanLyVanTai.DAL.Models
 {
     [Table("Tickets")]
-    public class Ticket
+    public class Ticket : ISoftDelete, IAuditable
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -41,7 +42,20 @@ namespace QuanLyVanTai.DAL.Models
         [MaxLength(30)]
         public string TicketStatus { get; set; } = "Booked"; // Booked, Completed, Cancelled
 
+        // Tracking / Auditing
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [MaxLength(50)]
+        public string? CreatedBy { get; set; }
+
+        public DateTime? UpdatedAt { get; set; }
+        [MaxLength(50)]
+        public string? UpdatedBy { get; set; }
+
+        // Soft Delete
+        public bool IsDeleted { get; set; } = false;
+        public DateTime? DeletedAt { get; set; }
+        [MaxLength(50)]
+        public string? DeletedBy { get; set; }
 
         // Foreign Keys
         [Required]

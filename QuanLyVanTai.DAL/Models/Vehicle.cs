@@ -1,10 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Core.Interfaces;
 
 namespace QuanLyVanTai.DAL.Models
 {
     [Table("Vehicles")]
-    public class Vehicle
+    public class Vehicle : ISoftDelete, IAuditable
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -26,9 +27,27 @@ namespace QuanLyVanTai.DAL.Models
 
         [Required]
         [MaxLength(30)]
-        public string Status { get; set; } = "Ready"; // Ready, InTransit, Maintenance
+        public string Status { get; set; } = "Ready"; // Ready (Sẵn sàng), InTransit (Đang chạy), Maintenance (Bảo dưỡng)
 
+        // Phân công tuyến xe phụ trách (Multi-table relationship Tuyến xe - Phương tiện)
+        public int? RouteId { get; set; }
+        [ForeignKey(nameof(RouteId))]
+        public virtual Route? Route { get; set; }
+
+        // Tracking / Auditing
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [MaxLength(50)]
+        public string? CreatedBy { get; set; }
+
+        public DateTime? UpdatedAt { get; set; }
+        [MaxLength(50)]
+        public string? UpdatedBy { get; set; }
+
+        // Soft Delete
+        public bool IsDeleted { get; set; } = false;
+        public DateTime? DeletedAt { get; set; }
+        [MaxLength(50)]
+        public string? DeletedBy { get; set; }
 
         // Navigation Properties: 1 Phương tiện phục vụ nhiều vé/chuyến xe
         public virtual ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
