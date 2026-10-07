@@ -10,37 +10,28 @@ namespace QuanLyVanTai.BLL.Services
         public string? VehicleType { get; set; }
         public string? Status { get; set; }
         public string? Manufacturer { get; set; }
-        public bool UseAndLogic { get; set; } = true; // true = AND, false = OR
+        public bool UseAndLogic { get; set; } = true;
     }
 
     public class VehicleService
     {
-        private readonly AppDbContext _context;
-
-        public VehicleService(AppDbContext context)
-        {
-            _context = context;
-        }
-
-        public VehicleService() : this(new AppDbContext())
-        {
-        }
+        // Mỗi operation tạo context riêng → tránh concurrent DbContext
+        private static AppDbContext CreateContext() => new AppDbContext();
 
         public async Task<List<Vehicle>> GetAllVehiclesAsync()
         {
-            return await _context.Vehicles
+            using var db = CreateContext();
+            return await db.Vehicles
                 .Include(v => v.Route)
                 .AsNoTracking()
                 .OrderByDescending(v => v.Id)
                 .ToListAsync();
         }
 
-        /// <summary>
-        /// Bộ lọc đa tiêu chí linh hoạt kết hợp logic AND hoặc OR và tìm kiếm real-time
-        /// </summary>
         public async Task<List<Vehicle>> SearchAndFilterVehiclesAsync(VehicleFilterCriteria criteria)
         {
-            var query = _context.Vehicles
+            using var db = CreateContext();
+            var query = db.Vehicles
                 .Include(v => v.Route)
                 .AsNoTracking()
                 .AsQueryable();
@@ -48,49 +39,36 @@ namespace QuanLyVanTai.BLL.Services
             bool hasKeyword = !string.IsNullOrWhiteSpace(criteria.Keyword);
             bool hasType = !string.IsNullOrWhiteSpace(criteria.VehicleType) && criteria.VehicleType != "Tất cả";
             bool hasStatus = !string.IsNullOrWhiteSpace(criteria.Status) && criteria.Status != "Tất cả";
-            bool hasManufacturer = !string.IsNullOrWhiteSpace(criteria.Manufacturer) && criteria.Manufacturer != "Tất cả";
+            bool hasMfr = !string.IsNullOrWhiteSpace(criteria.Manufacturer) && criteria.Manufacturer != "Tất cả";
 
-            // Nếu không có bất kỳ tiêu chí nào được chọn -> trả về toàn bộ
-            if (!hasKeyword && !hasType && !hasStatus && !hasManufacturer)
-            {
+            if (!hasKeyword && !hasType && !hasStatus && !hasMfr)
                 return await query.OrderByDescending(v => v.Id).ToListAsync();
-            }
 
-            string kw = criteria.Keyword?.Trim().ToLower() ?? string.Empty;
-            string vt = criteria.VehicleType?.Trim().ToLower() ?? string.Empty;
-            string st = criteria.Status?.Trim().ToLower() ?? string.Empty;
-            string mf = criteria.Manufacturer?.Trim().ToLower() ?? string.Empty;
+            string kw = criteria.Keyword?.Trim().ToLower() ?? "";
+            string vt = criteria.VehicleType?.Trim().ToLower() ?? "";
+            string st = criteria.Status?.Trim().ToLower() ?? "";
+            string mf = criteria.Manufacturer?.Trim().ToLower() ?? "";
 
             if (criteria.UseAndLogic)
             {
-                // Logic AND: Tất cả các tiêu chí được chọn ĐỀU PHẢI THỎA MÃN
                 if (hasKeyword)
-                {
                     query = query.Where(v =>
                         v.LicensePlate.ToLower().Contains(kw) ||
                         v.VehicleType.ToLower().Contains(kw) ||
                         (v.Manufacturer != null && v.Manufacturer.ToLower().Contains(kw)) ||
                         (v.Route != null && v.Route.RouteName.ToLower().Contains(kw)));
-                }
 
                 if (hasType)
-                {
                     query = query.Where(v => v.VehicleType.ToLower() == vt);
-                }
 
                 if (hasStatus)
-                {
                     query = query.Where(v => v.Status.ToLower() == st);
-                }
 
-                if (hasManufacturer)
-                {
+                if (hasMfr)
                     query = query.Where(v => v.Manufacturer != null && v.Manufacturer.ToLower() == mf);
-                }
             }
             else
             {
-                // Logic OR: Thỏa mãn BẤT KỲ tiêu chí nào trong số các tiêu chí được kích hoạt
                 query = query.Where(v =>
                     (hasKeyword && (
                         v.LicensePlate.ToLower().Contains(kw) ||
@@ -99,8 +77,7 @@ namespace QuanLyVanTai.BLL.Services
                         (v.Route != null && v.Route.RouteName.ToLower().Contains(kw)))) ||
                     (hasType && v.VehicleType.ToLower() == vt) ||
                     (hasStatus && v.Status.ToLower() == st) ||
-                    (hasManufacturer && v.Manufacturer != null && v.Manufacturer.ToLower() == mf)
-                );
+                    (hasMfr && v.Manufacturer != null && v.Manufacturer.ToLower() == mf));
             }
 
             return await query.OrderByDescending(v => v.Id).ToListAsync();
@@ -108,24 +85,22 @@ namespace QuanLyVanTai.BLL.Services
 
         public async Task<(bool Success, string Message, Vehicle? Vehicle)> CreateVehicleAsync(Vehicle vehicle)
         {
-            bool exists = await _context.Vehicles.AnyAsync(v => v.LicensePlate == vehicle.LicensePlate);
+            using var db = CreateContext();
+            bool exists = await db.Vehicles.AnyAsync(v => v.LicensePlate == vehicle.LicensePlate);
             if (exists)
-            {
                 return (false, $"Biển số xe '{vehicle.LicensePlate}' đã tồn tại!", null);
-            }
 
-            _context.Vehicles.Add(vehicle);
-            await _context.SaveChangesAsync();
+            db.Vehicles.Add(vehicle);
+            await db.SaveChangesAsync();
             return (true, "Thêm phương tiện thành công!", vehicle);
         }
 
         public async Task<(bool Success, string Message)> UpdateVehicleAsync(Vehicle vehicle)
         {
-            var existing = await _context.Vehicles.FindAsync(vehicle.Id);
+            using var db = CreateContext();
+            var existing = await db.Vehicles.FindAsync(vehicle.Id);
             if (existing == null)
-            {
                 return (false, "Không tìm thấy phương tiện cần cập nhật!");
-            }
 
             existing.LicensePlate = vehicle.LicensePlate;
             existing.VehicleType = vehicle.VehicleType;
@@ -134,41 +109,33 @@ namespace QuanLyVanTai.BLL.Services
             existing.Status = vehicle.Status;
             existing.RouteId = vehicle.RouteId;
 
-            await _context.SaveChangesAsync();
+            await db.SaveChangesAsync();
             return (true, "Cập nhật thông tin phương tiện thành công!");
         }
 
         public async Task<(bool Success, string Message)> DeleteVehicleAsync(int vehicleId, bool softDelete = true)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var db = CreateContext();
+            using var transaction = await db.Database.BeginTransactionAsync();
             try
             {
-                var vehicle = await _context.Vehicles
+                var vehicle = await db.Vehicles
                     .Include(v => v.Tickets)
                     .FirstOrDefaultAsync(v => v.Id == vehicleId);
 
                 if (vehicle == null)
-                {
                     return (false, "Không tìm thấy phương tiện cần xóa!");
-                }
 
                 if (vehicle.Tickets.Count > 0 && !softDelete)
-                {
                     return (false, $"Xe đang có {vehicle.Tickets.Count} vé liên quan! Vui lòng chọn Xóa mềm.");
-                }
 
                 if (softDelete)
-                {
-                    _context.Vehicles.Remove(vehicle);
-                }
+                    db.Vehicles.Remove(vehicle);
                 else
-                {
-                    _context.Entry(vehicle).State = EntityState.Deleted;
-                }
+                    db.Entry(vehicle).State = EntityState.Deleted;
 
-                await _context.SaveChangesAsync();
+                await db.SaveChangesAsync();
                 await transaction.CommitAsync();
-
                 return (true, $"Đã xóa phương tiện [{vehicle.LicensePlate}] thành công!");
             }
             catch (Exception ex)

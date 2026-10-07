@@ -43,12 +43,21 @@ namespace QuanLyVanTai.UI.UserControls
         private readonly ComboBox cboStatus = new();
         private readonly CheckedListBox clbStations = new();
         private readonly CheckedListBox clbVehicles = new();
+        private readonly ComboBox cboFkStation = new();
+        private readonly ComboBox cboFkVehicle = new();
 
         // State tracking
         private bool _isAddingNew = false;
+        private bool _suppressFkComboEvents = false;
         private int? _selectedRouteId = null;
         private List<Station> _allStations = [];
         private List<Vehicle> _allVehicles = [];
+
+        private sealed class FkLookupItem
+        {
+            public int Id { get; set; }
+            public string Display { get; set; } = string.Empty;
+        }
 
         public UcManageRoute()
         {
@@ -293,27 +302,37 @@ namespace QuanLyVanTai.UI.UserControls
 
             y += 65;
 
-            // Multi-table 1: Trạm dừng liên kết (N - N)
+            // Multi-table 1: Trạm dừng liên kết (N - N) + ComboBox khóa ngoại
             Label lblStationsTitle = CreateFieldLabel("📍 Trạm Dừng Thuộc Lộ Trình (Liên kết N-N):", 18, y);
             lblStationsTitle.ForeColor = ThemeConfig.PrimaryColor;
             lblStationsTitle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             pnlDetail.Controls.Add(lblStationsTitle);
 
-            clbStations.Location = new Point(18, y + 24);
-            clbStations.Size = new Size(382, 110);
+            cboFkStation.Location = new Point(18, y + 22);
+            cboFkStation.Size = new Size(382, 28);
+            cboFkStation.DropDownStyle = ComboBoxStyle.DropDownList;
+            pnlDetail.Controls.Add(cboFkStation);
+
+            clbStations.Location = new Point(18, y + 54);
+            clbStations.Size = new Size(382, 90);
             clbStations.CheckOnClick = true;
             pnlDetail.Controls.Add(clbStations);
 
-            y += 145;
+            y += 155;
 
-            // Multi-table 2: Phương tiện phân công (1 - N)
+            // Multi-table 2: Phương tiện phân công (1 - N) + ComboBox khóa ngoại
             Label lblVehiclesTitle = CreateFieldLabel("🚌 Phương Tiện Phân Công (Liên kết 1-N):", 18, y);
             lblVehiclesTitle.ForeColor = ThemeConfig.PrimaryColor;
             lblVehiclesTitle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             pnlDetail.Controls.Add(lblVehiclesTitle);
 
-            clbVehicles.Location = new Point(18, y + 24);
-            clbVehicles.Size = new Size(382, 110);
+            cboFkVehicle.Location = new Point(18, y + 22);
+            cboFkVehicle.Size = new Size(382, 28);
+            cboFkVehicle.DropDownStyle = ComboBoxStyle.DropDownList;
+            pnlDetail.Controls.Add(cboFkVehicle);
+
+            clbVehicles.Location = new Point(18, y + 54);
+            clbVehicles.Size = new Size(382, 90);
             clbVehicles.CheckOnClick = true;
             pnlDetail.Controls.Add(clbVehicles);
 
@@ -407,6 +426,9 @@ namespace QuanLyVanTai.UI.UserControls
             btnDelete.Click += async (s, e) => await DeleteSelectedRouteAsync();
             btnHistory.Click += async (s, e) => await ViewAuditHistoryAsync();
             btnExport.Click += (s, e) => DataExportHelper.ExportDataGridViewWithDialog(dgvRoutes, "DanhSach_TuyenXe");
+
+            cboFkStation.SelectedIndexChanged += (s, e) => ApplyFkStationSelection();
+            cboFkVehicle.SelectedIndexChanged += (s, e) => ApplyFkVehicleSelection();
         }
 
         private void ApplySecurity()
@@ -434,6 +456,7 @@ namespace QuanLyVanTai.UI.UserControls
                     clbVehicles.Items.Add($"{v.LicensePlate} ({v.VehicleType})");
                 }
 
+                BindForeignKeyComboBoxes();
                 await ReloadRoutesListAsync();
             }
             catch (Exception ex)
@@ -532,6 +555,8 @@ namespace QuanLyVanTai.UI.UserControls
             cboStatus.Enabled = editable;
             clbStations.Enabled = editable;
             clbVehicles.Enabled = editable;
+            cboFkStation.Enabled = editable;
+            cboFkVehicle.Enabled = editable;
 
             btnAdd.Enabled = !editable && UserSession.HasPermission(SystemMenus.Route, PermissionAction.Add);
             btnEdit.Enabled = !editable && dgvRoutes.SelectedRows.Count > 0 && UserSession.HasPermission(SystemMenus.Route, PermissionAction.Edit);
@@ -733,6 +758,63 @@ namespace QuanLyVanTai.UI.UserControls
             var logs = await _routeService.GetRouteAuditHistoryAsync(_selectedRouteId.Value);
             using var histDlg = new FrmAuditHistory($"Tuyến xe {txtRouteCode.Text}", logs);
             histDlg.ShowDialog();
+        }
+
+        private void BindForeignKeyComboBoxes()
+        {
+            _suppressFkComboEvents = true;
+            try
+            {
+                var stationItems = new List<FkLookupItem>
+                {
+                    new() { Id = 0, Display = "-- Chọn trạm dừng (khóa ngoại) --" }
+                };
+                stationItems.AddRange(_allStations.Select(st => new FkLookupItem
+                {
+                    Id = st.Id,
+                    Display = $"{st.StationCode} - {st.StationName} ({st.City})"
+                }));
+                cboFkStation.DisplayMember = nameof(FkLookupItem.Display);
+                cboFkStation.ValueMember = nameof(FkLookupItem.Id);
+                cboFkStation.DataSource = stationItems;
+
+                var vehicleItems = new List<FkLookupItem>
+                {
+                    new() { Id = 0, Display = "-- Chọn phương tiện (khóa ngoại) --" }
+                };
+                vehicleItems.AddRange(_allVehicles.Select(v => new FkLookupItem
+                {
+                    Id = v.Id,
+                    Display = $"{v.LicensePlate} ({v.VehicleType})"
+                }));
+                cboFkVehicle.DisplayMember = nameof(FkLookupItem.Display);
+                cboFkVehicle.ValueMember = nameof(FkLookupItem.Id);
+                cboFkVehicle.DataSource = vehicleItems;
+            }
+            finally
+            {
+                _suppressFkComboEvents = false;
+            }
+        }
+
+        private void ApplyFkStationSelection()
+        {
+            if (_suppressFkComboEvents || cboFkStation.SelectedItem is not FkLookupItem item || item.Id <= 0)
+                return;
+
+            int idx = _allStations.FindIndex(st => st.Id == item.Id);
+            if (idx >= 0 && idx < clbStations.Items.Count)
+                clbStations.SetItemChecked(idx, true);
+        }
+
+        private void ApplyFkVehicleSelection()
+        {
+            if (_suppressFkComboEvents || cboFkVehicle.SelectedItem is not FkLookupItem item || item.Id <= 0)
+                return;
+
+            int idx = _allVehicles.FindIndex(v => v.Id == item.Id);
+            if (idx >= 0 && idx < clbVehicles.Items.Count)
+                clbVehicles.SetItemChecked(idx, true);
         }
     }
 }

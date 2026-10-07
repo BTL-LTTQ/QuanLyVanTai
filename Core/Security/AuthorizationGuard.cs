@@ -76,19 +76,44 @@ namespace Core.Security
             Control? btnAdd = null,
             Control? btnEdit = null,
             Control? btnDelete = null,
-            Control? btnExport = null)
+            Control? btnExport = null,
+            bool hideWhenDenied = false)
         {
-            if (btnAdd != null)
-                btnAdd.Enabled = UserSession.HasPermission(menuCode, PermissionAction.Add);
+            ApplyButton(btnAdd, menuCode, PermissionAction.Add, hideWhenDenied);
+            ApplyButton(btnEdit, menuCode, PermissionAction.Edit, hideWhenDenied);
+            ApplyButton(btnDelete, menuCode, PermissionAction.Delete, hideWhenDenied);
+            ApplyButton(btnExport, menuCode, PermissionAction.Export, hideWhenDenied);
+        }
 
-            if (btnEdit != null)
-                btnEdit.Enabled = UserSession.HasPermission(menuCode, PermissionAction.Edit);
+        /// <summary>
+        /// Chặn mở Form/UserControl ngay Constructor hoặc FormLoad nếu không có quyền View.
+        /// Trả về false khi đã vô hiệu hóa control (không văng luồng cha).
+        /// </summary>
+        public static bool GuardFormAccess(Control host, string menuCode)
+        {
+            if (UserSession.HasPermission(menuCode, PermissionAction.View))
+                return true;
 
-            if (btnDelete != null)
-                btnDelete.Enabled = UserSession.HasPermission(menuCode, PermissionAction.Delete);
+            CheckAccess(menuCode, PermissionAction.View, showWarning: true);
+            host.Enabled = false;
+            host.Visible = false;
+            foreach (Control child in host.Controls)
+            {
+                child.Enabled = false;
+            }
 
-            if (btnExport != null)
-                btnExport.Enabled = UserSession.HasPermission(menuCode, PermissionAction.Export);
+            return false;
+        }
+
+        private static void ApplyButton(Control? button, string menuCode, PermissionAction action, bool hideWhenDenied)
+        {
+            if (button == null)
+                return;
+
+            bool allowed = UserSession.HasPermission(menuCode, action);
+            button.Enabled = allowed;
+            if (hideWhenDenied)
+                button.Visible = allowed;
         }
     }
 }

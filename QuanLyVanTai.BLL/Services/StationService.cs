@@ -14,20 +14,13 @@ namespace QuanLyVanTai.BLL.Services
 
     public class StationService
     {
-        private readonly AppDbContext _context;
-
-        public StationService(AppDbContext context)
-        {
-            _context = context;
-        }
-
-        public StationService() : this(new AppDbContext())
-        {
-        }
+        // Mỗi operation tạo context riêng → tránh concurrent DbContext
+        private static AppDbContext CreateContext() => new AppDbContext();
 
         public async Task<List<Station>> GetAllStationsAsync()
         {
-            return await _context.Stations
+            using var db = CreateContext();
+            return await db.Stations
                 .Include(s => s.Routes)
                 .AsNoTracking()
                 .OrderByDescending(s => s.Id)
@@ -36,7 +29,8 @@ namespace QuanLyVanTai.BLL.Services
 
         public async Task<List<Station>> SearchAndFilterStationsAsync(StationFilterCriteria criteria)
         {
-            var query = _context.Stations
+            using var db = CreateContext();
+            var query = db.Stations
                 .Include(s => s.Routes)
                 .AsNoTracking()
                 .AsQueryable();
@@ -46,34 +40,26 @@ namespace QuanLyVanTai.BLL.Services
             bool hasStatus = !string.IsNullOrWhiteSpace(criteria.Status) && criteria.Status != "Tất cả";
 
             if (!hasKeyword && !hasCity && !hasStatus)
-            {
                 return await query.OrderByDescending(s => s.Id).ToListAsync();
-            }
 
-            string kw = criteria.Keyword?.Trim().ToLower() ?? string.Empty;
-            string ct = criteria.City?.Trim().ToLower() ?? string.Empty;
-            string st = criteria.Status?.Trim().ToLower() ?? string.Empty;
+            string kw = criteria.Keyword?.Trim().ToLower() ?? "";
+            string ct = criteria.City?.Trim().ToLower() ?? "";
+            string st = criteria.Status?.Trim().ToLower() ?? "";
 
             if (criteria.UseAndLogic)
             {
                 if (hasKeyword)
-                {
                     query = query.Where(s =>
                         s.StationCode.ToLower().Contains(kw) ||
                         s.StationName.ToLower().Contains(kw) ||
                         s.Address.ToLower().Contains(kw) ||
                         s.City.ToLower().Contains(kw));
-                }
 
                 if (hasCity)
-                {
                     query = query.Where(s => s.City.ToLower() == ct);
-                }
 
                 if (hasStatus)
-                {
                     query = query.Where(s => s.Status.ToLower() == st);
-                }
             }
             else
             {
@@ -84,8 +70,7 @@ namespace QuanLyVanTai.BLL.Services
                         s.Address.ToLower().Contains(kw) ||
                         s.City.ToLower().Contains(kw))) ||
                     (hasCity && s.City.ToLower() == ct) ||
-                    (hasStatus && s.Status.ToLower() == st)
-                );
+                    (hasStatus && s.Status.ToLower() == st));
             }
 
             return await query.OrderByDescending(s => s.Id).ToListAsync();
@@ -93,24 +78,22 @@ namespace QuanLyVanTai.BLL.Services
 
         public async Task<(bool Success, string Message, Station? Station)> CreateStationAsync(Station station)
         {
-            bool exists = await _context.Stations.AnyAsync(s => s.StationCode == station.StationCode);
+            using var db = CreateContext();
+            bool exists = await db.Stations.AnyAsync(s => s.StationCode == station.StationCode);
             if (exists)
-            {
                 return (false, $"Mã trạm '{station.StationCode}' đã tồn tại!", null);
-            }
 
-            _context.Stations.Add(station);
-            await _context.SaveChangesAsync();
+            db.Stations.Add(station);
+            await db.SaveChangesAsync();
             return (true, "Thêm trạm dừng thành công!", station);
         }
 
         public async Task<(bool Success, string Message)> UpdateStationAsync(Station station)
         {
-            var existing = await _context.Stations.FindAsync(station.Id);
+            using var db = CreateContext();
+            var existing = await db.Stations.FindAsync(station.Id);
             if (existing == null)
-            {
                 return (false, "Không tìm thấy trạm dừng cần cập nhật!");
-            }
 
             existing.StationCode = station.StationCode;
             existing.StationName = station.StationName;
@@ -118,42 +101,36 @@ namespace QuanLyVanTai.BLL.Services
             existing.City = station.City;
             existing.Status = station.Status;
 
-            await _context.SaveChangesAsync();
+            await db.SaveChangesAsync();
             return (true, "Cập nhật thông tin trạm dừng thành công!");
         }
 
         public async Task<(bool Success, string Message)> DeleteStationAsync(int stationId, bool softDelete = true)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var db = CreateContext();
+            using var transaction = await db.Database.BeginTransactionAsync();
             try
             {
-                var station = await _context.Stations
+                var station = await db.Stations
                     .Include(s => s.Routes)
                     .FirstOrDefaultAsync(s => s.Id == stationId);
 
                 if (station == null)
-                {
                     return (false, "Không tìm thấy trạm dừng cần xóa!");
-                }
 
                 if (station.Routes.Count > 0 && !softDelete)
-                {
                     return (false, $"Trạm đang thuộc {station.Routes.Count} tuyến xe! Vui lòng chọn Xóa mềm.");
-                }
 
                 if (softDelete)
-                {
-                    _context.Stations.Remove(station);
-                }
+                    db.Stations.Remove(station);
                 else
                 {
                     station.Routes.Clear();
-                    _context.Entry(station).State = EntityState.Deleted;
+                    db.Entry(station).State = EntityState.Deleted;
                 }
 
-                await _context.SaveChangesAsync();
+                await db.SaveChangesAsync();
                 await transaction.CommitAsync();
-
                 return (true, $"Đã xóa trạm dừng [{station.StationName}] thành công!");
             }
             catch (Exception ex)
