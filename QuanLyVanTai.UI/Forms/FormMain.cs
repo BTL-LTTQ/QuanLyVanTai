@@ -5,6 +5,7 @@ using QuanLyVanTai.DAL;
 using Core.Helpers;
 using FontAwesome.Sharp;
 using QuanLyVanTai.UI.UserControls;
+using UserSession = Core.Security.UserSession;
 
 namespace QuanLyVanTai.UI
 {
@@ -299,7 +300,6 @@ namespace QuanLyVanTai.UI
                 // Tránh lỗi khi cập nhật ngôn ngữ
             }
         }
-        }
 
         private void ApplyTheme()
         {
@@ -494,7 +494,6 @@ btn.Height = 52;
         {
             CultureHelper.CultureChanged -= OnCultureChanged;
             base.OnFormClosed(e);
-        }
         }
     }
 }

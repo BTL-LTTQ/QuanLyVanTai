@@ -5,6 +5,7 @@ using FontAwesome.Sharp;
 using QuanLyVanTai.BLL.Services;
 using QuanLyVanTai.DAL.Models;
 using QuanLyVanTai.UI.Forms;
+using UserSession = Core.Security.UserSession;
 
 namespace QuanLyVanTai.UI.UserControls
 {

@@ -3,6 +3,7 @@ using Core.Helpers;
 using Core.Security;
 using QuanLyVanTai.BLL.Services;
 using QuanLyVanTai.DAL.Models;
+using UserSession = Core.Security.UserSession;
 
 namespace QuanLyVanTai.UI.UserControls
 {
