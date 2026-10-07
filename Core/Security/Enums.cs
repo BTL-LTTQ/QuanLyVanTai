@@ -25,6 +25,7 @@ namespace Core.Security
         public const string Station = "TramDung";
         public const string Vehicle = "PhuongTien";
         public const string Staff = "NhanSu";
+        public const string Service = "DichVu";
         public const string Ticket = "GiaVe";
         public const string Promotion = "KhuyenMai";
         public const string Permission = "PhanQuyen";
@@ -36,6 +37,7 @@ namespace Core.Security
             (Station, "Quản lý Trạm dừng"),
             (Vehicle, "Quản lý Phương tiện"),
             (Staff, "Quản lý Nhân sự"),
+            (Service, "Quản lý Dịch vụ"),
             (Ticket, "Quản lý Giá vé"),
             (Promotion, "Quản lý Khuyến mãi"),
             (Permission, "Quản lý Phân quyền"),

@@ -62,62 +62,114 @@ namespace QuanLyVanTai.UI.UserControls
         private void BuildCustomLayout()
         {
             this.Font = ThemeConfig.MainFont;
-            this.BackColor = ThemeConfig.BackgroundColor;
+            this.BackColor = Color.FromArgb(248, 250, 252);
 
             // ==========================================
-            // 1. Toolbar & Header
+            // 1. DASHBOARD HEADER với Statistics Cards
+            // ==========================================
+            Panel pnlDashboard = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 160,
+                BackColor = Color.FromArgb(248, 250, 252),
+                Padding = new Padding(20, 15, 20, 15)
+            };
+
+            Label lblPageTitle = new Label
+            {
+                Text = "📊 TRANG CHỦ - DASHBOARD QUẢN LÝ TUYẾN XE",
+                Font = new Font("Segoe UI", 13F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(30, 41, 59),
+                AutoSize = true,
+                Location = new Point(20, 15)
+            };
+            pnlDashboard.Controls.Add(lblPageTitle);
+
+            // Statistics Cards Container
+            Panel pnlStats = new Panel
+            {
+                Location = new Point(20, 50),
+                Size = new Size(1200, 95),
+                BackColor = Color.Transparent,
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+            };
+
+            // Card 1: Tổng tuyến xe
+            Panel cardTotalRoutes = CreateStatCard("🚌 Tổng Tuyến Xe", "0", Color.FromArgb(59, 130, 246), 0);
+            // Card 2: Đang hoạt động
+            Panel cardActiveRoutes = CreateStatCard("✅ Đang Hoạt Động", "0", Color.FromArgb(16, 185, 129), 310);
+            // Card 3: Tổng quãng đường
+            Panel cardTotalDistance = CreateStatCard("📏 Tổng Quãng Đường", "0 km", Color.FromArgb(245, 158, 11), 620);
+            // Card 4: Doanh thu ước tính
+            Panel cardRevenue = CreateStatCard("💰 Giá TB/Tuyến", "0 VNĐ", Color.FromArgb(239, 68, 68), 930);
+
+            pnlStats.Controls.AddRange(new Control[] { cardTotalRoutes, cardActiveRoutes, cardTotalDistance, cardRevenue });
+            pnlDashboard.Controls.Add(pnlStats);
+
+            this.Controls.Add(pnlDashboard);
+
+            // ==========================================
+            // 2. Toolbar & Action Buttons
             // ==========================================
             pnlToolbar.Dock = DockStyle.Top;
-            pnlToolbar.Height = 70;
+            pnlToolbar.Height = 75;
             pnlToolbar.BackColor = Color.White;
-            pnlToolbar.Padding = new Padding(15, 12, 15, 12);
+            pnlToolbar.Padding = new Padding(20, 15, 20, 15);
 
-            // Style Buttons
-            ThemeConfig.StyleSuccessButton(btnAdd, IconChar.Plus);
-            btnAdd.Text = " Thêm";
-            btnAdd.Size = new Size(100, 42);
-            btnAdd.Location = new Point(15, 14);
+            // Style Buttons với icon đẹp hơn
+            ThemeConfig.StyleSuccessButton(btnAdd, IconChar.PlusCircle);
+            btnAdd.Text = " Thêm Tuyến";
+            btnAdd.Size = new Size(130, 45);
+            btnAdd.Location = new Point(20, 15);
+            btnAdd.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
 
-            ThemeConfig.StylePrimaryButton(btnEdit, IconChar.Pen);
-            btnEdit.Text = " Sửa";
-            btnEdit.Size = new Size(95, 42);
-            btnEdit.Location = new Point(125, 14);
+            ThemeConfig.StylePrimaryButton(btnEdit, IconChar.PenToSquare);
+            btnEdit.Text = " Chỉnh Sửa";
+            btnEdit.Size = new Size(130, 45);
+            btnEdit.Location = new Point(160, 15);
+            btnEdit.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
 
-            ThemeConfig.StyleDangerButton(btnDelete, IconChar.Trash);
+            ThemeConfig.StyleDangerButton(btnDelete, IconChar.TrashAlt);
             btnDelete.Text = " Xóa";
-            btnDelete.Size = new Size(95, 42);
-            btnDelete.Location = new Point(230, 14);
+            btnDelete.Size = new Size(110, 45);
+            btnDelete.Location = new Point(300, 15);
+            btnDelete.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
 
             ThemeConfig.StylePrimaryButton(btnSave, IconChar.FloppyDisk);
             btnSave.Text = " Lưu";
-            btnSave.Size = new Size(95, 42);
-            btnSave.Location = new Point(335, 14);
+            btnSave.Size = new Size(110, 45);
+            btnSave.Location = new Point(420, 15);
             btnSave.Enabled = false;
+            btnSave.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
 
-            ThemeConfig.StyleSecondaryButton(btnCancel, IconChar.Xmark);
+            ThemeConfig.StyleSecondaryButton(btnCancel, IconChar.Times);
             btnCancel.Text = " Hủy";
-            btnCancel.Size = new Size(90, 42);
-            btnCancel.Location = new Point(440, 14);
+            btnCancel.Size = new Size(100, 45);
+            btnCancel.Location = new Point(540, 15);
             btnCancel.Enabled = false;
+            btnCancel.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
 
-            ThemeConfig.StyleSecondaryButton(btnHistory, IconChar.ClockRotateLeft);
-            btnHistory.Text = " Lịch sử";
+            ThemeConfig.StyleSecondaryButton(btnHistory, IconChar.History);
+            btnHistory.Text = " Lịch Sử";
             btnHistory.BackColor = Color.FromArgb(100, 116, 139);
-            btnHistory.Size = new Size(105, 42);
-            btnHistory.Location = new Point(540, 14);
+            btnHistory.Size = new Size(120, 45);
+            btnHistory.Location = new Point(650, 15);
+            btnHistory.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
 
             ThemeConfig.StyleSecondaryButton(btnExport, IconChar.FileExcel);
-            btnExport.Text = " Xuất file";
-            btnExport.BackColor = Color.FromArgb(16, 185, 129); // Green
-            btnExport.Size = new Size(115, 42);
-            btnExport.Location = new Point(655, 14);
+            btnExport.Text = " Xuất Excel";
+            btnExport.BackColor = Color.FromArgb(16, 185, 129);
+            btnExport.Size = new Size(130, 45);
+            btnExport.Location = new Point(780, 15);
+            btnExport.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
 
-            // Search box
-            txtSearch.Size = new Size(220, 36);
-            txtSearch.Location = new Point(810, 18);
-            txtSearch.Font = new Font("Segoe UI", 10.5F);
-            txtSearch.PlaceholderText = "🔍 Tìm tuyến, lộ trình...";
+            // Search box với style đẹp hơn
+            txtSearch.Size = new Size(280, 45);
+            txtSearch.Location = new Point(920, 15);
+            txtSearch.Font = new Font("Segoe UI", 11F);
+            txtSearch.PlaceholderText = "🔍 Tìm kiếm tuyến xe, lộ trình...";
             txtSearch.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            txtSearch.BorderStyle = BorderStyle.FixedSingle;
 
             pnlToolbar.Controls.AddRange([btnAdd, btnEdit, btnDelete, btnSave, btnCancel, btnHistory, btnExport, txtSearch]);
             this.Controls.Add(pnlToolbar);
@@ -281,6 +333,61 @@ namespace QuanLyVanTai.UI.UserControls
                 Font = new Font("Segoe UI", 9F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(71, 85, 105)
             };
+        }
+
+        private Panel CreateStatCard(string title, string value, Color accentColor, int xPos)
+        {
+            Panel card = new Panel
+            {
+                Size = new Size(290, 95),
+                Location = new Point(xPos, 0),
+                BackColor = Color.White,
+                BorderStyle = BorderStyle.None,
+                Padding = new Padding(15, 12, 15, 12)
+            };
+
+            // Accent bar bên trái
+            Panel accentBar = new Panel
+            {
+                Size = new Size(4, 95),
+                Location = new Point(0, 0),
+                BackColor = accentColor
+            };
+            card.Controls.Add(accentBar);
+
+            // Title
+            Label lblTitle = new Label
+            {
+                Text = title,
+                Font = new Font("Segoe UI", 9.5F, FontStyle.Regular),
+                ForeColor = Color.FromArgb(100, 116, 139),
+                Location = new Point(20, 15),
+                AutoSize = true
+            };
+            card.Controls.Add(lblTitle);
+
+            // Value
+            Label lblValue = new Label
+            {
+                Text = value,
+                Font = new Font("Segoe UI", 18F, FontStyle.Bold),
+                ForeColor = accentColor,
+                Location = new Point(20, 40),
+                AutoSize = true,
+                Tag = "statValue" // Tag để update dynamic
+            };
+            card.Controls.Add(lblValue);
+
+            // Shadow effect (optional - simulated with border)
+            card.Paint += (s, e) =>
+            {
+                using (Pen pen = new Pen(Color.FromArgb(226, 232, 240), 2))
+                {
+                    e.Graphics.DrawRectangle(pen, 0, 0, card.Width - 1, card.Height - 1);
+                }
+            };
+
+            return card;
         }
 
         private void SetupEvents()
