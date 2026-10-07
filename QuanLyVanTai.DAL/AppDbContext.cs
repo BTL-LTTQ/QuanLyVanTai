@@ -29,7 +29,8 @@ namespace QuanLyVanTai.DAL
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer("Server=.;Database=QuanLyVanTaiDb;Trusted_Connection=True;TrustServerCertificate=True;");
+                // Fallback connection string hỗ trợ chạy Migration từ PMC hoặc CLI
+                optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=QuanLyVanTaiDb;Trusted_Connection=True;TrustServerCertificate=True;");
             }
         }
 

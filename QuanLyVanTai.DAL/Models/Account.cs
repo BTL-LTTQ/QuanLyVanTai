@@ -54,6 +54,25 @@ namespace QuanLyVanTai.DAL.Models
         [MaxLength(50)]
         public string? DeletedBy { get; set; }
 
+        // Security & Authentication enhancement fields
+        [MaxLength(255)]
+        public string? PasswordSalt { get; set; }
+
+        public int FailedLoginAttempts { get; set; } = 0;
+
+        public DateTime? LockoutEndTime { get; set; }
+
+        [MaxLength(255)]
+        public string? SecurityQuestion { get; set; }
+
+        [MaxLength(255)]
+        public string? SecurityAnswerHash { get; set; }
+
+        [MaxLength(100)]
+        public string? ResetToken { get; set; }
+
+        public DateTime? ResetTokenExpiry { get; set; }
+
         // Navigation Properties: 1 Tài khoản nhân viên có thể lập/bán nhiều vé
         public virtual ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
     }

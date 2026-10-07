@@ -2,6 +2,8 @@ using Core.Configs;
 using Core.Security;
 using QuanLyVanTai.BLL.Services;
 using QuanLyVanTai.DAL;
+using Core.Helpers;
+using FontAwesome.Sharp;
 using QuanLyVanTai.UI.UserControls;
 
 namespace QuanLyVanTai.UI
@@ -12,6 +14,10 @@ namespace QuanLyVanTai.UI
         private readonly AuditLogService _auditLogService = new();
         private readonly ComboBox cboCurrentRole = new();
         private readonly Label lblRoleBadge = new();
+        private Label lblUserGreeting = null!;
+        private ComboBox cboMainLanguage = null!;
+        private IconButton btnLogout = null!;
+        private bool _isChangingLanguage = false;
 
         public FormMain()
         {
@@ -23,7 +29,7 @@ namespace QuanLyVanTai.UI
             SetupCanhBao();
             SetupRoleSwitcher();
             ApplyTheme();
-
+// --- GỘP CHUNG VÀO TRONG CONSTRUCTOR ---
             UserSession.SessionChanged += OnSessionChanged;
             btnDong.Click += btnDong_Click;
 
@@ -34,8 +40,14 @@ namespace QuanLyVanTai.UI
             };
 
             this.Load += FormMain_Load;
-        }
 
+            // Setup của nhánh main
+            SetupHeaderAuthControls();
+            CultureHelper.CultureChanged += OnCultureChanged;
+            UpdateLocalizedTexts();
+        } // Đóng constructor (Đã xóa các dấu ngoặc dư thừa)
+
+        // --- CÁC HÀM CỦA NHÁNH FEATURE ---
         private async void FormMain_Load(object? sender, EventArgs e)
         {
             try
@@ -146,6 +158,149 @@ namespace QuanLyVanTai.UI
             SetMenuVisual(btnNhatKy, SystemMenus.AuditLog);
         }
 
+        // --- CÁC HÀM CỦA NHÁNH MAIN ---
+        private void SetupHeaderAuthControls()
+        {
+            // 1. Nhãn chào người dùng
+            lblUserGreeting = new Label
+            {
+                AutoSize = false,
+                Size = new Size(280, 30),
+                ForeColor = Color.White,
+                Font = ThemeConfig.MainFont,
+                TextAlign = ContentAlignment.MiddleRight,
+                Anchor = AnchorStyles.Top | AnchorStyles.Right
+            };
+
+            var user = SessionManager.CurrentUser;
+            if (user != null)
+            {
+                lblUserGreeting.Text = $"👤 {user.FullName} ({user.Role})";
+            }
+            else
+            {
+                lblUserGreeting.Text = "👤 Khách (Guest)";
+            }
+
+            // 2. Chuyển đổi ngôn ngữ ở header
+            cboMainLanguage = new ComboBox
+            {
+                Size = new Size(130, 30),
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Font = new Font("Segoe UI", 9F),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right
+            };
+
+            cboMainLanguage.DisplayMember = "DisplayName";
+            cboMainLanguage.ValueMember = "Code";
+            cboMainLanguage.DataSource = CultureHelper.SupportedCultures
+                .Select(c => new { Code = c.Code, DisplayName = $"{c.Flag} {c.DisplayName}" })
+                .ToList();
+
+            string current = CultureHelper.CurrentCulture.Name;
+            var match = CultureHelper.SupportedCultures.FirstOrDefault(c => c.Code.Equals(current, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrEmpty(match.Code))
+            {
+                cboMainLanguage.SelectedValue = match.Code;
+            }
+
+            cboMainLanguage.SelectedIndexChanged += (s, e) => {
+                if (_isChangingLanguage || cboMainLanguage.SelectedValue == null) return;
+                string selectedLang = cboMainLanguage.SelectedValue.ToString()!;
+                CultureHelper.SetCulture(selectedLang, savePreference: true);
+            };
+
+            // 3. Nút Đăng xuất
+            btnLogout = new IconButton
+            {
+                Size = new Size(120, 36),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right
+            };
+            ThemeConfig.StyleDangerButton(btnLogout, IconChar.RightFromBracket);
+            btnLogout.Text = " Đăng xuất";
+            btnLogout.Click += BtnLogout_Click;
+
+            // Định vị các control bên phải header
+            int top = 18;
+            int right = pnlHeader.Width - 140;
+
+            btnLogout.Location = new Point(right, top);
+            cboMainLanguage.Location = new Point(right - 145, top + 3);
+            lblUserGreeting.Location = new Point(right - 145 - 290, top + 3);
+
+            pnlHeader.Controls.Add(lblUserGreeting);
+            pnlHeader.Controls.Add(cboMainLanguage);
+            pnlHeader.Controls.Add(btnLogout);
+
+            pnlHeader.Resize += (s, e) => {
+                int r = pnlHeader.Width - 140;
+                btnLogout.Location = new Point(r, top);
+                cboMainLanguage.Location = new Point(r - 145, top + 3);
+                lblUserGreeting.Location = new Point(r - 145 - 290, top + 3);
+            };
+        }
+
+        private void BtnLogout_Click(object? sender, EventArgs e)
+        {
+            var confirm = MessageBox.Show(
+                "Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?",
+                "Xác Nhận Đăng Xuất",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question
+            );
+
+            if (confirm == DialogResult.Yes)
+            {
+                SessionManager.ClearSession();
+                this.Close();
+            }
+        }
+
+        private void OnCultureChanged()
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(OnCultureChanged));
+                return;
+            }
+
+            _isChangingLanguage = true;
+            try
+            {
+                string current = CultureHelper.CurrentCulture.Name;
+                var match = CultureHelper.SupportedCultures.FirstOrDefault(c => c.Code.Equals(current, StringComparison.OrdinalIgnoreCase));
+                if (!string.IsNullOrEmpty(match.Code))
+                {
+                    cboMainLanguage.SelectedValue = match.Code;
+                }
+                UpdateLocalizedTexts();
+            }
+            finally
+            {
+                _isChangingLanguage = false;
+            }
+        }
+
+        private void UpdateLocalizedTexts()
+        {
+            try
+            {
+                Text = CultureHelper.GetString("AppTitle");
+                lblTitle.Text = CultureHelper.GetString("AppTitle");
+                btnTrangChu.Text = CultureHelper.CurrentCulture.Name.StartsWith("en") ? "Home" :
+                                   CultureHelper.CurrentCulture.Name.StartsWith("ja") ? "ホーム" : "Trang Chủ";
+                btnDichVu.Text = CultureHelper.CurrentCulture.Name.StartsWith("en") ? "Services" :
+                                 CultureHelper.CurrentCulture.Name.StartsWith("ja") ? "サービス" : "Dịch vụ";
+                btnLogout.Text = CultureHelper.CurrentCulture.Name.StartsWith("en") ? " Logout" :
+                                 CultureHelper.CurrentCulture.Name.StartsWith("ja") ? " ログアウト" : " Đăng xuất";
+            }
+            catch
+            {
+                // Tránh lỗi khi cập nhật ngôn ngữ
+            }
+        }
+        }
+
         private void ApplyTheme()
         {
             pnlSidebar.BackColor = ThemeConfig.TextMain;
@@ -159,7 +314,7 @@ namespace QuanLyVanTai.UI
                 btn.ForeColor = Color.White;
                 btn.IconChar = icon;
                 btn.IconColor = Color.White;
-                btn.IconSize = 26;
+                btn.IconSize = 28;
                 btn.Font = ThemeConfig.MainFont;
                 btn.FlatStyle = FlatStyle.Flat;
                 btn.FlatAppearance.BorderSize = 0;
@@ -167,40 +322,27 @@ namespace QuanLyVanTai.UI
                 btn.TextImageRelation = TextImageRelation.ImageBeforeText;
                 btn.ImageAlign = ContentAlignment.MiddleLeft;
                 btn.Padding = new Padding(12, 0, 0, 0);
-                btn.Height = 52;
+btn.Height = 52;
             }
 
+            // Cấu hình Icon cho menu (Text ngôn ngữ được xử lý ở UpdateLocalizedTexts)
             StyleSidebarButton(btnTrangChu, FontAwesome.Sharp.IconChar.Route);
-            btnTrangChu.Text = " Tuyến Xe";
-
             StyleSidebarButton(btnDichVu, FontAwesome.Sharp.IconChar.Bus);
-            btnDichVu.Text = " Phương Tiện";
-
             StyleSidebarButton(btnNhanSu, FontAwesome.Sharp.IconChar.Users);
-            btnNhanSu.Text = " Nhân Sự";
-
             StyleSidebarButton(btnGiaVe, FontAwesome.Sharp.IconChar.Tag);
-            btnGiaVe.Text = " Giá Vé";
-
             StyleSidebarButton(btnKhuyenMai, FontAwesome.Sharp.IconChar.Percent);
-            btnKhuyenMai.Text = " Khuyến Mãi";
-
             StyleSidebarButton(btnPhanQuyen, FontAwesome.Sharp.IconChar.ShieldHalved);
-            btnPhanQuyen.Text = " Phân Quyền";
-
             StyleSidebarButton(btnNhatKy, FontAwesome.Sharp.IconChar.ClockRotateLeft);
-            btnNhatKy.Text = " Nhật Ký";
-
             StyleSidebarButton(btnCaiDat, FontAwesome.Sharp.IconChar.Gear);
-            btnCaiDat.Text = " Cài Đặt";
         }
 
-        /// <summary>
-        /// Mở Menu có cơ chế BẢO MẬT CHẶN QUA CODE: Kiểm tra quyền trước, tuyệt đối không nạp Form nếu không có quyền
-        /// </summary>
+        // ==========================================
+        // CƠ CHẾ ĐIỀU HƯỚNG & HIỂN THỊ 
+        // (Gộp bảo mật của feature + Try Catch của main)
+        // ==========================================
         private void OpenMenu(string menuCode, string title, Func<UserControl> createControl)
         {
-            // 1. Lập trình chặn hoàn toàn việc mở Form trái phép qua code
+            // 1. Kiểm tra quyền trước khi nạp Form
             if (!AuthorizationGuard.CheckAccess(menuCode, PermissionAction.View, showWarning: false))
             {
                 AnNoiDungCu();
@@ -218,11 +360,18 @@ namespace QuanLyVanTai.UI
 
         private void ShowUserControl(UserControl uc)
         {
-            pnlContent.Controls.Clear();
-            pnlContent.Controls.Add(pnlCanhBao); // Giữ panel cảnh báo trong content
-            uc.Dock = DockStyle.Fill;
-            pnlContent.Controls.Add(uc);
-            uc.BringToFront();
+            try
+            {
+                pnlContent.Controls.Clear();
+                pnlContent.Controls.Add(pnlCanhBao); // Giữ panel cảnh báo bảo mật
+                uc.Dock = DockStyle.Fill;
+                pnlContent.Controls.Add(uc);
+                uc.BringToFront();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi hiển thị nội dung: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void AnNoiDungCu()
@@ -233,15 +382,20 @@ namespace QuanLyVanTai.UI
 
         // ==========================================
         // SIDEBAR BUTTON CLICKS
+        // (Gộp OpenMenu của feature + Tiêu đề đa ngôn ngữ của main)
         // ==========================================
-        private void btnTrangChu_Click(object sender, EventArgs e)
+        private void btnTrangChu_Click(object? sender, EventArgs e)
         {
-            OpenMenu(SystemMenus.Route, "QUẢN LÝ TUYẾN XE & LỘ TRÌNH", () => new UcManageRoute());
+            string title = CultureHelper.CurrentCulture.Name.StartsWith("en") ? "HOME / ROUTE MANAGEMENT" :
+                           CultureHelper.CurrentCulture.Name.StartsWith("ja") ? "ホーム / 路線管理" : "QUẢN LÝ TUYẾN XE & LỘ TRÌNH";
+            OpenMenu(SystemMenus.Route, title, () => new UcManageRoute());
         }
 
-        private void btnDichVu_Click(object sender, EventArgs e)
+        private void btnDichVu_Click(object? sender, EventArgs e)
         {
-            OpenMenu(SystemMenus.Vehicle, "QUẢN LÝ PHƯƠNG TIỆN & TRẠM DỪNG", () => new UcManageVehicleAndStation());
+            string title = CultureHelper.CurrentCulture.Name.StartsWith("en") ? "SERVICES MANAGEMENT" :
+                           CultureHelper.CurrentCulture.Name.StartsWith("ja") ? "サービス管理" : "QUẢN LÝ PHƯƠNG TIỆN & TRẠM DỪNG";
+            OpenMenu(SystemMenus.Vehicle, title, () => new UcManageVehicleAndStation());
         }
 
         private void btnNhanSu_Click(object sender, EventArgs e)
@@ -270,7 +424,7 @@ namespace QuanLyVanTai.UI
         }
 
         // ==========================================
-        // CẢNH BÁO AN NINH
+        // CẢNH BÁO AN NINH (Từ nhánh feature)
         // ==========================================
         private void SetupCanhBao()
         {
@@ -331,6 +485,16 @@ namespace QuanLyVanTai.UI
         private void btnDong_Click(object? sender, EventArgs e)
         {
             AnCanhBao();
+        }
+
+        // ==========================================
+        // DỌN DẸP BỘ NHỚ (Từ nhánh main)
+        // ==========================================
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            CultureHelper.CultureChanged -= OnCultureChanged;
+            base.OnFormClosed(e);
+        }
         }
     }
 }
