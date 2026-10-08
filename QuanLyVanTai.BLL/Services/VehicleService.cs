@@ -130,11 +130,18 @@ namespace QuanLyVanTai.BLL.Services
                     return (false, $"Xe đang có {vehicle.Tickets.Count} vé liên quan! Vui lòng chọn Xóa mềm.");
 
                 if (softDelete)
+                {
+                    // Soft delete: Remove() — interceptor ISoftDelete sẽ chuyển thành IsDeleted=true
                     db.Vehicles.Remove(vehicle);
+                    await db.SaveChangesAsync();
+                }
                 else
-                    db.Entry(vehicle).State = EntityState.Deleted;
+                {
+                    // Hard delete: xóa vĩnh viễn bằng SQL trực tiếp (bỏ qua interceptor ISoftDelete)
+                    await db.Database.ExecuteSqlRawAsync(
+                        "DELETE FROM Vehicles WHERE Id = {0}", vehicle.Id);
+                }
 
-                await db.SaveChangesAsync();
                 await transaction.CommitAsync();
                 return (true, $"Đã xóa phương tiện [{vehicle.LicensePlate}] thành công!");
             }

@@ -171,20 +171,31 @@ namespace QuanLyVanTai.BLL.Services
                 if (ticketCount > 0 && !softDelete)
                     return (false, $"Không thể xóa vĩnh viễn: Tuyến xe đang có {ticketCount} vé liên quan! Vui lòng chọn Xóa mềm.");
 
-                foreach (var v in route.Vehicles)
-                    v.RouteId = null;
-
                 if (softDelete)
                 {
+                    // Soft delete: cập nhật vehicle links rồi Remove() — interceptor sẽ chuyển IsDeleted=true
+                    foreach (var v in route.Vehicles)
+                        v.RouteId = null;
+
                     db.Routes.Remove(route);
+                    await db.SaveChangesAsync();
                 }
                 else
                 {
+                    // Hard delete: xóa vĩnh viễn khỏi DB
+                    // Bước 1: Flush vehicle RouteId = null (dùng EF update bình thường)
+                    foreach (var v in route.Vehicles)
+                        v.RouteId = null;
+
+                    // Bước 2: Xóa quan hệ N-N (RouteStations junction table)
                     route.Stations.Clear();
-                    db.Entry(route).State = EntityState.Deleted;
+                    await db.SaveChangesAsync(); // flush vehicle + station links
+
+                    // Bước 3: Xóa thẳng bằng SQL trực tiếp (bỏ qua interceptor ISoftDelete)
+                    await db.Database.ExecuteSqlRawAsync(
+                        "DELETE FROM Routes WHERE Id = {0}", route.Id);
                 }
 
-                await db.SaveChangesAsync();
                 await transaction.CommitAsync();
 
                 string msg = softDelete
