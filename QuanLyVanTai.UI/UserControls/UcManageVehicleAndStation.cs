@@ -284,23 +284,23 @@ namespace QuanLyVanTai.UI.UserControls
             y += 75;
             ThemeConfig.StyleSuccessButton(btnVehAdd, IconChar.Plus);
             btnVehAdd.Text = " Thêm";
-            btnVehAdd.Size = new Size(80, 36);
-            btnVehAdd.Location = new Point(18, y);
+            btnVehAdd.Size = new Size(82, 36);
+            btnVehAdd.Location = new Point(12, y);
 
             ThemeConfig.StylePrimaryButton(btnVehEdit, IconChar.Pen);
             btnVehEdit.Text = " Sửa";
-            btnVehEdit.Size = new Size(75, 36);
-            btnVehEdit.Location = new Point(105, y);
+            btnVehEdit.Size = new Size(82, 36);
+            btnVehEdit.Location = new Point(100, y);
 
             ThemeConfig.StyleDangerButton(btnVehDelete, IconChar.Trash);
             btnVehDelete.Text = " Xóa";
-            btnVehDelete.Size = new Size(75, 36);
+            btnVehDelete.Size = new Size(82, 36);
             btnVehDelete.Location = new Point(188, y);
 
             ThemeConfig.StylePrimaryButton(btnVehSave, IconChar.FloppyDisk);
             btnVehSave.Text = " Lưu";
-            btnVehSave.Size = new Size(75, 36);
-            btnVehSave.Location = new Point(270, y);
+            btnVehSave.Size = new Size(82, 36);
+            btnVehSave.Location = new Point(276, y);
             btnVehSave.Enabled = false;
 
             pnlVehDetail.Controls.AddRange([btnVehAdd, btnVehEdit, btnVehDelete, btnVehSave]);
@@ -463,23 +463,23 @@ namespace QuanLyVanTai.UI.UserControls
             y2 += 75;
             ThemeConfig.StyleSuccessButton(btnStAdd, IconChar.Plus);
             btnStAdd.Text = " Thêm";
-            btnStAdd.Size = new Size(80, 36);
-            btnStAdd.Location = new Point(18, y2);
+            btnStAdd.Size = new Size(82, 36);
+            btnStAdd.Location = new Point(12, y2);
 
             ThemeConfig.StylePrimaryButton(btnStEdit, IconChar.Pen);
             btnStEdit.Text = " Sửa";
-            btnStEdit.Size = new Size(75, 36);
-            btnStEdit.Location = new Point(105, y2);
+            btnStEdit.Size = new Size(82, 36);
+            btnStEdit.Location = new Point(100, y2);
 
             ThemeConfig.StyleDangerButton(btnStDelete, IconChar.Trash);
             btnStDelete.Text = " Xóa";
-            btnStDelete.Size = new Size(75, 36);
+            btnStDelete.Size = new Size(82, 36);
             btnStDelete.Location = new Point(188, y2);
 
             ThemeConfig.StylePrimaryButton(btnStSave, IconChar.FloppyDisk);
             btnStSave.Text = " Lưu";
-            btnStSave.Size = new Size(75, 36);
-            btnStSave.Location = new Point(270, y2);
+            btnStSave.Size = new Size(82, 36);
+            btnStSave.Location = new Point(276, y2);
             btnStSave.Enabled = false;
 
             pnlStDetail.Controls.AddRange([btnStAdd, btnStEdit, btnStDelete, btnStSave]);

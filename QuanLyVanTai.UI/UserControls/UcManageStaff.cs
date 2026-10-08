@@ -150,13 +150,13 @@ namespace QuanLyVanTai.UI.UserControls
 
             ThemeConfig.StyleSecondaryButton(btnRefresh, IconChar.RotateLeft);
             btnRefresh.Text = " Làm mới";
-            btnRefresh.Size = new Size(100, 30);
+            btnRefresh.Size = new Size(105, 30);
             btnRefresh.Location = new Point(535, 13);
 
             ThemeConfig.StyleSuccessButton(btnAdd, IconChar.UserPlus);
             btnAdd.Text = " Thêm";
             btnAdd.Size = new Size(95, 30);
-            btnAdd.Location = new Point(645, 13);
+            btnAdd.Location = new Point(648, 13);
 
             ThemeConfig.StyleSecondaryButton(btnExport, IconChar.FileExcel);
             btnExport.Text = " Xuất file";
@@ -292,27 +292,27 @@ namespace QuanLyVanTai.UI.UserControls
             // Buttons
             ThemeConfig.StylePrimaryButton(btnSave, IconChar.FloppyDisk);
             btnSave.Text = " Lưu";
-            btnSave.Size = new Size(80, 36);
-            btnSave.Location = new Point(18, y);
+            btnSave.Size = new Size(82, 36);
+            btnSave.Location = new Point(12, y);
             btnSave.Enabled = false;
 
             ThemeConfig.StyleSecondaryButton(btnCancel, IconChar.Xmark);
             btnCancel.Text = " Hủy";
-            btnCancel.Size = new Size(78, 36);
-            btnCancel.Location = new Point(105, y);
+            btnCancel.Size = new Size(82, 36);
+            btnCancel.Location = new Point(100, y);
             btnCancel.Enabled = false;
 
             ThemeConfig.StyleDangerButton(btnDelete, IconChar.Trash);
             btnDelete.Text = " Xóa";
-            btnDelete.Size = new Size(80, 36);
-            btnDelete.Location = new Point(190, y);
+            btnDelete.Size = new Size(82, 36);
+            btnDelete.Location = new Point(188, y);
             btnDelete.Enabled = false;
 
             ThemeConfig.StyleSecondaryButton(btnResetPwd, IconChar.Key);
-            btnResetPwd.Text = " Reset MK";
+            btnResetPwd.Text = " Đặt lại MK";
             btnResetPwd.BackColor = Color.FromArgb(245, 158, 11);
-            btnResetPwd.Size = new Size(100, 36);
-            btnResetPwd.Location = new Point(277, y);
+            btnResetPwd.Size = new Size(102, 36);
+            btnResetPwd.Location = new Point(276, y);
             btnResetPwd.Enabled = false;
 
             pnlDetail.Controls.AddRange([btnSave, btnCancel, btnDelete, btnResetPwd]);
