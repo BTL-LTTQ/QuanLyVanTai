@@ -178,19 +178,19 @@ namespace QuanLyVanTai.UI.UserControls
 
             ThemeConfig.StyleSecondaryButton(btnRefresh, IconChar.RotateLeft);
             btnRefresh.Text = " Làm mới";
-            btnRefresh.Size = new Size(100, 30);
-            btnRefresh.Location = new Point(480, 44);
+            btnRefresh.Size = new Size(105, 32);
+            btnRefresh.Location = new Point(480, 42);
 
             ThemeConfig.StyleSuccessButton(btnAdd, IconChar.Plus);
             btnAdd.Text = " Thêm vé";
-            btnAdd.Size = new Size(105, 30);
-            btnAdd.Location = new Point(590, 44);
+            btnAdd.Size = new Size(110, 32);
+            btnAdd.Location = new Point(595, 42);
 
             ThemeConfig.StyleSecondaryButton(btnExport, IconChar.FileExcel);
             btnExport.Text = " Xuất file";
             btnExport.BackColor = Color.FromArgb(16, 185, 129);
-            btnExport.Size = new Size(110, 30);
-            btnExport.Location = new Point(705, 44);
+            btnExport.Size = new Size(110, 32);
+            btnExport.Location = new Point(715, 42);
 
             pnlToolbar.Controls.AddRange([
                 txtKeyword, cboRoute, cboPayStatus, cboTicketStatus,
@@ -349,27 +349,27 @@ namespace QuanLyVanTai.UI.UserControls
             // Action Buttons
             ThemeConfig.StylePrimaryButton(btnSave, IconChar.FloppyDisk);
             btnSave.Text = " Lưu";
-            btnSave.Size = new Size(80, 36);
-            btnSave.Location = new Point(18, y);
+            btnSave.Size = new Size(82, 36);
+            btnSave.Location = new Point(12, y);
             btnSave.Enabled = false;
 
             ThemeConfig.StyleSecondaryButton(btnCancel, IconChar.Xmark);
-            btnCancel.Text = " Hủy bỏ";
-            btnCancel.Size = new Size(90, 36);
-            btnCancel.Location = new Point(105, y);
+            btnCancel.Text = " Hủy";
+            btnCancel.Size = new Size(82, 36);
+            btnCancel.Location = new Point(100, y);
             btnCancel.Enabled = false;
 
             ThemeConfig.StyleDangerButton(btnDelete, IconChar.Trash);
             btnDelete.Text = " Xóa";
-            btnDelete.Size = new Size(80, 36);
-            btnDelete.Location = new Point(205, y);
+            btnDelete.Size = new Size(82, 36);
+            btnDelete.Location = new Point(188, y);
             btnDelete.Enabled = false;
 
             ThemeConfig.StyleSecondaryButton(btnCancelTicket, IconChar.Ban);
             btnCancelTicket.Text = " Hủy Vé";
             btnCancelTicket.BackColor = Color.FromArgb(245, 158, 11);
-            btnCancelTicket.Size = new Size(88, 36);
-            btnCancelTicket.Location = new Point(292, y);
+            btnCancelTicket.Size = new Size(95, 36);
+            btnCancelTicket.Location = new Point(276, y);
             btnCancelTicket.Enabled = false;
 
             pnlDetail.Controls.AddRange([btnSave, btnCancel, btnDelete, btnCancelTicket]);

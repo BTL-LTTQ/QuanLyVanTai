@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Core.Interfaces;
 using Core.Security;
@@ -8,6 +10,42 @@ namespace QuanLyVanTai.DAL
 {
     public class AppDbContext : DbContext
     {
+        // =================================================================
+        // Salt cố định (deterministic) dùng cho seed data mặc định.
+        // KHÔNG dùng cho tài khoản thực — tài khoản thực dùng salt ngẫu nhiên.
+        // Chuỗi base64 dưới đây = SHA256("QuanLyVanTai_SeedSalt_2026") lấy 16 bytes đầu
+        // =================================================================
+        private const string SeedSaltAdmin    = "seed_salt_admin_v1_2026==";
+        private const string SeedSaltManager  = "seed_salt_qly_v1_2026===";
+        private const string SeedSaltStaff    = "seed_salt_nv_v1_2026====";
+
+        /// <summary>
+        /// Băm mật khẩu bằng PBKDF2 SHA-256 với salt cố định để dùng trong seed data.
+        /// Hàm này chỉ được gọi tại compile-time (static initializer) để tạo giá trị cố định.
+        /// </summary>
+        private static (string hash, string salt) HashSeedPassword(string password, string fixedSaltBase64)
+        {
+            // Đảm bảo fixedSaltBase64 là valid base64 đúng độ dài (16 bytes = 24 chars base64)
+            // Dùng UTF8 bytes của chuỗi salt cố định làm key material thay vì base64 decode
+            // để tránh padding issue
+            byte[] saltBytes = SHA256.HashData(Encoding.UTF8.GetBytes(fixedSaltBase64)).Take(16).ToArray();
+            string normalizedSalt = Convert.ToBase64String(saltBytes);
+
+            byte[] hash = Rfc2898DeriveBytes.Pbkdf2(
+                password: Encoding.UTF8.GetBytes(password),
+                salt: saltBytes,
+                iterations: 100_000,
+                hashAlgorithm: HashAlgorithmName.SHA256,
+                outputLength: 32
+            );
+            return (Convert.ToBase64String(hash), normalizedSalt);
+        }
+
+        // Pre-compute hash + salt cho 3 tài khoản seed (static = chỉ tính 1 lần)
+        private static readonly (string Hash, string Salt) _adminCred    = HashSeedPassword("admin123",    SeedSaltAdmin);
+        private static readonly (string Hash, string Salt) _managerCred  = HashSeedPassword("quanly123",   SeedSaltManager);
+        private static readonly (string Hash, string Salt) _staffCred    = HashSeedPassword("nhanvien123", SeedSaltStaff);
+
         public AppDbContext()
         {
         }
@@ -49,13 +87,15 @@ namespace QuanLyVanTai.DAL
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
                 entity.HasQueryFilter(e => !e.IsDeleted);
 
-                // Seed data tài khoản Admin và Nhân viên mặc định
+                // Seed data tài khoản mặc định — mật khẩu đã được băm PBKDF2 SHA-256 + salt
+                // Mật khẩu mặc định: admin=admin123 | quanly=quanly123 | nhanvien=nhanvien123
                 entity.HasData(
                     new Account
                     {
                         Id = 1,
                         Username = "admin",
-                        PasswordHash = "admin123",
+                        PasswordHash = _adminCred.Hash,
+                        PasswordSalt = _adminCred.Salt,
                         FullName = "Quản trị hệ thống",
                         Email = "admin@vantai.com",
                         PhoneNumber = "0988888888",
@@ -68,7 +108,8 @@ namespace QuanLyVanTai.DAL
                     {
                         Id = 2,
                         Username = "quanly",
-                        PasswordHash = "quanly123",
+                        PasswordHash = _managerCred.Hash,
+                        PasswordSalt = _managerCred.Salt,
                         FullName = "Nguyễn Văn Quản Lý",
                         Email = "quanly@vantai.com",
                         PhoneNumber = "0977777777",
@@ -81,7 +122,8 @@ namespace QuanLyVanTai.DAL
                     {
                         Id = 3,
                         Username = "nhanvien",
-                        PasswordHash = "nhanvien123",
+                        PasswordHash = _staffCred.Hash,
+                        PasswordSalt = _staffCred.Salt,
                         FullName = "Trần Thị Bán Vé",
                         Email = "banve@vantai.com",
                         PhoneNumber = "0966666666",

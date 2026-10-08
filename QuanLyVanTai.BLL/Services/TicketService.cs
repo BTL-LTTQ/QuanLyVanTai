@@ -87,6 +87,16 @@ namespace QuanLyVanTai.BLL.Services
             if (vehicle == null)
                 return (false, "Không tìm thấy phương tiện!", null);
 
+            // Kiểm tra ghế trùng: cùng xe + cùng số ghế + cùng giờ khởi hành, vé chưa bị hủy
+            bool seatTaken = await db.Tickets.AnyAsync(t =>
+                t.VehicleId == ticket.VehicleId &&
+                t.SeatNumber == ticket.SeatNumber &&
+                t.DepartureTime == ticket.DepartureTime &&
+                t.TicketStatus != "Cancelled");
+
+            if (seatTaken)
+                return (false, $"Ghế {ticket.SeatNumber} đã được đặt trên chuyến này! Vui lòng chọn ghế khác.", null);
+
             ticket.TicketCode = await GenerateTicketCodeAsync();
             db.Tickets.Add(ticket);
             await db.SaveChangesAsync();
