@@ -4,7 +4,11 @@ using QuanLyVanTai.DAL.Models;
 
 namespace QuanLyVanTai.BLL.Services
 {
-    public class RouteDetailDto
+    /// <summary>
+    /// DTO nội bộ dùng trong RouteService (legacy). Xem QuanLyVanTai.BLL.DTOs.RouteDetailDto
+    /// để dùng với RouteManagementService.
+    /// </summary>
+    public class RouteServiceDetailDto
     {
         public Route Route { get; set; } = null!;
         public List<Station> SelectedStations { get; set; } = [];
