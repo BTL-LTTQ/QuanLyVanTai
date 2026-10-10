@@ -2,8 +2,9 @@ using Core.Configs;
 using Core.Helpers;
 using Core.Security;
 using FontAwesome.Sharp;
+using QuanLyVanTai.BLL.DTOs;
+using QuanLyVanTai.BLL.Exceptions;
 using QuanLyVanTai.BLL.Services;
-using QuanLyVanTai.DAL.Models;
 using QuanLyVanTai.UI.Forms;
 using UserSession = Core.Security.UserSession;
 
@@ -11,9 +12,9 @@ namespace QuanLyVanTai.UI.UserControls
 {
     public partial class UcManageRoute : UserControl
     {
-        private readonly RouteService _routeService = new();
-        private readonly StationService _stationService = new();
-        private readonly VehicleService _vehicleService = new();
+        private readonly RouteManagementService _routeService = new();
+        private readonly StationManagementService _stationService = new();
+        private readonly VehicleManagementService _vehicleService = new();
 
         // UI Controls
         private readonly Panel pnlToolbar = new();
@@ -50,8 +51,8 @@ namespace QuanLyVanTai.UI.UserControls
         private bool _isAddingNew = false;
         private bool _suppressFkComboEvents = false;
         private int? _selectedRouteId = null;
-        private List<Station> _allStations = [];
-        private List<Vehicle> _allVehicles = [];
+        private List<StationSummaryDto> _allStations = [];
+        private List<VehicleSummaryDto> _allVehicles = [];
 
         private sealed class FkLookupItem
         {
@@ -440,24 +441,40 @@ namespace QuanLyVanTai.UI.UserControls
         {
             try
             {
-                // Tải danh sách Trạm dừng và Phương tiện cho multi-table selection
-                _allStations = await _stationService.GetAllStationsAsync();
-                _allVehicles = await _vehicleService.GetAllVehiclesAsync();
+                var stationsDto = await _stationService.GetStationListAsync();
+                _allStations = stationsDto.Select(dto => new StationSummaryDto
+                {
+                    Id          = dto.Id,
+                    StationCode = dto.StationCode,
+                    StationName = dto.StationName,
+                    City        = dto.City,
+                    Status      = dto.Status
+                }).ToList();
+
+                var vehiclesDto = await _vehicleService.GetVehicleListAsync();
+                _allVehicles = vehiclesDto.Select(dto => new VehicleSummaryDto
+                {
+                    Id           = dto.Id,
+                    LicensePlate = dto.LicensePlate,
+                    VehicleType  = dto.VehicleType,
+                    TotalSeats   = dto.TotalSeats,
+                    Status       = dto.Status
+                }).ToList();
 
                 clbStations.Items.Clear();
                 foreach (var st in _allStations)
-                {
                     clbStations.Items.Add($"{st.StationCode} - {st.StationName} ({st.City})");
-                }
 
                 clbVehicles.Items.Clear();
                 foreach (var v in _allVehicles)
-                {
                     clbVehicles.Items.Add($"{v.LicensePlate} ({v.VehicleType})");
-                }
 
                 BindForeignKeyComboBoxes();
                 await ReloadRoutesListAsync();
+            }
+            catch (DataAccessException ex)
+            {
+                MessageBox.Show($"Lỗi truy cập database: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
@@ -468,17 +485,13 @@ namespace QuanLyVanTai.UI.UserControls
         private async Task ReloadRoutesListAsync(string? keyword = null)
         {
             int? currentId = _selectedRouteId;
-            var routes = await _routeService.GetAllRoutesAsync(keyword);
+            var routes = await _routeService.GetRouteListAsync(keyword);
 
             dgvRoutes.Rows.Clear();
             foreach (var r in routes)
             {
                 string statusText = r.Status == "Active" ? "Đang hoạt động" : "Tạm ngừng";
-                string updatedInfo = r.UpdatedBy ?? r.CreatedBy ?? "admin";
-                if (r.UpdatedAt.HasValue)
-                {
-                    updatedInfo += $" ({r.UpdatedAt.Value.ToLocalTime():dd/MM/yyyy})";
-                }
+                string updatedInfo = r.CreatedBy ?? "admin";
 
                 int rowIndex = dgvRoutes.Rows.Add(
                     r.Id,
@@ -487,22 +500,18 @@ namespace QuanLyVanTai.UI.UserControls
                     $"{r.DistanceKm:N1}",
                     $"{r.EstimatedHours:N1}",
                     $"{r.BasePrice:N0}",
-                    r.Stations.Count,
-                    r.Vehicles.Count,
+                    r.StationCount,
+                    r.VehicleCount,
                     statusText,
                     updatedInfo
                 );
 
                 if (currentId.HasValue && r.Id == currentId.Value)
-                {
                     dgvRoutes.Rows[rowIndex].Selected = true;
-                }
             }
 
             if (dgvRoutes.SelectedRows.Count == 0 && dgvRoutes.Rows.Count > 0)
-            {
                 dgvRoutes.Rows[0].Selected = true;
-            }
         }
 
         private async void dgvRoutes_SelectionChanged(object? sender, EventArgs e)
@@ -514,14 +523,22 @@ namespace QuanLyVanTai.UI.UserControls
             int routeId = Convert.ToInt32(row.Cells["colId"].Value);
             _selectedRouteId = routeId;
 
-            var route = await _routeService.GetRouteByIdAsync(routeId);
-            if (route != null)
+            try
             {
+                var route = await _routeService.GetRouteDetailAsync(routeId);
                 DisplayRouteDetails(route);
+            }
+            catch (EntityNotFoundException)
+            {
+                // Row in grid but deleted from DB — ignore
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi tải chi tiết tuyến xe: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void DisplayRouteDetails(Route route)
+        private void DisplayRouteDetails(RouteDetailDto route)
         {
             txtRouteCode.Text = route.RouteCode;
             txtRouteName.Text = route.RouteName;
@@ -533,16 +550,12 @@ namespace QuanLyVanTai.UI.UserControls
             // Check multi-table Stations
             var routeStationIds = route.Stations.Select(s => s.Id).ToHashSet();
             for (int i = 0; i < _allStations.Count; i++)
-            {
                 clbStations.SetItemChecked(i, routeStationIds.Contains(_allStations[i].Id));
-            }
 
             // Check multi-table Vehicles
             var routeVehicleIds = route.Vehicles.Select(v => v.Id).ToHashSet();
             for (int i = 0; i < _allVehicles.Count; i++)
-            {
                 clbVehicles.SetItemChecked(i, routeVehicleIds.Contains(_allVehicles[i].Id));
-            }
         }
 
         private void SetFormEditable(bool editable)
@@ -628,7 +641,6 @@ namespace QuanLyVanTai.UI.UserControls
                 txtRouteCode.Focus();
                 return;
             }
-
             if (string.IsNullOrWhiteSpace(name))
             {
                 MessageBox.Show("Vui lòng nhập Tên lộ trình tuyến xe!", "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -636,76 +648,71 @@ namespace QuanLyVanTai.UI.UserControls
                 return;
             }
 
-            // Thu thập trạm dừng được chọn (Multi-table)
             var selectedStationIds = new List<int>();
             for (int i = 0; i < clbStations.Items.Count; i++)
-            {
                 if (clbStations.GetItemChecked(i) && i < _allStations.Count)
-                {
                     selectedStationIds.Add(_allStations[i].Id);
-                }
-            }
 
-            // Thu thập xe phân công (Multi-table)
             var selectedVehicleIds = new List<int>();
             for (int i = 0; i < clbVehicles.Items.Count; i++)
-            {
                 if (clbVehicles.GetItemChecked(i) && i < _allVehicles.Count)
-                {
                     selectedVehicleIds.Add(_allVehicles[i].Id);
-                }
-            }
 
-            if (_isAddingNew)
+            var dto = new RouteFormDto
             {
-                var newRoute = new Route
-                {
-                    RouteCode = code,
-                    RouteName = name,
-                    DistanceKm = numDistance.Value,
-                    EstimatedHours = numEstimatedHours.Value,
-                    BasePrice = numBasePrice.Value,
-                    Status = cboStatus.SelectedItem?.ToString() ?? "Active"
-                };
+                Id                 = _selectedRouteId ?? 0,
+                RouteCode          = code,
+                RouteName          = name,
+                DistanceKm         = numDistance.Value,
+                EstimatedHours     = numEstimatedHours.Value,
+                BasePrice          = numBasePrice.Value,
+                Status             = cboStatus.SelectedItem?.ToString() ?? "Active",
+                SelectedStationIds = selectedStationIds,
+                AssignedVehicleIds = selectedVehicleIds
+            };
 
-                var (success, msg, created) = await _routeService.CreateRouteAsync(newRoute, selectedStationIds, selectedVehicleIds);
-                if (success && created != null)
+            try
+            {
+                if (_isAddingNew)
                 {
+                    var created = await _routeService.CreateRouteAsync(dto);
                     _selectedRouteId = created.Id;
-                    MessageBox.Show(msg, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("Thêm tuyến xe thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     SetFormEditable(false);
                     _isAddingNew = false;
                     await ReloadRoutesListAsync();
                 }
-                else
+                else if (_selectedRouteId.HasValue)
                 {
-                    MessageBox.Show(msg, "Lỗi thêm tuyến xe", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-            else if (_selectedRouteId.HasValue)
-            {
-                var updateRoute = new Route
-                {
-                    Id = _selectedRouteId.Value,
-                    RouteCode = code,
-                    RouteName = name,
-                    DistanceKm = numDistance.Value,
-                    EstimatedHours = numEstimatedHours.Value,
-                    BasePrice = numBasePrice.Value,
-                    Status = cboStatus.SelectedItem?.ToString() ?? "Active"
-                };
-
-                var (success, msg) = await _routeService.UpdateRouteAsync(updateRoute, selectedStationIds, selectedVehicleIds);
-                if (success)
-                {
-                    MessageBox.Show(msg, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    await _routeService.UpdateRouteAsync(dto);
+                    MessageBox.Show("Cập nhật tuyến xe thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     SetFormEditable(false);
                     await ReloadRoutesListAsync();
                 }
-                else
-                {
-                    MessageBox.Show(msg, "Lỗi cập nhật", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+            }
+            catch (QuanLyVanTai.BLL.Exceptions.ValidationException ex)
+            {
+                MessageBox.Show($"Dữ liệu không hợp lệ: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (DuplicateEntityException ex)
+            {
+                MessageBox.Show($"Trùng lặp: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (EntityNotFoundException ex)
+            {
+                MessageBox.Show($"Không tìm thấy: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (BusinessRuleViolationException ex)
+            {
+                MessageBox.Show($"Vi phạm quy tắc: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (DataAccessException ex)
+            {
+                MessageBox.Show($"Lỗi database: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi không xác định: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -723,41 +730,45 @@ namespace QuanLyVanTai.UI.UserControls
             string code = txtRouteCode.Text;
             string name = txtRouteName.Text;
 
-            // Mở Dialog Xác nhận xóa an toàn
             using var confirmDlg = new FrmConfirmDelete(
                 $"{code} ({name})",
                 $"Đang có {clbStations.CheckedItems.Count} trạm dừng và {clbVehicles.CheckedItems.Count} xe được liên kết."
             );
-
             if (confirmDlg.ShowDialog() != DialogResult.OK)
                 return;
 
-            bool isSoftDelete = confirmDlg.IsSoftDelete;
-            var (success, msg) = await _routeService.DeleteRouteAsync(_selectedRouteId.Value, isSoftDelete);
-
-            if (success)
+            try
             {
-                MessageBox.Show(msg, "Kết quả xóa an toàn", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                await _routeService.DeleteRouteAsync(_selectedRouteId.Value, confirmDlg.IsSoftDelete);
+                MessageBox.Show("Xóa tuyến xe thành công!", "Kết quả xóa an toàn", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 _selectedRouteId = null;
                 await ReloadRoutesListAsync();
             }
-            else
+            catch (EntityNotFoundException ex)
             {
-                MessageBox.Show(msg, "Lỗi xóa dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Không tìm thấy: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (BusinessRuleViolationException ex)
+            {
+                MessageBox.Show($"Vi phạm quy tắc: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (DataAccessException ex)
+            {
+                MessageBox.Show($"Lỗi database: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi không xác định: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
+        // TODO: GetRouteAuditHistoryAsync chưa được implement trong RouteManagementService.
+        // Uncomment và implement sau khi ManagementService hỗ trợ audit history.
         private async Task ViewAuditHistoryAsync()
         {
-            if (_selectedRouteId == null)
-            {
-                MessageBox.Show("Vui lòng chọn tuyến xe để xem lịch sử!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
-
-            var logs = await _routeService.GetRouteAuditHistoryAsync(_selectedRouteId.Value);
-            using var histDlg = new FrmAuditHistory($"Tuyến xe {txtRouteCode.Text}", logs);
-            histDlg.ShowDialog();
+            await Task.CompletedTask;
+            MessageBox.Show("Tính năng xem lịch sử đang được phát triển.", "Thông báo",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void BindForeignKeyComboBoxes()
