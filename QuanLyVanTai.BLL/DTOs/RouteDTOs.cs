@@ -76,6 +76,45 @@ namespace QuanLyVanTai.BLL.DTOs
         public List<int> AssignedVehicleIds { get; set; } = [];
     }
 
+    // ── Import / Export Excel ─────────────────────────────────────────────────
+
+    /// <summary>
+    /// Một dòng dữ liệu tuyến xe trong file Excel khi Import.
+    /// Chỉ chứa các trường cốt lõi của Route; trạm dừng / xe liên kết không nhập qua Excel.
+    /// </summary>
+    public class RouteExcelRowDto
+    {
+        /// <summary>Mã tuyến (bắt buộc, unique).</summary>
+        public string RouteCode { get; set; } = string.Empty;
+
+        /// <summary>Tên tuyến / lộ trình (bắt buộc).</summary>
+        public string RouteName { get; set; } = string.Empty;
+
+        /// <summary>Quãng đường (km) — phải &gt; 0.</summary>
+        public decimal DistanceKm { get; set; }
+
+        /// <summary>Thời gian chạy dự kiến (giờ) — phải &gt; 0.</summary>
+        public decimal EstimatedHours { get; set; }
+
+        /// <summary>Giá cước cơ bản (VNĐ) — không âm.</summary>
+        public decimal BasePrice { get; set; }
+
+        /// <summary>Trạng thái: Active hoặc Suspended.</summary>
+        public string Status { get; set; } = "Active";
+    }
+
+    /// <summary>
+    /// Kết quả Import tuyến xe từ file Excel.
+    /// Luôn báo số dòng thành công; nếu có lỗi sẽ ném <see cref="ExcelImportException"/>
+    /// kèm danh sách dòng lỗi (toàn bộ transaction bị Rollback).
+    /// </summary>
+    public class RouteImportResultDto
+    {
+        public int TotalRows { get; set; }
+        public int SuccessRows { get; set; }
+        public int SkippedDuplicateRows { get; set; }
+    }
+
     // ── Sub-DTOs ──────────────────────────────────────────────────────────────
 
     /// <summary>DTO tóm tắt trạm dừng — dùng trong RouteDetailDto.</summary>

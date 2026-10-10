@@ -138,49 +138,62 @@ namespace QuanLyVanTai.BLL.Services
                 using var db = new AppDbContext();
                 var repo = new RouteRepository(db);
 
-                // Kiểm tra trùng mã tuyến
-                if (await repo.IsRouteCodeExistsAsync(dto.RouteCode))
-                    throw new DuplicateEntityException("Route", "RouteCode", dto.RouteCode);
-
-                var route = new Route
+                // Toàn bộ thao tác ghi (tuyến + link trạm + gán xe) được bọc trong MỘT
+                // transaction để đảm bảo tính nguyên tử: nếu bất kỳ bước nào thất bại
+                // thì rollback toàn bộ, không để dữ liệu bị lệch giữa các bảng.
+                await using var transaction = await db.Database.BeginTransactionAsync();
+                try
                 {
-                    RouteCode      = dto.RouteCode.Trim().ToUpper(),
-                    RouteName      = dto.RouteName.Trim(),
-                    DistanceKm     = dto.DistanceKm,
-                    EstimatedHours = dto.EstimatedHours,
-                    BasePrice      = dto.BasePrice,
-                    Status         = dto.Status
-                };
+                    // Kiểm tra trùng mã tuyến
+                    if (await repo.IsRouteCodeExistsAsync(dto.RouteCode))
+                        throw new DuplicateEntityException("Route", "RouteCode", dto.RouteCode);
 
-                // Thêm entity trước để lấy ID
-                await repo.AddAsync(route);
-                await repo.SaveChangesAsync();
+                    var route = new Route
+                    {
+                        RouteCode      = dto.RouteCode.Trim().ToUpper(),
+                        RouteName      = dto.RouteName.Trim(),
+                        DistanceKm     = dto.DistanceKm,
+                        EstimatedHours = dto.EstimatedHours,
+                        BasePrice      = dto.BasePrice,
+                        Status         = dto.Status
+                    };
 
-                // Liên kết trạm dừng (N-N): KHÔNG dùng AsNoTracking để EF track được entity
-                // và chỉ insert vào RouteStations, không insert lại Station.
-                if (dto.SelectedStationIds.Count > 0)
-                {
-                    var stations = await db.Stations
-                        .Where(s => dto.SelectedStationIds.Contains(s.Id))
-                        .ToListAsync(); // tracked entities
-                    foreach (var station in stations)
-                        route.Stations.Add(station);
+                    // Thêm entity trước để lấy ID
+                    await repo.AddAsync(route);
+                    await repo.SaveChangesAsync();
+
+                    // Liên kết trạm dừng (N-N): KHÔNG dùng AsNoTracking để EF track được entity
+                    // và chỉ insert vào RouteStations, không insert lại Station.
+                    if (dto.SelectedStationIds.Count > 0)
+                    {
+                        var stations = await db.Stations
+                            .Where(s => dto.SelectedStationIds.Contains(s.Id))
+                            .ToListAsync(); // tracked entities
+                        foreach (var station in stations)
+                            route.Stations.Add(station);
+                    }
+
+                    // Phân công phương tiện (1-N: cập nhật RouteId trực tiếp)
+                    if (dto.AssignedVehicleIds.Count > 0)
+                    {
+                        var vehicles = await db.Vehicles
+                            .Where(v => dto.AssignedVehicleIds.Contains(v.Id))
+                            .ToListAsync(); // tracked entities
+                        foreach (var vehicle in vehicles)
+                            vehicle.RouteId = route.Id;
+                    }
+
+                    await repo.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    // Trả về detail DTO của bản ghi vừa tạo (ngoài transaction)
+                    return await GetRouteDetailAsync(route.Id);
                 }
-
-                // Phân công phương tiện (1-N: cập nhật RouteId trực tiếp)
-                if (dto.AssignedVehicleIds.Count > 0)
+                catch
                 {
-                    var vehicles = await db.Vehicles
-                        .Where(v => dto.AssignedVehicleIds.Contains(v.Id))
-                        .ToListAsync(); // tracked entities
-                    foreach (var vehicle in vehicles)
-                        vehicle.RouteId = route.Id;
+                    await transaction.RollbackAsync();
+                    throw;
                 }
-
-                await repo.SaveChangesAsync();
-
-                // Trả về detail DTO của bản ghi vừa tạo
-                return await GetRouteDetailAsync(route.Id);
             }
             catch (BusStationException)
             {

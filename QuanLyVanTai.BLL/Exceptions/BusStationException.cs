@@ -129,4 +129,35 @@ namespace QuanLyVanTai.BLL.Exceptions
         {
         }
     }
+
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Ném ra khi Import dữ liệu Excel gặp lỗi ở một hoặc nhiều dòng.
+    /// Toàn bộ transaction Import sẽ bị Rollback — không dòng nào được lưu.
+    /// Thuộc tính <see cref="RowErrors"/> liệt kê chi tiết từng dòng lỗi cùng lý do.
+    /// → UI nên hiển thị Message và danh sách dòng lỗi để người dùng sửa file.
+    /// </summary>
+    public sealed class ExcelImportException : BusStationException
+    {
+        /// <summary>Số dòng dữ liệu (trong Excel) gặp lỗi.</summary>
+        public List<string> RowErrors { get; }
+
+        public ExcelImportException(string entityName, IEnumerable<string> rowErrors)
+            : base(entityName, BuildMessage(rowErrors))
+        {
+            RowErrors = rowErrors.ToList();
+        }
+
+        private static string BuildMessage(IEnumerable<string> rowErrors)
+        {
+            var list = rowErrors.ToList();
+            string summary = list.Count == 1
+                ? "Import thất bại: có 1 dòng dữ liệu lỗi. Toàn bộ dữ liệu đã được hoàn tác (Rollback)."
+                : $"Import thất bại: có {list.Count} dòng dữ liệu lỗi. Toàn bộ dữ liệu đã được hoàn tác (Rollback).";
+
+            // Chỉ nhúng tối đa 5 dòng đầu tiên để tránh message quá dài ở UI.
+            return summary + Environment.NewLine + string.Join(Environment.NewLine, list.Take(5));
+        }
+    }
 }

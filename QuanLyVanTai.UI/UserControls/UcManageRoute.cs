@@ -13,6 +13,7 @@ namespace QuanLyVanTai.UI.UserControls
     public partial class UcManageRoute : UserControl
     {
         private readonly RouteManagementService _routeService = new();
+        private readonly RouteExcelService _excelService = new();
         private readonly StationManagementService _stationService = new();
         private readonly VehicleManagementService _vehicleService = new();
 
@@ -32,7 +33,10 @@ namespace QuanLyVanTai.UI.UserControls
         private readonly IconButton btnSave = new();
         private readonly IconButton btnCancel = new();
         private readonly IconButton btnHistory = new();
+        private readonly IconButton btnImport = new();
         private readonly IconButton btnExport = new();
+        private readonly ProgressBar pbExcelProgress = new();
+        private readonly Label lblExcelProgress = new();
 
         // Detail Edit Controls
         private readonly Panel pnlDetail = new();
@@ -173,16 +177,51 @@ namespace QuanLyVanTai.UI.UserControls
             btnExport.Location = new Point(780, 15);
             btnExport.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
 
+            ThemeConfig.StyleSecondaryButton(btnImport, IconChar.FileImport);
+            btnImport.Text = " Nhập Excel";
+            btnImport.BackColor = Color.FromArgb(245, 158, 11);
+            btnImport.Size = new Size(130, 45);
+            btnImport.Location = new Point(920, 15);
+            btnImport.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+
             // Search box với style đẹp hơn
             txtSearch.Size = new Size(280, 45);
-            txtSearch.Location = new Point(920, 15);
+            txtSearch.Location = new Point(1080, 15);
             txtSearch.Font = new Font("Segoe UI", 11F);
             txtSearch.PlaceholderText = "🔍 Tìm kiếm tuyến xe, lộ trình...";
             txtSearch.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             txtSearch.BorderStyle = BorderStyle.FixedSingle;
 
-            pnlToolbar.Controls.AddRange([btnAdd, btnEdit, btnDelete, btnSave, btnCancel, btnHistory, btnExport, txtSearch]);
+            pnlToolbar.Controls.AddRange([btnAdd, btnEdit, btnDelete, btnSave, btnCancel, btnHistory, btnImport, btnExport, txtSearch]);
             this.Controls.Add(pnlToolbar);
+
+            // ==========================================
+            // 2. Progress Bar (Import / Export Excel) — docked dưới cùng
+            // ==========================================
+            Panel pnlProgress = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 46,
+                BackColor = Color.White,
+                Padding = new Padding(20, 8, 20, 8)
+            };
+
+            pbExcelProgress.Dock = DockStyle.Fill;
+            pbExcelProgress.Minimum = 0;
+            pbExcelProgress.Maximum = 100;
+            pbExcelProgress.Visible = false;
+            pbExcelProgress.Style = ProgressBarStyle.Continuous;
+
+            lblExcelProgress.Dock = DockStyle.Right;
+            lblExcelProgress.Width = 190;
+            lblExcelProgress.TextAlign = ContentAlignment.MiddleCenter;
+            lblExcelProgress.ForeColor = Color.FromArgb(71, 85, 105);
+            lblExcelProgress.Font = new Font("Segoe UI", 9F, FontStyle.Regular);
+            lblExcelProgress.Text = "Tiến độ: 0%";
+
+            pnlProgress.Controls.Add(lblExcelProgress);
+            pnlProgress.Controls.Add(pbExcelProgress);
+            this.Controls.Add(pnlProgress);
 
             // ==========================================
             // 2. Split Container (Master DataGridView / Detail Panel)
@@ -426,7 +465,8 @@ namespace QuanLyVanTai.UI.UserControls
             btnCancel.Click += (s, e) => CancelEdit();
             btnDelete.Click += async (s, e) => await DeleteSelectedRouteAsync();
             btnHistory.Click += async (s, e) => await ViewAuditHistoryAsync();
-            btnExport.Click += (s, e) => DataExportHelper.ExportDataGridViewWithDialog(dgvRoutes, "DanhSach_TuyenXe");
+            btnExport.Click += async (s, e) => await ExportRoutesToExcelAsync();
+            btnImport.Click += async (s, e) => await ImportRoutesFromExcelAsync();
 
             cboFkStation.SelectedIndexChanged += (s, e) => ApplyFkStationSelection();
             cboFkVehicle.SelectedIndexChanged += (s, e) => ApplyFkVehicleSelection();
@@ -575,7 +615,9 @@ namespace QuanLyVanTai.UI.UserControls
             btnEdit.Enabled = !editable && dgvRoutes.SelectedRows.Count > 0 && UserSession.HasPermission(SystemMenus.Route, PermissionAction.Edit);
             btnDelete.Enabled = !editable && dgvRoutes.SelectedRows.Count > 0 && UserSession.HasPermission(SystemMenus.Route, PermissionAction.Delete);
             btnHistory.Enabled = !editable && dgvRoutes.SelectedRows.Count > 0;
-            btnExport.Enabled = !editable;
+            bool canExport = UserSession.HasPermission(SystemMenus.Route, PermissionAction.Export);
+            btnExport.Enabled = !editable && canExport;
+            btnImport.Enabled = !editable && UserSession.HasPermission(SystemMenus.Route, PermissionAction.Add);
 
             btnSave.Enabled = editable;
             btnCancel.Enabled = editable;
@@ -769,6 +811,141 @@ namespace QuanLyVanTai.UI.UserControls
             await Task.CompletedTask;
             MessageBox.Show("Tính năng xem lịch sử đang được phát triển.", "Thông báo",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        // ── Import / Export Excel ─────────────────────────────────────────────
+
+        /// <summary>
+        /// Bọc IProgress&lt;int&gt; để cập nhật luôn lên ProgressBar + label.
+        /// IProgress.Report chạy trên UI SynchronizationContext nên an toàn thread.
+        /// </summary>
+        private IProgress<int> CreateProgressReporter()
+        {
+            return new Progress<int>(pct =>
+            {
+                int clamped = Math.Clamp(pct, 0, 100);
+                pbExcelProgress.Value = clamped;
+                lblExcelProgress.Text = $"Tiến độ: {clamped}%";
+            });
+        }
+
+        private void BeginExcelOperation(bool enabled)
+        {
+            // enabled == true: đang chạy Import/Export → hiện progress, khóa các nút thao tác khác.
+            pbExcelProgress.Value = 0;
+            lblExcelProgress.Text = "Tiến độ: 0%";
+            pbExcelProgress.Visible = enabled;
+            lblExcelProgress.Visible = enabled;
+
+            btnImport.Enabled = !enabled;
+            btnExport.Enabled = !enabled;
+            btnAdd.Enabled = !enabled;
+            btnEdit.Enabled = !enabled;
+            btnDelete.Enabled = !enabled;
+            btnHistory.Enabled = !enabled;
+            dgvRoutes.Enabled = !enabled;
+        }
+
+        /// <summary>
+        /// Xuất toàn bộ tuyến xe ra file Excel (.xlsx) với thanh tiến độ.
+        /// File dialog chạy trên UI thread; ghi file nặng chạy trong Task.Run ở BLL.
+        /// </summary>
+        private async Task ExportRoutesToExcelAsync()
+        {
+            if (!AuthorizationGuard.CheckAccess(SystemMenus.Route, PermissionAction.Export))
+                return;
+
+            using SaveFileDialog sfd = new SaveFileDialog
+            {
+                Title = "Xuất danh sách tuyến xe ra Excel",
+                FileName = $"DanhSach_TuyenXe_{DateTime.Now:yyyyMMdd_HHmmss}",
+                Filter = "File Excel (*.xlsx)|*.xlsx",
+                DefaultExt = "xlsx"
+            };
+            if (sfd.ShowDialog() != DialogResult.OK)
+                return;
+
+            BeginExcelOperation(true); // Ẩn nút + hiện progress
+            try
+            {
+                var progress = CreateProgressReporter();
+                int rowCount = await _excelService.ExportRoutesAsync(sfd.FileName, progress);
+
+                MessageBox.Show(
+                    $"Đã xuất {rowCount} tuyến xe ra file:\n{sfd.FileName}",
+                    "Xuất Excel thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (BusinessRuleViolationException ex)
+            {
+                MessageBox.Show(ex.Message, "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (DataAccessException ex)
+            {
+                MessageBox.Show($"Lỗi database khi xuất Excel: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi xuất Excel: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                BeginExcelOperation(false); // Khôi phục UI
+            }
+        }
+
+        /// <summary>
+        /// Import tuyến xe từ file Excel (.xlsx) với thanh tiến độ.
+        /// Toàn bộ dữ liệu được bọc trong transaction ở BLL — nếu 1 dòng sai
+        /// sẽ Rollback toàn bộ và hiển thị đúng dòng lỗi.
+        /// </summary>
+        private async Task ImportRoutesFromExcelAsync()
+        {
+            if (!AuthorizationGuard.CheckAccess(SystemMenus.Route, PermissionAction.Add))
+                return;
+
+            using OpenFileDialog ofd = new OpenFileDialog
+            {
+                Title = "Chọn file Excel tuyến xe (.xlsx)",
+                Filter = "File Excel (*.xlsx)|*.xlsx",
+                CheckFileExists = true,
+                Multiselect = false
+            };
+            if (ofd.ShowDialog() != DialogResult.OK)
+                return;
+
+            BeginExcelOperation(true); // Ẩn nút + hiện progress
+            try
+            {
+                var progress = CreateProgressReporter();
+                var result = await _excelService.ImportRoutesAsync(ofd.FileName, progress);
+
+                MessageBox.Show(
+                    $"Import thành công!\n\n" +
+                    $"Tổng dòng đọc   : {result.TotalRows}\n" +
+                    $"Đã thêm mới     : {result.SuccessRows}\n" +
+                    $"Bỏ qua (trùng mã): {result.SkippedDuplicateRows}",
+                    "Import Excel thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                // Tải lại danh sách sau khi import
+                await ReloadRoutesListAsync(txtSearch.Text);
+            }
+            catch (ExcelImportException ex)
+            {
+                // Hiển thị danh sách dòng lỗi — toàn bộ dữ liệu đã Rollback
+                MessageBox.Show(ex.Message, "Import thất bại", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (DataAccessException ex)
+            {
+                MessageBox.Show($"Lỗi database khi import Excel: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi import Excel: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                BeginExcelOperation(false); // Khôi phục UI
+            }
         }
 
         private void BindForeignKeyComboBoxes()

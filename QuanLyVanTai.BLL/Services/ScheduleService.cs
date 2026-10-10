@@ -420,9 +420,7 @@ namespace QuanLyVanTai.BLL.Services
             string routeName = conflict.Route?.RouteName ?? $"Tuyến #{conflict.RouteId}";
 
             throw new BusinessRuleViolationException("Schedule",
-                $"Xe [{vehicle.LicensePlate}] đang được phân công chạy {routeName} " +
-                $"từ {timeRange}. " +
-                $"Cần khoảng cách tối thiểu {VehicleBufferMinutes} phút giữa 2 chuyến liên tiếp.");
+                $"Xe {vehicle.LicensePlate} đang được phân công chạy tuyến {routeName} từ {timeRange}, không thể phân công.");
         }
 
         /// <summary>
@@ -454,9 +452,7 @@ namespace QuanLyVanTai.BLL.Services
                 string routeName = conflict.Route?.RouteName ?? $"Tuyến #{conflict.RouteId}";
 
                 throw new BusinessRuleViolationException("Schedule",
-                    $"Tài xế [{driver.FullName}] đang chạy chuyến {routeName} " +
-                    $"từ {timeRange}. " +
-                    $"Cần khoảng cách tối thiểu {DriverBufferMinutes} phút giữa 2 chuyến.");
+                    $"Tài xế {driver.FullName} đang chạy chuyến tuyến {routeName} từ {timeRange}, không thể phân công.");
             }
         }
 
@@ -492,11 +488,9 @@ namespace QuanLyVanTai.BLL.Services
 
         private static string FormatTimeRange(DateTime start, DateTime end)
         {
-            // Nếu cùng ngày: "08:30 - 10:45 ngày 10/10/2026"
-            // Khác ngày: "08:30 ngày 10/10 - 06:00 ngày 11/10/2026"
             if (start.Date == end.Date)
-                return $"{start:HH:mm} - {end:HH:mm} ngày {start:dd/MM/yyyy}";
-            return $"{start:HH:mm dd/MM} - {end:HH:mm dd/MM/yyyy}";
+                return $"{start:HH}h{start:mm} - {end:HH}h{end:mm} ngày {start:dd/MM/yyyy}";
+            return $"{start:HH}h{start:mm} ngày {start:dd/MM} - {end:HH}h{end:mm} ngày {end:dd/MM/yyyy}";
         }
 
         private static ScheduleListDto MapToListDto(Schedule s)
