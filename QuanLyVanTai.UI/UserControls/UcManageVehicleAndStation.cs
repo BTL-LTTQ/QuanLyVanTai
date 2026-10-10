@@ -2,17 +2,18 @@ using Core.Configs;
 using Core.Helpers;
 using Core.Security;
 using FontAwesome.Sharp;
+using QuanLyVanTai.BLL.DTOs;
+using QuanLyVanTai.BLL.Exceptions;
 using QuanLyVanTai.BLL.Services;
-using QuanLyVanTai.DAL.Models;
 using QuanLyVanTai.UI.Forms;
 
 namespace QuanLyVanTai.UI.UserControls
 {
     public partial class UcManageVehicleAndStation : UserControl
     {
-        private readonly VehicleService _vehicleService = new();
-        private readonly StationService _stationService = new();
-        private readonly RouteService _routeService = new();
+        private readonly VehicleManagementService _vehicleService = new();
+        private readonly StationManagementService _stationService = new();
+        private readonly RouteManagementService _routeService = new();
 
         private readonly TabControl tabMain = new();
 
@@ -48,7 +49,7 @@ namespace QuanLyVanTai.UI.UserControls
 
         private bool _isVehAdding = false;
         private int? _selectedVehId = null;
-        private List<Route> _availableRoutes = [];
+        private List<RouteListDto> _availableRoutes = [];
 
         // ==========================================
         // TAB 2: TRẠM DỪNG CONTROLS
@@ -588,17 +589,19 @@ namespace QuanLyVanTai.UI.UserControls
         {
             try
             {
-                _availableRoutes = await _routeService.GetAllRoutesAsync();
+                _availableRoutes = await _routeService.GetRouteListAsync();
                 cboVehRoute.Items.Clear();
                 cboVehRoute.Items.Add("-- Chưa phân công --");
                 foreach (var r in _availableRoutes)
-                {
                     cboVehRoute.Items.Add($"{r.RouteCode} - {r.RouteName}");
-                }
                 cboVehRoute.SelectedIndex = 0;
 
                 await FilterVehiclesAsync();
                 await FilterStationsAsync();
+            }
+            catch (DataAccessException ex)
+            {
+                MessageBox.Show($"Lỗi truy cập database: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
@@ -615,21 +618,37 @@ namespace QuanLyVanTai.UI.UserControls
             _isVehRefreshing = true;
             try
             {
-                var criteria = new VehicleFilterCriteria
-                {
-                    Keyword = txtVehKeyword.Text,
-                    VehicleType = cboVehType.SelectedItem?.ToString(),
-                    Status = cboVehStatus.SelectedItem?.ToString(),
-                    Manufacturer = cboVehManufacturer.SelectedItem?.ToString(),
-                    UseAndLogic = radVehAnd.Checked
-                };
+                var allVehicles = await _vehicleService.GetVehicleListAsync();
 
-                var vehicles = await _vehicleService.SearchAndFilterVehiclesAsync(criteria);
+                // Client-side filter
+                var keyword  = txtVehKeyword.Text.Trim().ToLower();
+                var typeFilter   = cboVehType.SelectedItem?.ToString();
+                var statusFilter = cboVehStatus.SelectedItem?.ToString();
+                var mfrFilter    = cboVehManufacturer.SelectedItem?.ToString();
+                bool useAnd  = radVehAnd.Checked;
+
+                var filtered = allVehicles.Where(v =>
+                {
+                    bool matchKeyword = string.IsNullOrEmpty(keyword)
+                        || v.LicensePlate.ToLower().Contains(keyword)
+                        || (v.VehicleType?.ToLower().Contains(keyword) ?? false);
+                    bool matchType   = string.IsNullOrEmpty(typeFilter) || typeFilter == "Tất cả" || v.VehicleType == typeFilter;
+                    bool matchStatus = string.IsNullOrEmpty(statusFilter) || statusFilter == "Tất cả" || v.Status == statusFilter;
+                    bool matchMfr    = string.IsNullOrEmpty(mfrFilter) || mfrFilter == "Tất cả"
+                        || (v.Manufacturer?.Contains(mfrFilter, StringComparison.OrdinalIgnoreCase) ?? false);
+
+                    return useAnd
+                        ? matchKeyword && matchType && matchStatus && matchMfr
+                        : matchKeyword || matchType || matchStatus || matchMfr;
+                }).ToList();
+
                 dgvVehicles.Rows.Clear();
-
-                foreach (var v in vehicles)
+                foreach (var v in filtered)
                 {
-                    string routeName = v.Route != null ? $"{v.Route.RouteCode} ({v.Route.RouteName})" : "Chưa phân công";
+                    string routeName = v.RouteName != null
+                        ? $"{v.RouteCode} ({v.RouteName})"
+                        : "Chưa phân công";
+
                     int idx = dgvVehicles.Rows.Add(
                         v.Id,
                         v.LicensePlate,
@@ -640,16 +659,19 @@ namespace QuanLyVanTai.UI.UserControls
                         v.Status
                     );
 
-                    // Màu trạng thái
                     var statusCell = dgvVehicles.Rows[idx].Cells["colVehStatus"];
                     statusCell.Style.ForeColor = v.Status switch
                     {
-                        "Ready" => Color.FromArgb(16, 185, 129),
+                        "Ready"     => Color.FromArgb(16, 185, 129),
                         "InTransit" => Color.FromArgb(59, 130, 246),
-                        _ => Color.FromArgb(239, 68, 68)
+                        _           => Color.FromArgb(239, 68, 68)
                     };
                     statusCell.Style.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
                 }
+            }
+            catch (DataAccessException ex)
+            {
+                MessageBox.Show($"Lỗi tải dữ liệu phương tiện: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
@@ -711,59 +733,56 @@ namespace QuanLyVanTai.UI.UserControls
 
             int? assignedRouteId = null;
             if (cboVehRoute.SelectedIndex > 0 && cboVehRoute.SelectedIndex - 1 < _availableRoutes.Count)
-            {
                 assignedRouteId = _availableRoutes[cboVehRoute.SelectedIndex - 1].Id;
-            }
 
-            if (_isVehAdding)
+            var dto = new VehicleFormDto
             {
-                var vehicle = new Vehicle
-                {
-                    LicensePlate = plate,
-                    VehicleType = cboVehEditType.SelectedItem?.ToString() ?? "Ghế ngồi",
-                    TotalSeats = (int)numVehSeats.Value,
-                    Manufacturer = txtVehManufacturer.Text.Trim(),
-                    Status = cboVehEditStatus.SelectedItem?.ToString() ?? "Ready",
-                    RouteId = assignedRouteId
-                };
+                Id           = _selectedVehId ?? 0,
+                LicensePlate = plate,
+                VehicleType  = cboVehEditType.SelectedItem?.ToString() ?? "Ghế ngồi",
+                TotalSeats   = (int)numVehSeats.Value,
+                Manufacturer = txtVehManufacturer.Text.Trim(),
+                Status       = cboVehEditStatus.SelectedItem?.ToString() ?? "Ready",
+                RouteId      = assignedRouteId
+            };
 
-                var (success, msg, _) = await _vehicleService.CreateVehicleAsync(vehicle);
-                if (success)
+            try
+            {
+                if (_isVehAdding)
                 {
-                    MessageBox.Show(msg, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    await _vehicleService.CreateVehicleAsync(dto);
+                    MessageBox.Show("Thêm phương tiện thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     btnVehSave.Enabled = false;
                     _isVehAdding = false;
                     await FilterVehiclesAsync();
                 }
-                else
+                else if (_selectedVehId.HasValue)
                 {
-                    MessageBox.Show(msg, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-            else if (_selectedVehId.HasValue)
-            {
-                var vehicle = new Vehicle
-                {
-                    Id = _selectedVehId.Value,
-                    LicensePlate = plate,
-                    VehicleType = cboVehEditType.SelectedItem?.ToString() ?? "Ghế ngồi",
-                    TotalSeats = (int)numVehSeats.Value,
-                    Manufacturer = txtVehManufacturer.Text.Trim(),
-                    Status = cboVehEditStatus.SelectedItem?.ToString() ?? "Ready",
-                    RouteId = assignedRouteId
-                };
-
-                var (success, msg) = await _vehicleService.UpdateVehicleAsync(vehicle);
-                if (success)
-                {
-                    MessageBox.Show(msg, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    await _vehicleService.UpdateVehicleAsync(dto);
+                    MessageBox.Show("Cập nhật phương tiện thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     btnVehSave.Enabled = false;
                     await FilterVehiclesAsync();
                 }
-                else
-                {
-                    MessageBox.Show(msg, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+            }
+            catch (QuanLyVanTai.BLL.Exceptions.ValidationException ex)
+            {
+                MessageBox.Show($"Dữ liệu không hợp lệ: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (DuplicateEntityException ex)
+            {
+                MessageBox.Show($"Trùng lặp: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (BusinessRuleViolationException ex)
+            {
+                MessageBox.Show($"Vi phạm quy tắc: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (DataAccessException ex)
+            {
+                MessageBox.Show($"Lỗi database: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi không xác định: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -775,16 +794,28 @@ namespace QuanLyVanTai.UI.UserControls
             using var confirmDlg = new FrmConfirmDelete(txtVehLicense.Text, "Phương tiện vận tải");
             if (confirmDlg.ShowDialog() != DialogResult.OK) return;
 
-            var (success, msg) = await _vehicleService.DeleteVehicleAsync(_selectedVehId.Value, confirmDlg.IsSoftDelete);
-            if (success)
+            try
             {
-                MessageBox.Show(msg, "Kết quả", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                await _vehicleService.DeleteVehicleAsync(_selectedVehId.Value, confirmDlg.IsSoftDelete);
+                MessageBox.Show("Xóa phương tiện thành công!", "Kết quả", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 _selectedVehId = null;
                 await FilterVehiclesAsync();
             }
-            else
+            catch (EntityNotFoundException ex)
             {
-                MessageBox.Show(msg, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Không tìm thấy: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (BusinessRuleViolationException ex)
+            {
+                MessageBox.Show($"Vi phạm quy tắc: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (DataAccessException ex)
+            {
+                MessageBox.Show($"Lỗi database: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi không xác định: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -797,18 +828,23 @@ namespace QuanLyVanTai.UI.UserControls
             _isStRefreshing = true;
             try
             {
-                var criteria = new StationFilterCriteria
+                var keyword = txtStKeyword.Text.Trim();
+                var allStations = await _stationService.GetStationListAsync(string.IsNullOrWhiteSpace(keyword) ? null : keyword);
+
+                // Client-side filter for city and status combos
+                var cityFilter   = cboStCity.SelectedItem?.ToString();
+                var statusFilter = cboStStatus.SelectedItem?.ToString();
+                bool useAnd      = radStAnd.Checked;
+
+                var filtered = allStations.Where(s =>
                 {
-                    Keyword = txtStKeyword.Text,
-                    City = cboStCity.SelectedItem?.ToString(),
-                    Status = cboStStatus.SelectedItem?.ToString(),
-                    UseAndLogic = radStAnd.Checked
-                };
+                    bool matchCity   = string.IsNullOrEmpty(cityFilter) || cityFilter == "Tất cả" || s.City == cityFilter;
+                    bool matchStatus = string.IsNullOrEmpty(statusFilter) || statusFilter == "Tất cả" || s.Status == statusFilter;
+                    return useAnd ? matchCity && matchStatus : matchCity || matchStatus;
+                }).ToList();
 
-                var stations = await _stationService.SearchAndFilterStationsAsync(criteria);
                 dgvStations.Rows.Clear();
-
-                foreach (var s in stations)
+                foreach (var s in filtered)
                 {
                     int idx = dgvStations.Rows.Add(
                         s.Id,
@@ -816,17 +852,20 @@ namespace QuanLyVanTai.UI.UserControls
                         s.StationName,
                         s.Address,
                         s.City,
-                        s.Routes.Count,
+                        s.RouteCount,
                         s.Status
                     );
 
-                    // Màu trạng thái
                     var statusCell = dgvStations.Rows[idx].Cells["colStStatus"];
                     statusCell.Style.ForeColor = s.Status == "Active"
                         ? Color.FromArgb(16, 185, 129)
                         : Color.FromArgb(239, 68, 68);
                     statusCell.Style.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
                 }
+            }
+            catch (DataAccessException ex)
+            {
+                MessageBox.Show($"Lỗi tải dữ liệu trạm dừng: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
@@ -888,53 +927,53 @@ namespace QuanLyVanTai.UI.UserControls
                 return;
             }
 
-            if (_isStAdding)
+            var dto = new StationFormDto
             {
-                var station = new Station
-                {
-                    StationCode = code,
-                    StationName = name,
-                    Address = txtStAddress.Text.Trim(),
-                    City = cboStEditCity.SelectedItem?.ToString() ?? "Hà Nội",
-                    Status = cboStEditStatus.SelectedItem?.ToString() ?? "Active"
-                };
+                Id          = _selectedStId ?? 0,
+                StationCode = code,
+                StationName = name,
+                Address     = txtStAddress.Text.Trim(),
+                City        = cboStEditCity.SelectedItem?.ToString() ?? "Hà Nội",
+                Status      = cboStEditStatus.SelectedItem?.ToString() ?? "Active"
+            };
 
-                var (success, msg, _) = await _stationService.CreateStationAsync(station);
-                if (success)
+            try
+            {
+                if (_isStAdding)
                 {
-                    MessageBox.Show(msg, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    await _stationService.CreateStationAsync(dto);
+                    MessageBox.Show("Thêm trạm dừng thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     btnStSave.Enabled = false;
                     _isStAdding = false;
                     await FilterStationsAsync();
                 }
-                else
+                else if (_selectedStId.HasValue)
                 {
-                    MessageBox.Show(msg, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-            else if (_selectedStId.HasValue)
-            {
-                var station = new Station
-                {
-                    Id = _selectedStId.Value,
-                    StationCode = code,
-                    StationName = name,
-                    Address = txtStAddress.Text.Trim(),
-                    City = cboStEditCity.SelectedItem?.ToString() ?? "Hà Nội",
-                    Status = cboStEditStatus.SelectedItem?.ToString() ?? "Active"
-                };
-
-                var (success, msg) = await _stationService.UpdateStationAsync(station);
-                if (success)
-                {
-                    MessageBox.Show(msg, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    await _stationService.UpdateStationAsync(dto);
+                    MessageBox.Show("Cập nhật trạm dừng thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     btnStSave.Enabled = false;
                     await FilterStationsAsync();
                 }
-                else
-                {
-                    MessageBox.Show(msg, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+            }
+            catch (QuanLyVanTai.BLL.Exceptions.ValidationException ex)
+            {
+                MessageBox.Show($"Dữ liệu không hợp lệ: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (DuplicateEntityException ex)
+            {
+                MessageBox.Show($"Trùng lặp: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (BusinessRuleViolationException ex)
+            {
+                MessageBox.Show($"Vi phạm quy tắc: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (DataAccessException ex)
+            {
+                MessageBox.Show($"Lỗi database: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi không xác định: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -946,16 +985,28 @@ namespace QuanLyVanTai.UI.UserControls
             using var confirmDlg = new FrmConfirmDelete(txtStName.Text, "Trạm dừng bến xe");
             if (confirmDlg.ShowDialog() != DialogResult.OK) return;
 
-            var (success, msg) = await _stationService.DeleteStationAsync(_selectedStId.Value, confirmDlg.IsSoftDelete);
-            if (success)
+            try
             {
-                MessageBox.Show(msg, "Kết quả", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                await _stationService.DeleteStationAsync(_selectedStId.Value, confirmDlg.IsSoftDelete);
+                MessageBox.Show("Xóa trạm dừng thành công!", "Kết quả", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 _selectedStId = null;
                 await FilterStationsAsync();
             }
-            else
+            catch (EntityNotFoundException ex)
             {
-                MessageBox.Show(msg, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Không tìm thấy: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (BusinessRuleViolationException ex)
+            {
+                MessageBox.Show($"Vi phạm quy tắc: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (DataAccessException ex)
+            {
+                MessageBox.Show($"Lỗi database: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi không xác định: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
