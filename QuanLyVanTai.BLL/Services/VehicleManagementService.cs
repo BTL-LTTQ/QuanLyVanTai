@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using QuanLyVanTai.BLL.DTOs;
 using QuanLyVanTai.BLL.Exceptions;
 using QuanLyVanTai.DAL;
@@ -194,11 +195,14 @@ namespace QuanLyVanTai.BLL.Services
         {
             try
             {
+                // Dùng một DbContext duy nhất cho toàn bộ operation
                 using var db = new AppDbContext();
                 var repo = new VehicleRepository(db);
 
-                // Kiểm tra quy tắc nghiệp vụ trước khi gọi transaction
-                var vehicle = await repo.GetByIdAsync(vehicleId)
+                // Load kèm Tickets để kiểm tra cả rule InTransit lẫn ràng buộc hard-delete
+                var vehicle = await db.Vehicles
+                    .Include(v => v.Tickets)
+                    .FirstOrDefaultAsync(v => v.Id == vehicleId)
                     ?? throw new EntityNotFoundException("Vehicle", vehicleId);
 
                 if (vehicle.Status == "InTransit")
@@ -206,6 +210,12 @@ namespace QuanLyVanTai.BLL.Services
                         $"Xe [{vehicle.LicensePlate}] đang trong trạng thái InTransit. " +
                         "Không thể xóa xe đang hoạt động trên đường.");
 
+                if (!softDelete && vehicle.Tickets.Count > 0)
+                    throw new BusinessRuleViolationException("Vehicle",
+                        $"Xe [{vehicle.LicensePlate}] đang có {vehicle.Tickets.Count} vé liên quan. " +
+                        "Không thể xóa vĩnh viễn, hãy chọn xóa mềm.");
+
+                // Gọi transaction trong cùng db context — tránh load lại lần 2
                 await repo.DeleteWithTransactionAsync(vehicleId, softDelete);
             }
             catch (KeyNotFoundException ex)

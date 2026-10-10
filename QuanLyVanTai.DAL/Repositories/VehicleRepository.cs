@@ -45,7 +45,7 @@ namespace QuanLyVanTai.DAL.Repositories
         public async Task<bool> IsLicensePlateExistsAsync(string licensePlate, int? excludeId = null)
             => await _db.Vehicles.AnyAsync(v =>
                 v.LicensePlate == licensePlate &&
-                (excludeId == null || v.Id != excludeId));
+                (excludeId == null || v.Id != excludeId.Value));
 
         // ── Xóa an toàn với Transaction ───────────────────────────────────────
 
@@ -60,10 +60,25 @@ namespace QuanLyVanTai.DAL.Repositories
             await using var transaction = await _db.Database.BeginTransactionAsync();
             try
             {
-                var vehicle = await _db.Vehicles
-                    .Include(v => v.Tickets)
-                    .FirstOrDefaultAsync(v => v.Id == vehicleId)
-                    ?? throw new KeyNotFoundException($"Không tìm thấy phương tiện ID = {vehicleId}.");
+                // Kiểm tra xem entity đã được track chưa — tránh load lại gây conflict
+                var tracked = _db.ChangeTracker.Entries<Vehicle>()
+                    .FirstOrDefault(e => e.Entity.Id == vehicleId);
+
+                Vehicle vehicle;
+                if (tracked != null)
+                {
+                    vehicle = tracked.Entity;
+                    // Đảm bảo Tickets đã được load (cần cho hard-delete check)
+                    if (!tracked.Collection(v => v.Tickets).IsLoaded)
+                        await _db.Entry(vehicle).Collection(v => v.Tickets).LoadAsync();
+                }
+                else
+                {
+                    vehicle = await _db.Vehicles
+                        .Include(v => v.Tickets)
+                        .FirstOrDefaultAsync(v => v.Id == vehicleId)
+                        ?? throw new KeyNotFoundException($"Không tìm thấy phương tiện ID = {vehicleId}.");
+                }
 
                 if (!softDelete && vehicle.Tickets.Count > 0)
                     throw new InvalidOperationException(

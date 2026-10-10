@@ -59,7 +59,7 @@ namespace QuanLyVanTai.DAL.Repositories
         public async Task<bool> IsRouteCodeExistsAsync(string routeCode, int? excludeId = null)
             => await _db.Routes.AnyAsync(r =>
                 r.RouteCode == routeCode &&
-                (excludeId == null || r.Id != excludeId));
+                (excludeId == null || r.Id != excludeId.Value));
 
         // ── Xóa an toàn với Transaction ───────────────────────────────────────
 
@@ -91,9 +91,15 @@ namespace QuanLyVanTai.DAL.Repositories
                         $"Không thể xóa vĩnh viễn: tuyến xe [{route.RouteCode}] đang có " +
                         $"{route.Tickets.Count} vé liên quan. Hãy chọn xóa mềm.");
 
-                // Bước 1: Giải phóng phương tiện khỏi tuyến
-                foreach (var vehicle in route.Vehicles)
-                    vehicle.RouteId = null;
+                // Bước 1: Giải phóng phương tiện khỏi tuyến — flush trước khi xóa Route
+                // để tránh conflict với OnDelete(SetNull): EF không thể null FK và xóa parent
+                // trong cùng 1 SaveChanges khi có nhiều entities tracked.
+                if (route.Vehicles.Count > 0)
+                {
+                    foreach (var vehicle in route.Vehicles)
+                        vehicle.RouteId = null;
+                    await _db.SaveChangesAsync(); // flush vehicle.RouteId = null lên DB trước
+                }
 
                 if (softDelete)
                 {
@@ -104,7 +110,7 @@ namespace QuanLyVanTai.DAL.Repositories
                 {
                     // Bước 2b: Xóa quan hệ N-N trong bảng junction trước
                     route.Stations.Clear();
-                    await _db.SaveChangesAsync(); // flush vehicle + station clear
+                    await _db.SaveChangesAsync(); // flush station clear
 
                     // Bước 3: Hard-delete bỏ qua Global Query Filter + interceptor
                     await _db.Database.ExecuteSqlRawAsync(

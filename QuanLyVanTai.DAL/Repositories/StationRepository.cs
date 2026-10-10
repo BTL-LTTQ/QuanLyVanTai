@@ -53,7 +53,7 @@ namespace QuanLyVanTai.DAL.Repositories
         public async Task<bool> IsStationCodeExistsAsync(string stationCode, int? excludeId = null)
             => await _db.Stations.AnyAsync(s =>
                 s.StationCode == stationCode &&
-                (excludeId == null || s.Id != excludeId));
+                (excludeId == null || s.Id != excludeId.Value));
 
         /// <inheritdoc/>
         public async Task<List<string>> GetDistinctCitiesAsync()

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using QuanLyVanTai.BLL.DTOs;
 using QuanLyVanTai.BLL.Exceptions;
 using QuanLyVanTai.DAL;
@@ -155,20 +156,23 @@ namespace QuanLyVanTai.BLL.Services
                 await repo.AddAsync(route);
                 await repo.SaveChangesAsync();
 
-                // Liên kết trạm dừng (N-N)
+                // Liên kết trạm dừng (N-N): KHÔNG dùng AsNoTracking để EF track được entity
+                // và chỉ insert vào RouteStations, không insert lại Station.
                 if (dto.SelectedStationIds.Count > 0)
                 {
-                    var stations = await new StationRepository(db)
-                        .FindAsync(s => dto.SelectedStationIds.Contains(s.Id));
+                    var stations = await db.Stations
+                        .Where(s => dto.SelectedStationIds.Contains(s.Id))
+                        .ToListAsync(); // tracked entities
                     foreach (var station in stations)
                         route.Stations.Add(station);
                 }
 
-                // Phân công phương tiện (1-N: cập nhật RouteId)
+                // Phân công phương tiện (1-N: cập nhật RouteId trực tiếp)
                 if (dto.AssignedVehicleIds.Count > 0)
                 {
-                    var vehicles = await new VehicleRepository(db)
-                        .FindAsync(v => dto.AssignedVehicleIds.Contains(v.Id));
+                    var vehicles = await db.Vehicles
+                        .Where(v => dto.AssignedVehicleIds.Contains(v.Id))
+                        .ToListAsync(); // tracked entities
                     foreach (var vehicle in vehicles)
                         vehicle.RouteId = route.Id;
                 }
@@ -224,27 +228,30 @@ namespace QuanLyVanTai.BLL.Services
                 route.BasePrice      = dto.BasePrice;
                 route.Status         = dto.Status;
 
-                // Đồng bộ Stations: xoá cũ, gán mới
+                // Đồng bộ Stations: xoá cũ, gán mới (dùng tracked entities để chỉ update RouteStations)
                 route.Stations.Clear();
                 if (dto.SelectedStationIds.Count > 0)
                 {
-                    var newStations = await new StationRepository(db)
-                        .FindAsync(s => dto.SelectedStationIds.Contains(s.Id));
+                    var newStations = await db.Stations
+                        .Where(s => dto.SelectedStationIds.Contains(s.Id))
+                        .ToListAsync();
                     foreach (var s in newStations)
                         route.Stations.Add(s);
                 }
 
-                // Đồng bộ Vehicles
-                var oldVehicles = await new VehicleRepository(db)
-                    .FindAsync(v => v.RouteId == route.Id);
+                // Đồng bộ Vehicles (1-N: thao tác trực tiếp trên RouteId)
+                var oldVehicles = await db.Vehicles
+                    .Where(v => v.RouteId == route.Id)
+                    .ToListAsync();
                 foreach (var v in oldVehicles)
                     if (!dto.AssignedVehicleIds.Contains(v.Id))
                         v.RouteId = null;
 
                 if (dto.AssignedVehicleIds.Count > 0)
                 {
-                    var newVehicles = await new VehicleRepository(db)
-                        .FindAsync(v => dto.AssignedVehicleIds.Contains(v.Id));
+                    var newVehicles = await db.Vehicles
+                        .Where(v => dto.AssignedVehicleIds.Contains(v.Id))
+                        .ToListAsync();
                     foreach (var v in newVehicles)
                         v.RouteId = route.Id;
                 }
