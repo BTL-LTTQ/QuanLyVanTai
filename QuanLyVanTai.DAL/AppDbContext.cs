@@ -63,6 +63,11 @@ namespace QuanLyVanTai.DAL
         public virtual DbSet<AuditLog> AuditLogs { get; set; } = null!;
         public virtual DbSet<RolePermission> RolePermissions { get; set; } = null!;
 
+        // ── Scheduling & Driver Assignment ────────────────────────────────────
+        public virtual DbSet<Driver> Drivers { get; set; } = null!;
+        public virtual DbSet<Schedule> Schedules { get; set; } = null!;
+        public virtual DbSet<DriverAssignment> DriverAssignments { get; set; } = null!;
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -286,6 +291,62 @@ namespace QuanLyVanTai.DAL
                 entity.HasIndex(e => e.Timestamp);
                 entity.HasIndex(e => e.Username);
                 entity.HasIndex(e => e.EntityName);
+            });
+
+            // ==========================================
+            // 8. Cấu hình Driver
+            // ==========================================
+            modelBuilder.Entity<Driver>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.DriverCode).IsUnique();
+                entity.HasIndex(e => e.LicenseNumber).IsUnique();
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
+                entity.HasQueryFilter(e => !e.IsDeleted);
+            });
+
+            // ==========================================
+            // 9. Cấu hình Schedule
+            // ==========================================
+            modelBuilder.Entity<Schedule>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ScheduleCode).IsUnique();
+                // Index tăng tốc conflict query (VehicleId + khoảng thời gian)
+                entity.HasIndex(e => new { e.VehicleId, e.DepartureTime });
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
+                entity.HasQueryFilter(e => !e.IsDeleted);
+
+                entity.HasOne(s => s.Route)
+                      .WithMany()
+                      .HasForeignKey(s => s.RouteId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(s => s.Vehicle)
+                      .WithMany()
+                      .HasForeignKey(s => s.VehicleId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // ==========================================
+            // 10. Cấu hình DriverAssignment
+            // ==========================================
+            modelBuilder.Entity<DriverAssignment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                // Mỗi tài xế chỉ có 1 vai trò (Primary/Secondary) trên 1 chuyến
+                entity.HasIndex(e => new { e.ScheduleId, e.DriverId, e.Role }).IsUnique();
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
+
+                entity.HasOne(a => a.Schedule)
+                      .WithMany(s => s.DriverAssignments)
+                      .HasForeignKey(a => a.ScheduleId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(a => a.Driver)
+                      .WithMany(d => d.Assignments)
+                      .HasForeignKey(a => a.DriverId)
+                      .OnDelete(DeleteBehavior.Restrict);
             });
         }
 
