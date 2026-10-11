@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using QuanLyVanTai.DAL;
 using QuanLyVanTai.DAL.Models;
+using Core.Helpers;
+using Core.Security;
 
 namespace QuanLyVanTai.BLL.Services
 {
@@ -84,18 +86,41 @@ namespace QuanLyVanTai.BLL.Services
 
                 var vehicles = new List<Vehicle>
                 {
-                    new Vehicle { LicensePlate = "29B-123.45", VehicleType = "Ghế ngồi cao cấp", TotalSeats = 29, Manufacturer = "Hyundai Universe", Status = "Ready", RouteId = route1?.Id },
-                    new Vehicle { LicensePlate = "29B-888.88", VehicleType = "Limousine VIP", TotalSeats = 16, Manufacturer = "Ford Transit DCar", Status = "InTransit", RouteId = route1?.Id },
-                    new Vehicle { LicensePlate = "43B-567.89", VehicleType = "Giường nằm 40 chỗ", TotalSeats = 40, Manufacturer = "Thaco Mobihome", Status = "Ready", RouteId = route2?.Id },
-                    new Vehicle { LicensePlate = "51B-999.99", VehicleType = "Giường nằm VIP 32 phòng", TotalSeats = 32, Manufacturer = "Tracomeco", Status = "Ready", RouteId = route2?.Id },
-                    new Vehicle { LicensePlate = "30E-333.33", VehicleType = "Ghế ngồi", TotalSeats = 34, Manufacturer = "Samco", Status = "Maintenance", RouteId = null }
+                    new Vehicle { LicensePlate = "29B-123.45", VehicleType = "Ghế ngồi 28 chỗ", TotalSeats = 28, Manufacturer = "Thaco", Status = "Ready", RouteId = route1?.Id },
+                    new Vehicle { LicensePlate = "29B-888.88", VehicleType = "Limousine 9 chỗ", TotalSeats = 9, Manufacturer = "Ford Transit DCar", Status = "InTransit", RouteId = route1?.Id },
+                    new Vehicle { LicensePlate = "43B-567.89", VehicleType = "Ghế ngồi 45 chỗ", TotalSeats = 45, Manufacturer = "Hyundai Universe", Status = "Ready", RouteId = route2?.Id },
+                    new Vehicle { LicensePlate = "51B-999.99", VehicleType = "Giường nằm 24 phòng", TotalSeats = 24, Manufacturer = "Tracomeco", Status = "Ready", RouteId = route2?.Id },
+                    new Vehicle { LicensePlate = "30E-333.33", VehicleType = "Giường nằm 34 chỗ", TotalSeats = 34, Manufacturer = "Samco", Status = "Maintenance", RouteId = null }
                 };
 
                 context.Vehicles.AddRange(vehicles);
                 await context.SaveChangesAsync();
             }
 
-            // 4. Khởi tạo một số vé mẫu
+            // 4. Kiểm tra và thêm tài khoản Khách hàng mẫu nếu chưa có
+            if (!await context.Accounts.AnyAsync(a => a.Username == "khachhang"))
+            {
+                string salt = SecurityHelper.GenerateSalt();
+                string passwordHash = SecurityHelper.HashPassword("khachhang123", salt);
+
+                var customerAccount = new Account
+                {
+                    Username = "khachhang",
+                    PasswordHash = passwordHash,
+                    PasswordSalt = salt,
+                    FullName = "Khách Hàng Mẫu",
+                    Email = "khachhang@vantai.com",
+                    PhoneNumber = "0912345678",
+                    Role = SystemRoles.Customer,
+                    Status = "Active",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = "System"
+                };
+                context.Accounts.Add(customerAccount);
+                await context.SaveChangesAsync();
+            }
+
+            // 5. Khởi tạo một số vé mẫu
             if (!await context.Tickets.AnyAsync())
             {
                 var r1 = await context.Routes.FirstOrDefaultAsync();
@@ -108,7 +133,7 @@ namespace QuanLyVanTai.BLL.Services
                             TicketCode = "TK20261001",
                             CustomerName = "Nguyễn Văn An",
                             CustomerPhone = "0912345678",
-                            SeatNumber = "A01",
+                            SeatNumber = "01",
                             Price = r1.BasePrice,
                             DepartureTime = DateTime.UtcNow.AddHours(2),
                             PaymentStatus = "Paid",
@@ -122,7 +147,7 @@ namespace QuanLyVanTai.BLL.Services
                             TicketCode = "TK20261002",
                             CustomerName = "Trần Thị Mai",
                             CustomerPhone = "0987654321",
-                            SeatNumber = "A02",
+                            SeatNumber = "02",
                             Price = r1.BasePrice,
                             DepartureTime = DateTime.UtcNow.AddHours(2),
                             PaymentStatus = "Paid",

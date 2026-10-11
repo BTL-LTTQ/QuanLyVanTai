@@ -1,4 +1,5 @@
 using Core.Helpers;
+using Core.Security;
 using Microsoft.EntityFrameworkCore;
 using QuanLyVanTai.BLL.DTOs;
 using QuanLyVanTai.DAL;
@@ -214,7 +215,7 @@ namespace QuanLyVanTai.BLL.Services
                     FullName = string.IsNullOrWhiteSpace(request.FullName) ? request.Username.Trim() : request.FullName.Trim(),
                     Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim(),
                     PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim(),
-                    Role = "Staff", // Mặc định tài khoản đăng ký mới là Nhân viên
+                    Role = SystemRoles.Customer, // Mặc định tài khoản đăng ký mới là Khách hàng đặt vé
                     Status = "Active",
                     CreatedAt = DateTime.UtcNow,
                     SecurityQuestion = string.IsNullOrWhiteSpace(request.SecurityQuestion) ? null : request.SecurityQuestion.Trim(),

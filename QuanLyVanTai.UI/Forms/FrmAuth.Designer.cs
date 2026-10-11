@@ -448,11 +448,11 @@ namespace QuanLyVanTai.UI.Forms
 
             lblRegHeading.Location = new Point(20, 10);
             lblRegHeading.Size = new Size(560, 32);
-            lblRegHeading.Text = "TẠO TÀI KHOẢN MỚI";
+            lblRegHeading.Text = "ĐĂNG KÝ";
 
             lblRegSubheading.Location = new Point(20, 44);
             lblRegSubheading.Size = new Size(560, 22);
-            lblRegSubheading.Text = "Điền đầy đủ các thông tin bên dưới để đăng ký tài khoản nhân viên.";
+            lblRegSubheading.Text = "Điền đầy đủ các thông tin bên dưới để đăng ký tài khoản.";
 
             lblRegFullName.Location = new Point(20, 75);
             lblRegFullName.Size = new Size(260, 20);
@@ -521,7 +521,7 @@ namespace QuanLyVanTai.UI.Forms
 
             btnSubmitRegister.Location = new Point(20, 410);
             btnSubmitRegister.Size = new Size(540, 46);
-            btnSubmitRegister.Text = " ĐĂNG KÝ TÀI KHOẢN";
+            btnSubmitRegister.Text = " ĐĂNG KÝ";
             btnSubmitRegister.IconChar = FontAwesome.Sharp.IconChar.UserPlus;
 
             lblHaveAccountPrompt.Location = new Point(140, 470);
