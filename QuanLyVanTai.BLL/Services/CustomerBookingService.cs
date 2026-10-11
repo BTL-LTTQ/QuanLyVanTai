@@ -286,8 +286,24 @@ namespace QuanLyVanTai.BLL.Services
                 string routeCode = t.Route?.RouteCode ?? "HN-DN-01";
                 string plate = t.Vehicle?.LicensePlate ?? "29B-123.45";
                 string vType = t.Vehicle?.VehicleType ?? "Giường nằm 40 chỗ";
-                string depStation = t.Route?.Stations?.FirstOrDefault()?.StationName ?? "Bến xe xuất phát";
-                string arrStation = t.Route?.Stations?.LastOrDefault()?.StationName ?? "Bến xe đích";
+                string depStation = t.Route?.Stations?.FirstOrDefault()?.StationName ?? "";
+                string arrStation = t.Route?.Stations?.LastOrDefault()?.StationName ?? "";
+
+                // Nếu Route chưa liên kết bảng trung gian trạm hoặc trạm rỗng, lấy chính xác từ tên tuyến trong DB (VD: Hà Nội - Đà Nẵng)
+                if (string.IsNullOrWhiteSpace(depStation) || depStation == "Bến xe xuất phát")
+                {
+                    if (!string.IsNullOrWhiteSpace(routeName) && routeName.Contains('-'))
+                    {
+                        var parts = routeName.Split('-');
+                        depStation = parts[0].Trim();
+                        arrStation = parts.Length > 1 ? parts[1].Split('(')[0].Trim() : "Bến xe đến";
+                    }
+                    else
+                    {
+                        depStation = "Bến xe trung tâm";
+                        arrStation = "Bến xe đến";
+                    }
+                }
                 string staff = t.Account?.FullName ?? "Nhân viên bán vé";
 
                 int floor = 1;

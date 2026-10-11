@@ -45,9 +45,7 @@ namespace QuanLyVanTai.UI.Forms
             ThemeConfig.StyleSuccessButton(btnDatVe, IconChar.Ticket);
             btnDatVe.Size = new Size(200, 42);
 
-            ThemeConfig.StylePrimaryButton(btnXuatVe, IconChar.Print);
-            btnXuatVe.Size = new Size(200, 42);
-            btnXuatVe.Enabled = false; // Chỉ bật khi đã có vé được đặt
+            btnXuatVe.Visible = false;
 
             ThemeConfig.StyleSecondaryButton(btnTaiSoDo, IconChar.RotateLeft);
             btnTaiSoDo.Size = new Size(160, 32);
@@ -107,9 +105,8 @@ namespace QuanLyVanTai.UI.Forms
                 }
             };
 
-            // Nút đặt vé & xuất vé
+            // Nút đặt vé
             btnDatVe.Click += async (s, e) => await ExecuteBookingAsync();
-            btnXuatVe.Click += async (s, e) => await OpenTicketPrintPreviewAsync();
 
             // Validation qua ErrorProvider (Chương 4)
             txtTenKhachHang.Validating += TxtTenKhachHang_Validating;
@@ -129,8 +126,8 @@ namespace QuanLyVanTai.UI.Forms
             mnuThoat.Click += (s, e) => Application.Exit();
             mnuHuongDan.Click += (s, e) => ShowGuideDialog();
             mnuThongTin.Click += (s, e) => ShowAboutDialog();
-            mnuTraCuuVe.Click += async (s, e) => await SearchTicketDialogAsync();
-            mnuLichSuDatVe.Click += async (s, e) => await ViewBookingHistoryDialogAsync();
+            mnuTraCuuVe.Click += (s, e) => OpenBookingHistory();
+            mnuLichSuDatVe.Click += (s, e) => OpenBookingHistory();
         }
 
         private async void FormMain_KhachHang_Load(object? sender, EventArgs e)
@@ -426,7 +423,7 @@ namespace QuanLyVanTai.UI.Forms
 
         #endregion
 
-        #region Đặt vé
+        #region Đặt vé & Xuất vé PDF
 
         private async Task ExecuteBookingAsync()
         {
@@ -475,7 +472,6 @@ namespace QuanLyVanTai.UI.Forms
                 if (result.Success)
                 {
                     _lastBookedTicketIds = result.CreatedTicketIds;
-                    btnXuatVe.Enabled = true;
 
                     lblStatus.Text = result.Message;
                     System.Media.SystemSounds.Asterisk.Play();
@@ -483,7 +479,11 @@ namespace QuanLyVanTai.UI.Forms
                     // Tải lại sơ đồ ghế để ghế vừa đặt chuyển sang màu xám Đã bán
                     await LoadSeatMapForSelectedTripAsync();
 
-                    MessageBox.Show(result.Message, "Đặt vé thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show(
+                        $"{result.Message}\n\nVé của quý khách đã được lưu vào hệ thống thành công!\nQuý khách có thể xem lại, IN VÉ hoặc HỦY VÉ bất kỳ lúc nào tại menu 'Vé của tôi > Lịch sử đặt vé' (phím tắt Ctrl+H).",
+                        "Đặt Vé Thành Công",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
                 }
                 else
                 {
@@ -500,49 +500,56 @@ namespace QuanLyVanTai.UI.Forms
             }
         }
 
-        private Task OpenTicketPrintPreviewAsync()
+        private async Task OpenTicketPrintPreviewAsync()
         {
-            MessageBox.Show("Vé đã được lưu vào hệ thống! Tính năng xuất vé điện tử PDF sẽ được kích hoạt ở bản cập nhật tiếp theo.",
-                "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            return Task.CompletedTask;
-        }
+            if (_lastBookedTicketIds == null || _lastBookedTicketIds.Count == 0)
+            {
+                MessageBox.Show("Chưa có vé nào được đặt trong lượt này để xuất!",
+                    "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
 
-        #endregion
-
-        #region Tra cứu vé & Xem lịch sử
-
-        private Task SearchTicketDialogAsync()
-        {
-            MessageBox.Show("Tính năng tra cứu vé điện tử sẽ được kích hoạt cùng bản in vé.",
-                "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            return Task.CompletedTask;
-        }
-
-        private async Task ViewBookingHistoryDialogAsync()
-        {
-            SetLoading(true, "Đang tải lịch sử đặt vé gần nhất...");
+            SetLoading(true, "Đang chuẩn bị mẫu vé điện tử...");
             try
             {
-                var tickets = await _ticketService.GetAllTicketsAsync();
-                var recentTickets = tickets.Take(15).ToList();
+                var receipts = await _bookingService.GetTicketReceiptsAsync(_lastBookedTicketIds);
+                if (receipts.Count == 0)
+                {
+                    MessageBox.Show("Không tìm thấy thông tin vé cần in!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
 
-                string list = string.Join("\n", recentTickets.Select(t =>
-                    $"[{t.TicketCode}] {t.CustomerName} ({t.CustomerPhone}) | Xe: {t.Vehicle?.LicensePlate} | Ghế: {t.SeatNumber} | {t.Price:N0}đ | {t.TicketStatus}"));
-
-                MessageBox.Show(
-                    $"DANH SÁCH 15 VÉ ĐƯỢC ĐẶT GẦN NHẤT:\n\n{list}",
-                    "Lịch Sử Đặt Vé Gần Nhất",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+                using var previewForm = new FrmTicketPrintPreview(receipts);
+                previewForm.ShowDialog(this);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi lấy lịch sử: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Lỗi hiển thị bản in vé: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
                 SetLoading(false, "Sẵn sàng");
             }
+        }
+
+        #endregion
+
+        #region Tra cứu vé & Xem lịch sử (FrmCustomerTicketHistory)
+
+        private void OpenBookingHistory(string? searchKeyword = null)
+        {
+            string? phone = searchKeyword;
+            if (string.IsNullOrWhiteSpace(phone))
+            {
+                phone = SessionManager.CurrentUser?.PhoneNumber;
+            }
+            if (string.IsNullOrWhiteSpace(phone))
+            {
+                phone = txtSoDienThoai.Text.Trim();
+            }
+
+            using var frm = new FrmCustomerTicketHistory(phone);
+            frm.ShowDialog(this);
         }
 
         #endregion
@@ -561,6 +568,11 @@ namespace QuanLyVanTai.UI.Forms
                 e.Handled = true;
                 btnDatVe.PerformClick();
             }
+            else if ((e.Control && e.KeyCode == Keys.H) || (e.Control && e.KeyCode == Keys.P))
+            {
+                e.Handled = true;
+                OpenBookingHistory();
+            }
         }
 
         private void ShowGuideDialog()
@@ -574,7 +586,7 @@ namespace QuanLyVanTai.UI.Forms
                            "   - Ghế màu Xám: Đã bán (Không thể chọn).\n" +
                            "4. Điền họ tên và SĐT (10 số, bắt đầu bằng 0).\n" +
                            "5. Nhập mã khuyến mãi (VD: TET2026, VIP10, GIAM50K) nếu có.\n" +
-                           "6. Nhấn ĐẶT VÉ (F5 / Ctrl+S).\n\n" +
+                           "6. Nhấn ĐẶT VÉ (F5 / Ctrl+S) -> Vào 'Vé của tôi > Lịch sử đặt vé' (Ctrl+H) để In vé hoặc Hủy vé (trước 1 giờ xuất bến).\n\n" +
                            "Chúc quý khách có chuyến đi thượng lộ bình an!";
 
             MessageBox.Show(guide, "Hướng Dẫn Đặt Vé", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -583,7 +595,7 @@ namespace QuanLyVanTai.UI.Forms
         private void ShowAboutDialog()
         {
             string about = "HỆ THỐNG QUẢN LÝ VẬN TẢI HÀNH KHÁCH\n" +
-                           "Phân hệ: Đặt vé trực quan & Tính tiền khuyến mãi\n" +
+                           "Phân hệ: Đặt vé trực quan & Xuất vé điện tử PDF nhúng mã QR\n" +
                            "Nền tảng: .NET 10 / C# 13+ (Lập trình trực quan LTTQ)\n" +
                            "Tác giả: Nhóm phát triển đồ án Quản Lý Vận Tải";
 

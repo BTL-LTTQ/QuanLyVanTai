@@ -46,6 +46,28 @@ Hệ thống được thiết kế chuẩn hóa (3NF) với 5 thực thể chín
 
 ---
 
+## 🌟 Tính Năng Nổi Bật (Phân Hệ Khách Hàng & Đặt Vé)
+
+- **Màn hình Đặt vé trực quan (`FormMain_KhachHang`)**:
+  - Chọn tuyến đường, ngày đi, xem sơ đồ ghế động theo từng tầng (Tầng 1 / Tầng 2).
+  - Tự động kiểm tra xung đột chỗ ngồi thời gian thực, tính cước vé chuẩn xác.
+- **Lịch sử đặt vé & Tra cứu nhanh (`FrmCustomerTicketHistory`)**:
+  - Giao diện chuẩn Desktop Windows Forms (MenuStrip, StatusStrip, phím tắt `F5`, `Ctrl+D`, `Ctrl+P`, `Delete`).
+  - Lưới hiển thị tinh gọn 5 cột chủ chốt: Mã vé, Tuyến đường, Ghế, Giờ khởi hành, Trạng thái.
+  - Tìm kiếm linh hoạt theo mã vé, tên khách, số điện thoại hoặc lọc theo trạng thái vé.
+- **Hộp thoại Chi tiết vé xe (`FrmTicketDetail`)**:
+  - Xem tường minh thông tin hành khách, thông tin chuyến xe & chỗ ngồi, thông tin thanh toán.
+  - Tích hợp nút tác vụ In thẻ lên xe và Hủy vé xe trực tiếp trên form chi tiết.
+- **In Thẻ lên xe & Xuất vé điện tử GDI+ (`TicketPdfExportService` & `FrmTicketPrintPreview`)**:
+  - Thiết kế theo nhận diện thương hiệu chuẩn **QLVT Bus Lines** (kích thước khổ in nhiệt đứng 600x860).
+  - Tích hợp mã QR Code quét bằng điện thoại, lấy bến đi / bến đến động từ dữ liệu tuyến xe.
+  - Đóng dấu watermark cảnh báo `VÉ ĐÃ HỦY / VOID` nếu vé không còn hiệu lực.
+- **Ràng buộc nghiệp vụ Hủy vé chặt chẽ**:
+  - Chỉ cho phép khách hàng hủy vé **trước giờ xe khởi hành tối thiểu 60 phút (1 giờ)**.
+  - Tự động vô hiệu hóa nút In vé và chặn tuyệt đối việc in thẻ lên xe đối với vé đã hủy.
+
+---
+
 ## 🚀 Hướng Dẫn Cài Đặt & Chạy Dự Án
 
 ### 1. Yêu cầu hệ thống

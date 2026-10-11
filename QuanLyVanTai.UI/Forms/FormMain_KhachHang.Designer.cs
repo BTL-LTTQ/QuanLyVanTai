@@ -39,7 +39,6 @@ namespace QuanLyVanTai.UI.Forms
             pnlLeftScroll = new Panel();
             flpButtons = new FlowLayoutPanel();
             btnDatVe = new FontAwesome.Sharp.IconButton();
-            btnXuatVe = new FontAwesome.Sharp.IconButton();
             btnHuyChon = new FontAwesome.Sharp.IconButton();
             grpThanhToan = new GroupBox();
             tlpThanhToan = new TableLayoutPanel();
@@ -52,9 +51,9 @@ namespace QuanLyVanTai.UI.Forms
             txtMaKhuyenMai = new TextBox();
             btnApDungKhuyenMai = new Button();
             lblTienGiamTitle = new Label();
-            lblTienGiam = new Label();
             lblTongTienTitle = new Label();
             lblTongTien = new Label();
+            lblTienGiam = new Label();
             grpThongTinKhach = new GroupBox();
             tlpKhachHang = new TableLayoutPanel();
             lblTenKhachHang = new Label();
@@ -83,6 +82,7 @@ namespace QuanLyVanTai.UI.Forms
             pnlLegendBookedColor = new Panel();
             lblLegendBooked = new Label();
             lblLegendSteering = new Label();
+            btnXuatVe = new FontAwesome.Sharp.IconButton();
             errorProviderMain = new ErrorProvider(components);
             timerClock = new System.Windows.Forms.Timer(components);
             msMain.SuspendLayout();
@@ -130,25 +130,25 @@ namespace QuanLyVanTai.UI.Forms
             // 
             mnuDangXuat.Name = "mnuDangXuat";
             mnuDangXuat.ShortcutKeys = Keys.Control | Keys.Q;
-            mnuDangXuat.Size = new Size(224, 26);
+            mnuDangXuat.Size = new Size(222, 26);
             mnuDangXuat.Text = "Đăng &xuất";
             // 
             // mnuDoiMatKhau
             // 
             mnuDoiMatKhau.Name = "mnuDoiMatKhau";
-            mnuDoiMatKhau.Size = new Size(224, 26);
+            mnuDoiMatKhau.Size = new Size(222, 26);
             mnuDoiMatKhau.Text = "Đổi &mật khẩu...";
             // 
             // toolStripSeparator1
             // 
             toolStripSeparator1.Name = "toolStripSeparator1";
-            toolStripSeparator1.Size = new Size(221, 6);
+            toolStripSeparator1.Size = new Size(219, 6);
             // 
             // mnuThoat
             // 
             mnuThoat.Name = "mnuThoat";
             mnuThoat.ShortcutKeys = Keys.Alt | Keys.F4;
-            mnuThoat.Size = new Size(224, 26);
+            mnuThoat.Size = new Size(222, 26);
             mnuThoat.Text = "&Thoát";
             // 
             // mnuVeCuaToi
@@ -282,7 +282,6 @@ namespace QuanLyVanTai.UI.Forms
             // flpButtons
             // 
             flpButtons.Controls.Add(btnDatVe);
-            flpButtons.Controls.Add(btnXuatVe);
             flpButtons.Controls.Add(btnHuyChon);
             flpButtons.Dock = DockStyle.Top;
             flpButtons.Location = new Point(14, 796);
@@ -308,31 +307,10 @@ namespace QuanLyVanTai.UI.Forms
             btnDatVe.Location = new Point(3, 15);
             btnDatVe.Margin = new Padding(3, 4, 3, 4);
             btnDatVe.Name = "btnDatVe";
-            btnDatVe.Size = new Size(234, 53);
+            btnDatVe.Size = new Size(276, 53);
             btnDatVe.TabIndex = 0;
             btnDatVe.Text = " ĐẶT VÉ (F5/Ctrl+S)";
             btnDatVe.UseVisualStyleBackColor = false;
-            // 
-            // btnXuatVe
-            // 
-            btnXuatVe.BackColor = Color.FromArgb(37, 99, 235);
-            btnXuatVe.Cursor = Cursors.Hand;
-            btnXuatVe.FlatAppearance.BorderSize = 0;
-            btnXuatVe.FlatStyle = FlatStyle.Flat;
-            btnXuatVe.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
-            btnXuatVe.ForeColor = Color.White;
-            btnXuatVe.IconChar = FontAwesome.Sharp.IconChar.Print;
-            btnXuatVe.IconColor = Color.White;
-            btnXuatVe.IconFont = FontAwesome.Sharp.IconFont.Auto;
-            btnXuatVe.IconSize = 20;
-            btnXuatVe.ImageAlign = ContentAlignment.MiddleLeft;
-            btnXuatVe.Location = new Point(243, 15);
-            btnXuatVe.Margin = new Padding(3, 4, 3, 4);
-            btnXuatVe.Name = "btnXuatVe";
-            btnXuatVe.Size = new Size(222, 53);
-            btnXuatVe.TabIndex = 1;
-            btnXuatVe.Text = " IN & XUẤT VÉ (Ctrl+P)";
-            btnXuatVe.UseVisualStyleBackColor = false;
             // 
             // btnHuyChon
             // 
@@ -340,17 +318,17 @@ namespace QuanLyVanTai.UI.Forms
             btnHuyChon.Cursor = Cursors.Hand;
             btnHuyChon.FlatAppearance.BorderSize = 0;
             btnHuyChon.FlatStyle = FlatStyle.Flat;
-            btnHuyChon.Font = new Font("Segoe UI", 9F);
+            btnHuyChon.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             btnHuyChon.ForeColor = Color.FromArgb(71, 85, 105);
             btnHuyChon.IconChar = FontAwesome.Sharp.IconChar.Close;
             btnHuyChon.IconColor = Color.FromArgb(71, 85, 105);
             btnHuyChon.IconFont = FontAwesome.Sharp.IconFont.Auto;
             btnHuyChon.IconSize = 16;
             btnHuyChon.ImageAlign = ContentAlignment.MiddleLeft;
-            btnHuyChon.Location = new Point(3, 76);
+            btnHuyChon.Location = new Point(285, 15);
             btnHuyChon.Margin = new Padding(3, 4, 3, 4);
             btnHuyChon.Name = "btnHuyChon";
-            btnHuyChon.Size = new Size(160, 43);
+            btnHuyChon.Size = new Size(187, 53);
             btnHuyChon.TabIndex = 2;
             btnHuyChon.Text = " Bỏ chọn tất cả";
             btnHuyChon.UseVisualStyleBackColor = false;
@@ -365,7 +343,7 @@ namespace QuanLyVanTai.UI.Forms
             grpThanhToan.Location = new Point(14, 511);
             grpThanhToan.Margin = new Padding(3, 4, 3, 4);
             grpThanhToan.Name = "grpThanhToan";
-            grpThanhToan.Padding = new Padding(11, 11, 11, 11);
+            grpThanhToan.Padding = new Padding(11);
             grpThanhToan.Size = new Size(486, 285);
             grpThanhToan.TabIndex = 2;
             grpThanhToan.TabStop = false;
@@ -508,18 +486,6 @@ namespace QuanLyVanTai.UI.Forms
             lblTienGiamTitle.TabIndex = 6;
             lblTienGiamTitle.Text = "Giảm trừ:";
             // 
-            // lblTienGiam
-            // 
-            lblTienGiam.Anchor = AnchorStyles.Left;
-            lblTienGiam.AutoSize = true;
-            lblTienGiam.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
-            lblTienGiam.ForeColor = Color.FromArgb(16, 185, 129);
-            lblTienGiam.Location = new Point(140, 148);
-            lblTienGiam.Name = "lblTienGiam";
-            lblTienGiam.Size = new Size(62, 21);
-            lblTienGiam.TabIndex = 7;
-            lblTienGiam.Text = "-0 VNĐ";
-            // 
             // lblTongTienTitle
             // 
             lblTongTienTitle.Anchor = AnchorStyles.Left;
@@ -544,6 +510,18 @@ namespace QuanLyVanTai.UI.Forms
             lblTongTien.TabIndex = 9;
             lblTongTien.Text = "0 VNĐ";
             // 
+            // lblTienGiam
+            // 
+            lblTienGiam.Anchor = AnchorStyles.Left;
+            lblTienGiam.AutoSize = true;
+            lblTienGiam.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
+            lblTienGiam.ForeColor = Color.FromArgb(16, 185, 129);
+            lblTienGiam.Location = new Point(140, 148);
+            lblTienGiam.Name = "lblTienGiam";
+            lblTienGiam.Size = new Size(62, 21);
+            lblTienGiam.TabIndex = 7;
+            lblTienGiam.Text = "-0 VNĐ";
+            // 
             // grpThongTinKhach
             // 
             grpThongTinKhach.BackColor = Color.White;
@@ -554,7 +532,7 @@ namespace QuanLyVanTai.UI.Forms
             grpThongTinKhach.Location = new Point(14, 291);
             grpThongTinKhach.Margin = new Padding(3, 4, 3, 4);
             grpThongTinKhach.Name = "grpThongTinKhach";
-            grpThongTinKhach.Padding = new Padding(11, 11, 11, 11);
+            grpThongTinKhach.Padding = new Padding(11);
             grpThongTinKhach.Size = new Size(486, 220);
             grpThongTinKhach.TabIndex = 1;
             grpThongTinKhach.TabStop = false;
@@ -662,7 +640,7 @@ namespace QuanLyVanTai.UI.Forms
             grpTimChuyen.Location = new Point(14, 16);
             grpTimChuyen.Margin = new Padding(3, 4, 3, 4);
             grpTimChuyen.Name = "grpTimChuyen";
-            grpTimChuyen.Padding = new Padding(11, 11, 11, 11);
+            grpTimChuyen.Padding = new Padding(11);
             grpTimChuyen.Size = new Size(486, 275);
             grpTimChuyen.TabIndex = 0;
             grpTimChuyen.TabStop = false;
@@ -914,6 +892,27 @@ namespace QuanLyVanTai.UI.Forms
             lblLegendSteering.Size = new Size(183, 20);
             lblLegendSteering.TabIndex = 6;
             lblLegendSteering.Text = "⎈ Vô lăng = Hướng đầu xe";
+            // 
+            // btnXuatVe
+            // 
+            btnXuatVe.BackColor = Color.FromArgb(37, 99, 235);
+            btnXuatVe.Cursor = Cursors.Hand;
+            btnXuatVe.FlatAppearance.BorderSize = 0;
+            btnXuatVe.FlatStyle = FlatStyle.Flat;
+            btnXuatVe.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
+            btnXuatVe.ForeColor = Color.White;
+            btnXuatVe.IconChar = FontAwesome.Sharp.IconChar.Print;
+            btnXuatVe.IconColor = Color.White;
+            btnXuatVe.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            btnXuatVe.IconSize = 20;
+            btnXuatVe.ImageAlign = ContentAlignment.MiddleLeft;
+            btnXuatVe.Location = new Point(243, 15);
+            btnXuatVe.Margin = new Padding(3, 4, 3, 4);
+            btnXuatVe.Name = "btnXuatVe";
+            btnXuatVe.Size = new Size(222, 53);
+            btnXuatVe.TabIndex = 1;
+            btnXuatVe.Text = " IN & XUẤT VÉ (Ctrl+P)";
+            btnXuatVe.UseVisualStyleBackColor = false;
             // 
             // errorProviderMain
             // 
