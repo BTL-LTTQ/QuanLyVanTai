@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Text.RegularExpressions;
 using Core.Configs;
 using Core.Helpers;
 using FontAwesome.Sharp;
@@ -12,10 +13,13 @@ namespace QuanLyVanTai.UI.Forms
     {
         private readonly TicketService _ticketService = new();
         private readonly SeatMapService _seatMapService = new();
+        private readonly CustomerBookingService _bookingService = new();
 
         private List<Route> _routes = new();
         private List<Vehicle> _vehicles = new();
         private VehicleSeatMapDto? _currentSeatMap;
+        private List<int> _lastBookedTicketIds = new();
+        private PromotionVerifyResultDto? _currentPromotion;
 
         public FormMain_KhachHang()
         {
@@ -43,7 +47,7 @@ namespace QuanLyVanTai.UI.Forms
 
             ThemeConfig.StylePrimaryButton(btnXuatVe, IconChar.Print);
             btnXuatVe.Size = new Size(200, 42);
-            btnXuatVe.Enabled = false;
+            btnXuatVe.Enabled = false; // Chỉ bật khi đã có vé được đặt
 
             ThemeConfig.StyleSecondaryButton(btnTaiSoDo, IconChar.RotateLeft);
             btnTaiSoDo.Size = new Size(160, 32);
@@ -92,6 +96,30 @@ namespace QuanLyVanTai.UI.Forms
             seatMapControl.SelectionChanged += (s, selectedSeats) => OnSeatSelectionChanged(selectedSeats);
             btnHuyChon.Click += (s, e) => seatMapControl.ClearSelection();
 
+            // Áp dụng khuyến mãi
+            btnApDungKhuyenMai.Click += async (s, e) => await ApplyPromotionCodeAsync();
+            txtMaKhuyenMai.KeyDown += async (s, e) =>
+            {
+                if (e.KeyCode == Keys.Enter)
+                {
+                    e.SuppressKeyPress = true;
+                    await ApplyPromotionCodeAsync();
+                }
+            };
+
+            // Nút đặt vé & xuất vé
+            btnDatVe.Click += async (s, e) => await ExecuteBookingAsync();
+            btnXuatVe.Click += async (s, e) => await OpenTicketPrintPreviewAsync();
+
+            // Validation qua ErrorProvider (Chương 4)
+            txtTenKhachHang.Validating += TxtTenKhachHang_Validating;
+            txtSoDienThoai.Validating += TxtSoDienThoai_Validating;
+
+            // Chuyển focus bằng phím Enter
+            txtTenKhachHang.KeyDown += OnInputEnterNextControl;
+            txtSoDienThoai.KeyDown += OnInputEnterNextControl;
+            txtGhiChu.KeyDown += OnInputEnterNextControl;
+
             // MenuStrip handlers
             mnuDangXuat.Click += (s, e) =>
             {
@@ -101,6 +129,8 @@ namespace QuanLyVanTai.UI.Forms
             mnuThoat.Click += (s, e) => Application.Exit();
             mnuHuongDan.Click += (s, e) => ShowGuideDialog();
             mnuThongTin.Click += (s, e) => ShowAboutDialog();
+            mnuTraCuuVe.Click += async (s, e) => await SearchTicketDialogAsync();
+            mnuLichSuDatVe.Click += async (s, e) => await ViewBookingHistoryDialogAsync();
         }
 
         private async void FormMain_KhachHang_Load(object? sender, EventArgs e)
@@ -230,7 +260,7 @@ namespace QuanLyVanTai.UI.Forms
 
         #endregion
 
-        #region Tương tác chọn ghế trên sơ đồ GDI+
+        #region Tính tiền & Khuyến mãi
 
         private void OnSeatSelectionChanged(List<SeatVisualItem> selectedSeats)
         {
@@ -240,6 +270,7 @@ namespace QuanLyVanTai.UI.Forms
                 lblDanhSachGhe.ForeColor = Color.FromArgb(71, 85, 105);
                 lblTongTien.Text = "0 VNĐ";
                 lblTienGiam.Text = "-0 VNĐ";
+                _currentPromotion = null;
                 return;
             }
 
@@ -248,8 +279,270 @@ namespace QuanLyVanTai.UI.Forms
             lblDanhSachGhe.ForeColor = Color.FromArgb(37, 99, 235);
 
             decimal subTotal = selectedSeats.Sum(s => s.FinalPrice);
-            lblTienGiam.Text = "-0 VNĐ";
-            lblTongTien.Text = $"{subTotal:N0} VNĐ";
+
+            // Tính lại khuyến mãi nếu có
+            if (_currentPromotion != null && _currentPromotion.IsValid)
+            {
+                decimal discount = _currentPromotion.DiscountPercent > 0
+                    ? Math.Round(subTotal * (_currentPromotion.DiscountPercent / 100m), 0)
+                    : _currentPromotion.DiscountAmount;
+
+                _currentPromotion.DiscountAmount = discount;
+                _currentPromotion.FinalTotal = Math.Max(0, subTotal - discount);
+
+                lblTienGiam.Text = $"-{discount:N0} VNĐ";
+                lblTongTien.Text = $"{_currentPromotion.FinalTotal:N0} VNĐ";
+            }
+            else
+            {
+                lblTienGiam.Text = "-0 VNĐ";
+                lblTongTien.Text = $"{subTotal:N0} VNĐ";
+            }
+
+            errorProviderMain.SetError(seatMapControl, string.Empty);
+        }
+
+        private async Task ApplyPromotionCodeAsync()
+        {
+            var selectedSeats = seatMapControl.GetSelectedSeats();
+            if (selectedSeats.Count == 0)
+            {
+                MessageBox.Show("Vui lòng chọn ít nhất 1 vị trí ghế trước khi áp dụng mã khuyến mãi!",
+                    "Chưa chọn ghế", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            string code = txtMaKhuyenMai.Text.Trim();
+            if (string.IsNullOrEmpty(code))
+            {
+                _currentPromotion = null;
+                OnSeatSelectionChanged(selectedSeats);
+                return;
+            }
+
+            decimal subTotal = selectedSeats.Sum(s => s.FinalPrice);
+            SetLoading(true, "Đang kiểm tra mã khuyến mãi...");
+
+            try
+            {
+                _currentPromotion = await _bookingService.VerifyPromotionAsync(code, subTotal);
+
+                if (_currentPromotion.IsValid)
+                {
+                    lblTienGiam.Text = $"-{_currentPromotion.DiscountAmount:N0} VNĐ";
+                    lblTongTien.Text = $"{_currentPromotion.FinalTotal:N0} VNĐ";
+                    MessageBox.Show($"{_currentPromotion.Message}\n{_currentPromotion.Description}",
+                        "Áp dụng thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    _currentPromotion = null;
+                    lblTienGiam.Text = "-0 VNĐ";
+                    lblTongTien.Text = $"{subTotal:N0} VNĐ";
+                    MessageBox.Show(_currentPromotion?.Message ?? "Mã không hợp lệ!",
+                        "Không hợp lệ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            finally
+            {
+                SetLoading(false, "Sẵn sàng");
+            }
+        }
+
+        #endregion
+
+        #region Validation bằng ErrorProvider (Chương 4)
+
+        private void TxtTenKhachHang_Validating(object? sender, CancelEventArgs e)
+        {
+            string name = txtTenKhachHang.Text.Trim();
+            if (string.IsNullOrEmpty(name))
+            {
+                errorProviderMain.SetError(txtTenKhachHang, "Họ và tên khách hàng không được để trống!");
+            }
+            else if (name.Length < 2)
+            {
+                errorProviderMain.SetError(txtTenKhachHang, "Họ và tên phải có tối thiểu 2 ký tự!");
+            }
+            else
+            {
+                errorProviderMain.SetError(txtTenKhachHang, string.Empty);
+            }
+        }
+
+        private void TxtSoDienThoai_Validating(object? sender, CancelEventArgs e)
+        {
+            string phone = txtSoDienThoai.Text.Trim();
+            if (string.IsNullOrEmpty(phone))
+            {
+                errorProviderMain.SetError(txtSoDienThoai, "Số điện thoại không được để trống!");
+            }
+            else if (!Regex.IsMatch(phone, @"^0\d{9}$"))
+            {
+                errorProviderMain.SetError(txtSoDienThoai, "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0 (VD: 0912345678)!");
+            }
+            else
+            {
+                errorProviderMain.SetError(txtSoDienThoai, string.Empty);
+            }
+        }
+
+        private bool ValidateAllInputs()
+        {
+            TxtTenKhachHang_Validating(txtTenKhachHang, new CancelEventArgs());
+            TxtSoDienThoai_Validating(txtSoDienThoai, new CancelEventArgs());
+
+            if (!string.IsNullOrEmpty(errorProviderMain.GetError(txtTenKhachHang)) ||
+                !string.IsNullOrEmpty(errorProviderMain.GetError(txtSoDienThoai)))
+            {
+                return false;
+            }
+
+            if (cboChuyenXe.SelectedItem is not TripDisplayItem)
+            {
+                MessageBox.Show("Vui lòng chọn chuyến xe khởi hành!", "Chưa chọn chuyến xe", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            var selectedSeats = seatMapControl.GetSelectedSeats();
+            if (selectedSeats.Count == 0)
+            {
+                errorProviderMain.SetError(seatMapControl, "Vui lòng chọn ít nhất 1 chỗ ngồi trên sơ đồ xe!");
+                MessageBox.Show("Vui lòng chọn ít nhất 1 vị trí ghế trên sơ đồ xe!", "Chưa chọn ghế", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            return true;
+        }
+
+        private void OnInputEnterNextControl(object? sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true;
+                this.SelectNextControl((Control)sender!, true, true, true, true);
+            }
+        }
+
+        #endregion
+
+        #region Đặt vé
+
+        private async Task ExecuteBookingAsync()
+        {
+            if (!ValidateAllInputs()) return;
+
+            var trip = (TripDisplayItem)cboChuyenXe.SelectedItem!;
+            var selectedSeats = seatMapControl.GetSelectedSeats();
+            var seatCodes = selectedSeats.Select(s => s.SeatCode).ToList();
+
+            string confirmMsg = $"XÁC NHẬN ĐẶT VÉ:\n\n" +
+                                $"• Hành khách: {txtTenKhachHang.Text.Trim()}\n" +
+                                $"• Điện thoại: {txtSoDienThoai.Text.Trim()}\n" +
+                                $"• Chuyến: {trip.LicensePlate} ({trip.DepartureTime:dd/MM/yyyy HH:mm})\n" +
+                                $"• Vị trí ghế: {string.Join(", ", seatCodes)}\n" +
+                                $"• Tổng thanh toán: {lblTongTien.Text}\n\n" +
+                                $"Quý khách có chắc chắn muốn tiến hành đặt vé không?";
+
+            if (MessageBox.Show(confirmMsg, "Xác nhận đặt vé", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+            {
+                return;
+            }
+
+            SetLoading(true, "Đang xử lý đặt vé & ghi nhận hệ thống...");
+
+            try
+            {
+                int routeId = (int)(cboTuyenXe.SelectedValue ?? 0);
+                int? accountId = SessionManager.CurrentUser?.Id;
+
+                var bookingRequest = new BookingRequestDto
+                {
+                    RouteId = routeId,
+                    VehicleId = trip.VehicleId,
+                    DepartureTime = trip.DepartureTime,
+                    CustomerName = txtTenKhachHang.Text.Trim(),
+                    CustomerPhone = txtSoDienThoai.Text.Trim(),
+                    CustomerNotes = txtGhiChu.Text.Trim(),
+                    SelectedSeats = seatCodes,
+                    PromotionCode = txtMaKhuyenMai.Text.Trim(),
+                    AccountId = accountId,
+                    PaymentMethod = "Tiền mặt"
+                };
+
+                var result = await _bookingService.BookTicketsAsync(bookingRequest);
+
+                if (result.Success)
+                {
+                    _lastBookedTicketIds = result.CreatedTicketIds;
+                    btnXuatVe.Enabled = true;
+
+                    lblStatus.Text = result.Message;
+                    System.Media.SystemSounds.Asterisk.Play();
+
+                    // Tải lại sơ đồ ghế để ghế vừa đặt chuyển sang màu xám Đã bán
+                    await LoadSeatMapForSelectedTripAsync();
+
+                    MessageBox.Show(result.Message, "Đặt vé thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show(result.Message, "Không thể đặt vé", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi trong quá trình đặt vé: " + ex.Message, "Lỗi Hệ Thống", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                SetLoading(false, "Sẵn sàng");
+            }
+        }
+
+        private Task OpenTicketPrintPreviewAsync()
+        {
+            MessageBox.Show("Vé đã được lưu vào hệ thống! Tính năng xuất vé điện tử PDF sẽ được kích hoạt ở bản cập nhật tiếp theo.",
+                "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return Task.CompletedTask;
+        }
+
+        #endregion
+
+        #region Tra cứu vé & Xem lịch sử
+
+        private Task SearchTicketDialogAsync()
+        {
+            MessageBox.Show("Tính năng tra cứu vé điện tử sẽ được kích hoạt cùng bản in vé.",
+                "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return Task.CompletedTask;
+        }
+
+        private async Task ViewBookingHistoryDialogAsync()
+        {
+            SetLoading(true, "Đang tải lịch sử đặt vé gần nhất...");
+            try
+            {
+                var tickets = await _ticketService.GetAllTicketsAsync();
+                var recentTickets = tickets.Take(15).ToList();
+
+                string list = string.Join("\n", recentTickets.Select(t =>
+                    $"[{t.TicketCode}] {t.CustomerName} ({t.CustomerPhone}) | Xe: {t.Vehicle?.LicensePlate} | Ghế: {t.SeatNumber} | {t.Price:N0}đ | {t.TicketStatus}"));
+
+                MessageBox.Show(
+                    $"DANH SÁCH 15 VÉ ĐƯỢC ĐẶT GẦN NHẤT:\n\n{list}",
+                    "Lịch Sử Đặt Vé Gần Nhất",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi lấy lịch sử: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                SetLoading(false, "Sẵn sàng");
+            }
         }
 
         #endregion
@@ -263,6 +556,11 @@ namespace QuanLyVanTai.UI.Forms
                 e.Handled = true;
                 btnTaiSoDo.PerformClick();
             }
+            else if (e.Control && e.KeyCode == Keys.S)
+            {
+                e.Handled = true;
+                btnDatVe.PerformClick();
+            }
         }
 
         private void ShowGuideDialog()
@@ -273,7 +571,10 @@ namespace QuanLyVanTai.UI.Forms
                            "3. Quan sát sơ đồ chỗ ngồi:\n" +
                            "   - Ghế màu Xanh nhạt: Còn trống (Click để chọn).\n" +
                            "   - Ghế màu Cam: Đang chọn (Click lần nữa để hủy chọn).\n" +
-                           "   - Ghế màu Xám: Đã bán (Không thể chọn).\n\n" +
+                           "   - Ghế màu Xám: Đã bán (Không thể chọn).\n" +
+                           "4. Điền họ tên và SĐT (10 số, bắt đầu bằng 0).\n" +
+                           "5. Nhập mã khuyến mãi (VD: TET2026, VIP10, GIAM50K) nếu có.\n" +
+                           "6. Nhấn ĐẶT VÉ (F5 / Ctrl+S).\n\n" +
                            "Chúc quý khách có chuyến đi thượng lộ bình an!";
 
             MessageBox.Show(guide, "Hướng Dẫn Đặt Vé", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -282,7 +583,7 @@ namespace QuanLyVanTai.UI.Forms
         private void ShowAboutDialog()
         {
             string about = "HỆ THỐNG QUẢN LÝ VẬN TẢI HÀNH KHÁCH\n" +
-                           "Phân hệ: Đặt vé trực quan bằng sơ đồ GDI+\n" +
+                           "Phân hệ: Đặt vé trực quan & Tính tiền khuyến mãi\n" +
                            "Nền tảng: .NET 10 / C# 13+ (Lập trình trực quan LTTQ)\n" +
                            "Tác giả: Nhóm phát triển đồ án Quản Lý Vận Tải";
 
