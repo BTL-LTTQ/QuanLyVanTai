@@ -19,7 +19,7 @@ namespace Core.Configs
         // Font chữ
         public static Font MainFont = new Font("Segoe UI", 10F, FontStyle.Regular);
         public static Font TitleFont = new Font("Segoe UI", 14F, FontStyle.Bold);
-        public static Font ButtonFont = new Font("Segoe UI", 10F, FontStyle.Bold);
+        public static Font ButtonFont = new Font("Segoe UI", 9F, FontStyle.Bold);
 
         // Helper methods for styling UI controls
         public static void StyleButton(IconButton button, Color bgColor, Color iconColor, IconChar icon)
@@ -28,15 +28,16 @@ namespace Core.Configs
             button.ForeColor = Color.White;
             button.IconChar = icon;
             button.IconColor = iconColor;
-            button.IconSize = 24;
+            button.IconSize = 18;
             button.Font = ButtonFont;
             button.FlatStyle = FlatStyle.Flat;
             button.FlatAppearance.BorderSize = 0;
             button.Cursor = Cursors.Hand;
             button.TextImageRelation = TextImageRelation.ImageBeforeText;
-            button.ImageAlign = ContentAlignment.MiddleLeft;
-            button.Padding = new Padding(10, 0, 10, 0);
-            button.Size = new Size(110, 40);
+            button.ImageAlign = ContentAlignment.MiddleCenter;
+            button.TextAlign = ContentAlignment.MiddleCenter;
+            button.Padding = new Padding(4, 0, 4, 0);
+            button.Size = new Size(110, 36);
         }
         
         public static void StylePrimaryButton(IconButton button, IconChar icon)

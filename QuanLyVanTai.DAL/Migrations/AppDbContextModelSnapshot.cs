@@ -35,6 +35,17 @@ namespace QuanLyVanTai.DAL.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
 
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("Email")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -46,6 +57,9 @@ namespace QuanLyVanTai.DAL.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("LockoutEndTime")
                         .HasColumnType("datetime2");
@@ -88,6 +102,13 @@ namespace QuanLyVanTai.DAL.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -109,14 +130,515 @@ namespace QuanLyVanTai.DAL.Migrations
                         {
                             Id = 1,
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedBy = "System",
                             Email = "admin@vantai.com",
                             FailedLoginAttempts = 0,
                             FullName = "Quản trị hệ thống",
-                            PasswordHash = "admin123",
+                            IsDeleted = false,
+                            PasswordHash = "Eh0EyUW4L77LZu1zqhZjCKrQG550Omv/Gz104EX92Zk=",
+                            PasswordSalt = "ijqwgl6CHPohVYAzWSP3sQ==",
                             PhoneNumber = "0988888888",
-                            Role = "Admin",
+                            Role = "Quản trị viên",
                             Status = "Active",
                             Username = "admin"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedBy = "System",
+                            Email = "quanly@vantai.com",
+                            FailedLoginAttempts = 0,
+                            FullName = "Nguyễn Văn Quản Lý",
+                            IsDeleted = false,
+                            PasswordHash = "nkCDe2JgquW7II1AloN0t7erpvLAJb810kKSrBIut7U=",
+                            PasswordSalt = "OVTLBbFfH6hO1/MCkJSwRw==",
+                            PhoneNumber = "0977777777",
+                            Role = "Quản lý",
+                            Status = "Active",
+                            Username = "quanly"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedBy = "System",
+                            Email = "banve@vantai.com",
+                            FailedLoginAttempts = 0,
+                            FullName = "Trần Thị Bán Vé",
+                            IsDeleted = false,
+                            PasswordHash = "AGEiu4PWTLtphI94XUjgv+CbSkBe7pGsckS3Y4OyrvU=",
+                            PasswordSalt = "Rz9m1NguF0fsxiWbmOIXpA==",
+                            PhoneNumber = "0966666666",
+                            Role = "Nhân viên bán vé",
+                            Status = "Active",
+                            Username = "nhanvien"
+                        });
+                });
+
+            modelBuilder.Entity("QuanLyVanTai.DAL.Models.AuditLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("EntityName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("IpAddress")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("NewValues")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OldValues")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RecordId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityName");
+
+                    b.HasIndex("Timestamp");
+
+                    b.HasIndex("Username");
+
+                    b.ToTable("AuditLogs");
+                });
+
+            modelBuilder.Entity("QuanLyVanTai.DAL.Models.RolePermission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("CanAdd")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanDelete")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanEdit")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanExport")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanView")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MenuCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("MenuName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleName", "MenuCode")
+                        .IsUnique();
+
+                    b.ToTable("RolePermissions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CanAdd = true,
+                            CanDelete = true,
+                            CanEdit = true,
+                            CanExport = true,
+                            CanView = true,
+                            MenuCode = "TuyenXe",
+                            MenuName = "Quản lý Tuyến xe",
+                            RoleName = "Quản trị viên",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CanAdd = true,
+                            CanDelete = true,
+                            CanEdit = true,
+                            CanExport = true,
+                            CanView = true,
+                            MenuCode = "TramDung",
+                            MenuName = "Quản lý Trạm dừng",
+                            RoleName = "Quản trị viên",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CanAdd = true,
+                            CanDelete = true,
+                            CanEdit = true,
+                            CanExport = true,
+                            CanView = true,
+                            MenuCode = "PhuongTien",
+                            MenuName = "Quản lý Phương tiện",
+                            RoleName = "Quản trị viên",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CanAdd = true,
+                            CanDelete = true,
+                            CanEdit = true,
+                            CanExport = true,
+                            CanView = true,
+                            MenuCode = "NhanSu",
+                            MenuName = "Quản lý Nhân sự",
+                            RoleName = "Quản trị viên",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CanAdd = true,
+                            CanDelete = true,
+                            CanEdit = true,
+                            CanExport = true,
+                            CanView = true,
+                            MenuCode = "DichVu",
+                            MenuName = "Quản lý Dịch vụ",
+                            RoleName = "Quản trị viên",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 6,
+                            CanAdd = true,
+                            CanDelete = true,
+                            CanEdit = true,
+                            CanExport = true,
+                            CanView = true,
+                            MenuCode = "GiaVe",
+                            MenuName = "Quản lý Giá vé",
+                            RoleName = "Quản trị viên",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 7,
+                            CanAdd = true,
+                            CanDelete = true,
+                            CanEdit = true,
+                            CanExport = true,
+                            CanView = true,
+                            MenuCode = "KhuyenMai",
+                            MenuName = "Quản lý Khuyến mãi",
+                            RoleName = "Quản trị viên",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 8,
+                            CanAdd = true,
+                            CanDelete = true,
+                            CanEdit = true,
+                            CanExport = true,
+                            CanView = true,
+                            MenuCode = "PhanQuyen",
+                            MenuName = "Quản lý Phân quyền",
+                            RoleName = "Quản trị viên",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 9,
+                            CanAdd = true,
+                            CanDelete = true,
+                            CanEdit = true,
+                            CanExport = true,
+                            CanView = true,
+                            MenuCode = "NhatKyHoatDong",
+                            MenuName = "Nhật ký hoạt động",
+                            RoleName = "Quản trị viên",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 10,
+                            CanAdd = true,
+                            CanDelete = false,
+                            CanEdit = true,
+                            CanExport = true,
+                            CanView = true,
+                            MenuCode = "TuyenXe",
+                            MenuName = "Quản lý Tuyến xe",
+                            RoleName = "Quản lý",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 11,
+                            CanAdd = true,
+                            CanDelete = false,
+                            CanEdit = true,
+                            CanExport = true,
+                            CanView = true,
+                            MenuCode = "TramDung",
+                            MenuName = "Quản lý Trạm dừng",
+                            RoleName = "Quản lý",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 12,
+                            CanAdd = true,
+                            CanDelete = false,
+                            CanEdit = true,
+                            CanExport = true,
+                            CanView = true,
+                            MenuCode = "PhuongTien",
+                            MenuName = "Quản lý Phương tiện",
+                            RoleName = "Quản lý",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 13,
+                            CanAdd = true,
+                            CanDelete = false,
+                            CanEdit = true,
+                            CanExport = true,
+                            CanView = true,
+                            MenuCode = "NhanSu",
+                            MenuName = "Quản lý Nhân sự",
+                            RoleName = "Quản lý",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 14,
+                            CanAdd = true,
+                            CanDelete = false,
+                            CanEdit = true,
+                            CanExport = true,
+                            CanView = true,
+                            MenuCode = "DichVu",
+                            MenuName = "Quản lý Dịch vụ",
+                            RoleName = "Quản lý",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 15,
+                            CanAdd = true,
+                            CanDelete = false,
+                            CanEdit = true,
+                            CanExport = true,
+                            CanView = true,
+                            MenuCode = "GiaVe",
+                            MenuName = "Quản lý Giá vé",
+                            RoleName = "Quản lý",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 16,
+                            CanAdd = true,
+                            CanDelete = false,
+                            CanEdit = true,
+                            CanExport = true,
+                            CanView = true,
+                            MenuCode = "KhuyenMai",
+                            MenuName = "Quản lý Khuyến mãi",
+                            RoleName = "Quản lý",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 17,
+                            CanAdd = false,
+                            CanDelete = false,
+                            CanEdit = false,
+                            CanExport = true,
+                            CanView = true,
+                            MenuCode = "PhanQuyen",
+                            MenuName = "Quản lý Phân quyền",
+                            RoleName = "Quản lý",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 18,
+                            CanAdd = false,
+                            CanDelete = false,
+                            CanEdit = false,
+                            CanExport = true,
+                            CanView = true,
+                            MenuCode = "NhatKyHoatDong",
+                            MenuName = "Nhật ký hoạt động",
+                            RoleName = "Quản lý",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 19,
+                            CanAdd = false,
+                            CanDelete = false,
+                            CanEdit = false,
+                            CanExport = false,
+                            CanView = true,
+                            MenuCode = "TuyenXe",
+                            MenuName = "Quản lý Tuyến xe",
+                            RoleName = "Nhân viên bán vé",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 20,
+                            CanAdd = false,
+                            CanDelete = false,
+                            CanEdit = false,
+                            CanExport = false,
+                            CanView = false,
+                            MenuCode = "TramDung",
+                            MenuName = "Quản lý Trạm dừng",
+                            RoleName = "Nhân viên bán vé",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 21,
+                            CanAdd = false,
+                            CanDelete = false,
+                            CanEdit = false,
+                            CanExport = false,
+                            CanView = false,
+                            MenuCode = "PhuongTien",
+                            MenuName = "Quản lý Phương tiện",
+                            RoleName = "Nhân viên bán vé",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 22,
+                            CanAdd = false,
+                            CanDelete = false,
+                            CanEdit = false,
+                            CanExport = false,
+                            CanView = false,
+                            MenuCode = "NhanSu",
+                            MenuName = "Quản lý Nhân sự",
+                            RoleName = "Nhân viên bán vé",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 23,
+                            CanAdd = false,
+                            CanDelete = false,
+                            CanEdit = false,
+                            CanExport = false,
+                            CanView = false,
+                            MenuCode = "DichVu",
+                            MenuName = "Quản lý Dịch vụ",
+                            RoleName = "Nhân viên bán vé",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 24,
+                            CanAdd = true,
+                            CanDelete = false,
+                            CanEdit = false,
+                            CanExport = false,
+                            CanView = true,
+                            MenuCode = "GiaVe",
+                            MenuName = "Quản lý Giá vé",
+                            RoleName = "Nhân viên bán vé",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 25,
+                            CanAdd = false,
+                            CanDelete = false,
+                            CanEdit = false,
+                            CanExport = false,
+                            CanView = true,
+                            MenuCode = "KhuyenMai",
+                            MenuName = "Quản lý Khuyến mãi",
+                            RoleName = "Nhân viên bán vé",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 26,
+                            CanAdd = false,
+                            CanDelete = false,
+                            CanEdit = false,
+                            CanExport = false,
+                            CanView = false,
+                            MenuCode = "PhanQuyen",
+                            MenuName = "Quản lý Phân quyền",
+                            RoleName = "Nhân viên bán vé",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 27,
+                            CanAdd = false,
+                            CanDelete = false,
+                            CanEdit = false,
+                            CanExport = false,
+                            CanView = false,
+                            MenuCode = "NhatKyHoatDong",
+                            MenuName = "Nhật ký hoạt động",
+                            RoleName = "Nhân viên bán vé",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
 
@@ -136,11 +658,25 @@ namespace QuanLyVanTai.DAL.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
 
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<decimal>("DistanceKm")
                         .HasColumnType("decimal(8,2)");
 
                     b.Property<decimal>("EstimatedHours")
                         .HasColumnType("decimal(4,2)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("RouteCode")
                         .IsRequired()
@@ -156,6 +692,13 @@ namespace QuanLyVanTai.DAL.Migrations
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
 
@@ -188,6 +731,20 @@ namespace QuanLyVanTai.DAL.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
 
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<string>("StationCode")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -202,6 +759,13 @@ namespace QuanLyVanTai.DAL.Migrations
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
 
@@ -227,6 +791,10 @@ namespace QuanLyVanTai.DAL.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
 
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("CustomerName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -237,8 +805,18 @@ namespace QuanLyVanTai.DAL.Migrations
                         .HasMaxLength(15)
                         .HasColumnType("nvarchar(15)");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<DateTime>("DepartureTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("PaymentStatus")
                         .IsRequired()
@@ -265,6 +843,13 @@ namespace QuanLyVanTai.DAL.Migrations
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("VehicleId")
                         .HasColumnType("int");
@@ -300,6 +885,20 @@ namespace QuanLyVanTai.DAL.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
 
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<string>("LicensePlate")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -309,6 +908,9 @@ namespace QuanLyVanTai.DAL.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<int?>("RouteId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -316,6 +918,13 @@ namespace QuanLyVanTai.DAL.Migrations
 
                     b.Property<int>("TotalSeats")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("VehicleType")
                         .IsRequired()
@@ -326,6 +935,8 @@ namespace QuanLyVanTai.DAL.Migrations
 
                     b.HasIndex("LicensePlate")
                         .IsUnique();
+
+                    b.HasIndex("RouteId");
 
                     b.ToTable("Vehicles");
                 });
@@ -371,6 +982,16 @@ namespace QuanLyVanTai.DAL.Migrations
                     b.Navigation("Vehicle");
                 });
 
+            modelBuilder.Entity("QuanLyVanTai.DAL.Models.Vehicle", b =>
+                {
+                    b.HasOne("QuanLyVanTai.DAL.Models.Route", "Route")
+                        .WithMany("Vehicles")
+                        .HasForeignKey("RouteId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Route");
+                });
+
             modelBuilder.Entity("RouteStation", b =>
                 {
                     b.HasOne("QuanLyVanTai.DAL.Models.Route", null)
@@ -394,6 +1015,8 @@ namespace QuanLyVanTai.DAL.Migrations
             modelBuilder.Entity("QuanLyVanTai.DAL.Models.Route", b =>
                 {
                     b.Navigation("Tickets");
+
+                    b.Navigation("Vehicles");
                 });
 
             modelBuilder.Entity("QuanLyVanTai.DAL.Models.Vehicle", b =>

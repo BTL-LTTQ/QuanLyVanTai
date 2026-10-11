@@ -78,6 +78,36 @@ namespace QuanLyVanTai.UI
                         MessageBoxIcon.Error);
                     return;
                 }
+                // Tự động kiểm tra và áp dụng Migration sinh Database/bảng nếu chưa có
+                try
+                {
+                    using (var db = new AppDbContext(options))
+                    {
+                        try
+                        {
+                            db.Database.Migrate();
+                        }
+                        catch
+                        {
+                            db.Database.EnsureCreated();
+                        }
+
+                        DatabaseSeeder.SeedSampleData(db);
+                    }
+
+                    LoggerService.Info("Kết nối và cập nhật cơ sở dữ liệu thành công.");
+                }
+                catch (Exception ex)
+                {
+                    LoggerService.Error(ex, "Lỗi khi khởi tạo hoặc kết nối CSDL SQL Server.");
+
+                    MessageBox.Show(
+                        $"Không thể khởi tạo hoặc kết nối CSDL SQL Server:\n{ex.Message}\n\nVui lòng kiểm tra lại chuỗi kết nối trong appsettings.json và đảm bảo SQL Server đang chạy.",
+                        "Lỗi Cơ Sở Dữ Liệu",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                    return;
+                }
 
                 // 5. Vòng lặp xác thực người dùng (Login -> Main -> Logout -> Login)
                 while (true)

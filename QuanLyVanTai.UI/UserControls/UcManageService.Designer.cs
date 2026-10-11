@@ -1,4 +1,4 @@
-namespace QuanLyVanTai.UI
+namespace QuanLyVanTai.UI.UserControls
 {
     partial class UcManageService
     {

@@ -1,10 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Core.Interfaces;
 
 namespace QuanLyVanTai.DAL.Models
 {
     [Table("Routes")]
-    public class Route
+    public class Route : ISoftDelete, IAuditable
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -34,7 +35,20 @@ namespace QuanLyVanTai.DAL.Models
         [MaxLength(30)]
         public string Status { get; set; } = "Active"; // Active, Suspended
 
+        // Tracking / Auditing
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [MaxLength(50)]
+        public string? CreatedBy { get; set; }
+
+        public DateTime? UpdatedAt { get; set; }
+        [MaxLength(50)]
+        public string? UpdatedBy { get; set; }
+
+        // Soft Delete
+        public bool IsDeleted { get; set; } = false;
+        public DateTime? DeletedAt { get; set; }
+        [MaxLength(50)]
+        public string? DeletedBy { get; set; }
 
         // Navigation Properties:
         // 1. Quan hệ N-N với Station (1 Tuyến đi qua nhiều Trạm dừng)
@@ -42,5 +56,8 @@ namespace QuanLyVanTai.DAL.Models
 
         // 2. Quan hệ 1-N với Ticket (1 Tuyến có nhiều Vé bán ra)
         public virtual ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
+
+        // 3. Quan hệ 1-N với Vehicle (Các phương tiện được phân công chạy tuyến này)
+        public virtual ICollection<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
     }
 }

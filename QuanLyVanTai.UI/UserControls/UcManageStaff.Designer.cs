@@ -1,6 +1,6 @@
-﻿namespace QuanLyVanTai.UI.Forms
+﻿namespace QuanLyVanTai.UI.UserControls
 {
-    partial class FrmManageVehicle
+    partial class UcManageStaff
     {
         /// <summary>
         /// Required designer variable.
@@ -20,7 +20,7 @@
             base.Dispose(disposing);
         }
 
-        #region Windows Form Designer generated code
+        #region Component Designer generated code
 
         /// <summary>
         /// Required method for Designer support - do not modify
@@ -28,15 +28,16 @@
         /// </summary>
         private void InitializeComponent()
         {
-            SuspendLayout();
+            components = new System.ComponentModel.Container();
+            this.SuspendLayout();
             // 
-            // FrmManageVehicle
+            // UcManageStaff
             // 
-            AutoScaleDimensions = new SizeF(8F, 20F);
-            AutoScaleMode = AutoScaleMode.Font;
-            Name = "FrmManageVehicle";
-            Size = new Size(800, 450);
-            ResumeLayout(false);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Name = "UcManageStaff";
+            this.Size = new System.Drawing.Size(1200, 800);
+            this.ResumeLayout(false);
         }
 
         #endregion
