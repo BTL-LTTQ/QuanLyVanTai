@@ -1,5 +1,6 @@
 using Core.Configs;
 using Core.Helpers;
+using Core.Logging;
 using FontAwesome.Sharp;
 using QuanLyVanTai.UI.UserControls;
 
@@ -11,6 +12,7 @@ namespace QuanLyVanTai.UI
         private ComboBox cboMainLanguage = null!;
         private IconButton btnLogout = null!;
         private bool _isChangingLanguage = false;
+        private UcAiChatbot? _chatbotWidget;
 
         public FormMain()
         {
@@ -23,6 +25,9 @@ namespace QuanLyVanTai.UI
 
             // Hiển thị màn hình mặc định
             btnTrangChu_Click(this, EventArgs.Empty);
+
+            // Khởi tạo AI Chatbot Widget nổi ở góc dưới phải
+            InitializeChatbotWidget();
         }
 
         private void SetupHeaderAuthControls()
@@ -194,6 +199,27 @@ namespace QuanLyVanTai.UI
 
             StyleSidebarButton(btnTrangChu, IconChar.Home);
             StyleSidebarButton(btnDichVu, IconChar.Truck);
+
+            // Nút Demo Test lỗi toàn cục (có thể ẩn khi release)
+            var btnTestError = new IconButton
+            {
+                Text = " Test Lỗi",
+                Dock = DockStyle.Bottom,
+                Height = 40,
+                IconChar = IconChar.Bug,
+                IconColor = Color.White,
+                IconSize = 20,
+                Font = new Font("Segoe UI", 8.5F),
+                ForeColor = Color.White,
+                BackColor = Color.FromArgb(120, 53, 15),
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand,
+                TextImageRelation = TextImageRelation.ImageBeforeText,
+                Padding = new Padding(8, 0, 0, 0)
+            };
+            btnTestError.FlatAppearance.BorderSize = 0;
+            btnTestError.Click += (s, e) => QuanLyVanTai.UI.Utils.GlobalExceptionHandler.SimulateDemoException("ui");
+            pnlSidebar.Controls.Add(btnTestError);
         }
 
         // Hàm xóa nội dung cũ và nạp UserControl mới vào vùng giữa
@@ -204,9 +230,13 @@ namespace QuanLyVanTai.UI
                 pnlContent.Controls.Clear();
                 uc.Dock = DockStyle.Fill;
                 pnlContent.Controls.Add(uc);
+
+                // Đảm bảo Chatbot Widget luôn nổi trên cùng
+                _chatbotWidget?.BringToFront();
             }
             catch (Exception ex)
             {
+                LoggerService.Error(ex, "Lỗi khi hiển thị UserControl: {Message}", ex.Message);
                 MessageBox.Show($"Lỗi hiển thị nội dung: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -227,9 +257,50 @@ namespace QuanLyVanTai.UI
                             CultureHelper.CurrentCulture.Name.StartsWith("ja") ? "サービス管理" : "QUẢN LÝ DỊCH VỤ VẬN TẢI";
         }
 
+        // ====================================================================================
+        // AI CHATBOT WIDGET - Nổi góc dưới phải của Form (Floating Action Widget)
+        // ====================================================================================
+        private void InitializeChatbotWidget()
+        {
+            try
+            {
+                _chatbotWidget = new UcAiChatbot();
+                
+                // Cập nhật vị trí khi người dùng đóng/mở khung chat
+                _chatbotWidget.ChatToggled += (s, e) => PositionChatbotWidget();
+
+                // Thêm trực tiếp vào Form để nổi độc lập trên tất cả panel
+                this.Controls.Add(_chatbotWidget);
+                _chatbotWidget.BringToFront();
+
+                // Đặt vị trí ban đầu và khi resize form
+                PositionChatbotWidget();
+                this.Resize += (s, e) => PositionChatbotWidget();
+                this.Shown += (s, e) => PositionChatbotWidget();
+
+                LoggerService.Info("AI Chatbot Widget đã được khởi tạo trong FormMain.");
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Error(ex, "Không thể khởi tạo AI Chatbot Widget.");
+            }
+        }
+
+        private void PositionChatbotWidget()
+        {
+            if (_chatbotWidget == null) return;
+            // Căn lề góc dưới phải của Form với margin 18px
+            int margin = 18;
+            int x = this.ClientSize.Width - _chatbotWidget.Width - margin;
+            int y = this.ClientSize.Height - _chatbotWidget.Height - margin;
+            _chatbotWidget.Location = new Point(Math.Max(10, x), Math.Max(10, y));
+            _chatbotWidget.BringToFront();
+        }
+
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             CultureHelper.CultureChanged -= OnCultureChanged;
+            _chatbotWidget?.Dispose();
             base.OnFormClosed(e);
         }
     }
