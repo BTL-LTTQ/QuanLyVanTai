@@ -67,8 +67,7 @@ namespace QuanLyVanTai.UI
         }
 
             // Mở mặc định Dashboard
-            OpenMenu(SystemMenus.Route, "DASHBOARD - TRANG CHỦ", () => new UcDashboard());
-        }
+        
 
         // Role switcher removed from header to avoid visual clutter.
         // Session switching is now done through the proper login flow.
@@ -286,8 +285,8 @@ namespace QuanLyVanTai.UI
 
             var control = createControl();
             ShowUserControl(control);
-            StyleSidebarButton(btnTrangChu, IconChar.Home);
-            StyleSidebarButton(btnDichVu, IconChar.Truck);
+            //StyleSidebarButton(btnTrangChu, IconChar.Home);
+            //StyleSidebarButton(btnDichVu, IconChar.Truck);
 
             // Nút Demo Test lỗi toàn cục (có thể ẩn khi release)
             var btnTestError = new IconButton
