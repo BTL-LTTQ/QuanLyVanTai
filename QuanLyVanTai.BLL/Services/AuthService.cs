@@ -1,4 +1,5 @@
 using Core.Helpers;
+using Core.Logging;
 using Microsoft.EntityFrameworkCore;
 using QuanLyVanTai.BLL.DTOs;
 using QuanLyVanTai.DAL;
@@ -97,6 +98,11 @@ namespace QuanLyVanTai.BLL.Services
                         account.Status = "Locked";
                         await _db.SaveChangesAsync();
 
+                        // [SECURITY LOG] Tài khoản bị khóa do nhập sai nhiều lần
+                        LoggerService.Warning(
+                            "[SECURITY] Tài khoản [{Username}] bị TẠM KHÓA sau {Attempts} lần nhập sai mật khẩu liên tiếp.",
+                            account.Username, MaxFailedAttempts);
+
                         return new LoginResultDto
                         {
                             Success = false,
@@ -109,6 +115,12 @@ namespace QuanLyVanTai.BLL.Services
                     {
                         await _db.SaveChangesAsync();
                         int remaining = MaxFailedAttempts - account.FailedLoginAttempts;
+
+                        // [SECURITY LOG] Nhập sai mật khẩu
+                        LoggerService.Warning(
+                            "[SECURITY] Đăng nhập thất bại cho [{Username}] - Lần sai thứ {Attempt}/{Max}, còn {Remaining} lần.",
+                            account.Username, account.FailedLoginAttempts, MaxFailedAttempts, remaining);
+
                         return new LoginResultDto
                         {
                             Success = false,
@@ -128,6 +140,7 @@ namespace QuanLyVanTai.BLL.Services
                     string newSalt = SecurityHelper.GenerateSalt();
                     account.PasswordSalt = newSalt;
                     account.PasswordHash = SecurityHelper.HashPassword(request.Password, newSalt);
+                    LoggerService.Info("[SECURITY] Mật khẩu của [{Username}] đã được nâng cấp lên PBKDF2+Salt.", account.Username);
                 }
 
                 await _db.SaveChangesAsync();
@@ -145,6 +158,11 @@ namespace QuanLyVanTai.BLL.Services
                 // Lưu cấu hình Remember Me
                 SessionManager.SaveRememberMe(request.RememberMe, request.Username);
 
+                // [SECURITY LOG] Đăng nhập thành công
+                LoggerService.Info(
+                    "[SECURITY] Đăng nhập thành công: [{Username}] - Vai trò: {Role}",
+                    account.Username, account.Role);
+
                 return new LoginResultDto
                 {
                     Success = true,
@@ -154,6 +172,7 @@ namespace QuanLyVanTai.BLL.Services
             }
             catch (Exception ex)
             {
+                LoggerService.Error(ex, "[SECURITY] Lỗi hệ thống trong quá trình đăng nhập.");
                 return new LoginResultDto
                 {
                     Success = false,
@@ -225,6 +244,11 @@ namespace QuanLyVanTai.BLL.Services
                 _db.Accounts.Add(newAccount);
                 await _db.SaveChangesAsync();
 
+                // [SECURITY LOG] Tài khoản mới được tạo thành công
+                LoggerService.Info(
+                    "[SECURITY] Tài khoản mới được tạo: [{Username}] - Email: {Email} - Vai trò: Staff",
+                    newAccount.Username, newAccount.Email ?? "N/A");
+
                 return new RegisterResultDto
                 {
                     Success = true,
@@ -234,6 +258,7 @@ namespace QuanLyVanTai.BLL.Services
             }
             catch (Exception ex)
             {
+                LoggerService.Error(ex, "[SECURITY] Lỗi khi tạo tài khoản mới cho [{Username}].", request.Username);
                 return new RegisterResultDto
                 {
                     Success = false,
