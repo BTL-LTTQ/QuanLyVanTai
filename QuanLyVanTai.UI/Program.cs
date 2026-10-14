@@ -78,38 +78,8 @@ namespace QuanLyVanTai.UI
                         MessageBoxIcon.Error);
                     return;
                 }
-                // Tự động kiểm tra và áp dụng Migration sinh Database/bảng nếu chưa có
-                try
-                {
-                    using (var db = new AppDbContext(options))
-                    {
-                        try
-                        {
-                            db.Database.Migrate();
-                        }
-                        catch
-                        {
-                            db.Database.EnsureCreated();
-                        }
 
-                        DatabaseSeeder.SeedSampleData(db);
-                    }
-
-                    LoggerService.Info("Kết nối và cập nhật cơ sở dữ liệu thành công.");
-                }
-                catch (Exception ex)
-                {
-                    LoggerService.Error(ex, "Lỗi khi khởi tạo hoặc kết nối CSDL SQL Server.");
-
-                    MessageBox.Show(
-                        $"Không thể khởi tạo hoặc kết nối CSDL SQL Server:\n{ex.Message}\n\nVui lòng kiểm tra lại chuỗi kết nối trong appsettings.json và đảm bảo SQL Server đang chạy.",
-                        "Lỗi Cơ Sở Dữ Liệu",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
-                    return;
-                }
-
-// 5. Vòng lặp xác thực người dùng (Login -> Main -> Logout -> Login)
+                // 5. Vòng lặp xác thực người dùng (Login -> Main -> Logout -> Login)
                 while (true)
                 {
                     using (var authForm = new FrmAuth())
@@ -144,27 +114,6 @@ namespace QuanLyVanTai.UI
                         }
 
                         // Khi Form đóng:
-                        // Nếu session đã bị xóa (do người dùng bấm Đăng xuất) -> quay lại mở FrmAuth
-                        // Nếu session vẫn còn (người dùng bấm nút X tắt ứng dụng) -> thoát vòng lặp
-                        if (SessionManager.IsLoggedIn)
-                        {
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-                    if (SessionManager.IsLoggedIn)
-                    {
-                        LoggerService.Info("Người dùng [{Username}] ({Role}) đã đăng nhập vào hệ thống.", 
-                            SessionManager.CurrentUser?.Username ?? "Guest", 
-                            SessionManager.CurrentUser?.Role ?? "Unknown");
-
-                        Application.Run(new FormMain());
-
-                        // Khi FormMain đóng:
                         // Nếu session đã bị xóa (do người dùng bấm Đăng xuất) -> quay lại mở FrmAuth
                         // Nếu session vẫn còn (người dùng bấm nút X tắt ứng dụng) -> thoát vòng lặp
                         if (SessionManager.IsLoggedIn)
