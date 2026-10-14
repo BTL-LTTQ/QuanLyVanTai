@@ -5,7 +5,6 @@ using QuanLyVanTai.DAL;
 using Core.Helpers;
 using Core.Logging;
 using FontAwesome.Sharp;
-using QuanLyVanTai.UI.Forms;
 using QuanLyVanTai.UI.UserControls;
 using UserSession = Core.Security.UserSession;
 
@@ -44,15 +43,6 @@ namespace QuanLyVanTai.UI
             SetupHeaderAuthControls();
             CultureHelper.CultureChanged += OnCultureChanged;
             UpdateLocalizedTexts();
-
-            // Mở màn hình Khách hàng / Bán vé sơ đồ ghế cho quản trị viên/quản lý trải nghiệm
-            btnCaiDat.Text = " Đặt Vé (Sơ Đồ)";
-            btnCaiDat.IconChar = FontAwesome.Sharp.IconChar.Ticket;
-            btnCaiDat.Click += (s, e) =>
-            {
-                using var frm = new FormMain_KhachHang();
-                frm.ShowDialog(this);
-            };
         }
 
         // --- CÁC HÀM CỦA NHÁNH FEATURE ---

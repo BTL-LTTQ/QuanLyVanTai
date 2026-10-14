@@ -134,17 +134,6 @@ namespace QuanLyVanTai.BLL.Services
             if (ticket.TicketStatus == "Cancelled")
                 return (false, "Vé đã được hủy trước đó!");
 
-            // Quy định nghiệp vụ: Chỉ cho phép hủy vé trước giờ khởi hành tối thiểu 1 giờ (60 phút)
-            if (ticket.DepartureTime <= DateTime.Now)
-                return (false, "Chuyến xe đã khởi hành, không thể hủy vé!");
-
-            if (ticket.DepartureTime - DateTime.Now < TimeSpan.FromHours(1))
-            {
-                var remaining = ticket.DepartureTime - DateTime.Now;
-                int remainingMinutes = Math.Max(0, (int)remaining.TotalMinutes);
-                return (false, $"Không thể hủy vé! Chuyến xe sẽ khởi hành sau {remainingMinutes} phút nữa.\nTheo quy định của hệ thống, quý khách chỉ được hủy vé trước giờ xe chạy tối thiểu 60 phút (1 giờ).");
-            }
-
             ticket.TicketStatus = "Cancelled";
             ticket.PaymentStatus = ticket.PaymentStatus == "Paid" ? "Refunded" : ticket.PaymentStatus;
 
