@@ -15,8 +15,9 @@ namespace Core.Security
         public const string Admin = "Quản trị viên";
         public const string Manager = "Quản lý";
         public const string TicketStaff = "Nhân viên bán vé";
+        public const string Customer = "Khách hàng";
 
-        public static readonly string[] AllRoles = [Admin, Manager, TicketStaff];
+        public static readonly string[] AllRoles = [Admin, Manager, TicketStaff, Customer];
     }
 
     public static class SystemMenus

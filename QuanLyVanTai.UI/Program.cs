@@ -109,7 +109,7 @@ namespace QuanLyVanTai.UI
                     return;
                 }
 
-                // 5. Vòng lặp xác thực người dùng (Login -> Main -> Logout -> Login)
+// 5. Vòng lặp xác thực người dùng (Login -> Main -> Logout -> Login)
                 while (true)
                 {
                     using (var authForm = new FrmAuth())
@@ -122,7 +122,40 @@ namespace QuanLyVanTai.UI
                         }
                     }
 
-                    // Nếu đăng nhập thành công -> Mở FormMain
+                    // Nếu đăng nhập thành công -> Điều hướng theo vai trò người dùng
+                    if (SessionManager.IsLoggedIn)
+                    {
+                        LoggerService.Info("Người dùng [{Username}] ({Role}) đã đăng nhập vào hệ thống.", 
+                            SessionManager.CurrentUser?.Username ?? "Guest", 
+                            SessionManager.CurrentUser?.Role ?? "Unknown");
+
+                        string role = SessionManager.CurrentUser?.Role ?? string.Empty;
+
+                        // Vai trò 1 (Nhân viên bán vé / Khách hàng): Mở FormMain_KhachHang
+                        if (role.Contains("bán vé", StringComparison.OrdinalIgnoreCase) ||
+                            role.Contains("khách hàng", StringComparison.OrdinalIgnoreCase))
+                        {
+                            Application.Run(new FormMain_KhachHang());
+                        }
+                        else
+                        {
+                            // Vai trò 2 (Quản trị viên / Quản lý): Mở FormMain
+                            Application.Run(new FormMain());
+                        }
+
+                        // Khi Form đóng:
+                        // Nếu session đã bị xóa (do người dùng bấm Đăng xuất) -> quay lại mở FrmAuth
+                        // Nếu session vẫn còn (người dùng bấm nút X tắt ứng dụng) -> thoát vòng lặp
+                        if (SessionManager.IsLoggedIn)
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
                     if (SessionManager.IsLoggedIn)
                     {
                         LoggerService.Info("Người dùng [{Username}] ({Role}) đã đăng nhập vào hệ thống.", 
