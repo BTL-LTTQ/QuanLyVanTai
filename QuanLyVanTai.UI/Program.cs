@@ -63,26 +63,6 @@ namespace QuanLyVanTai.UI
                 {
                     using (var db = new AppDbContext(options))
                     {
-                        db.Database.Migrate();
-                        DatabaseSeeder.SeedSampleData(db);
-                    }
-                    LoggerService.Info("Kết nối và cập nhật cơ sở dữ liệu thành công.");
-                }
-                catch (Exception ex)
-                {
-                    LoggerService.Error(ex, "Lỗi khi khởi tạo hoặc kết nối CSDL SQL Server.");
-                    MessageBox.Show(
-                        $"Không thể khởi tạo hoặc kết nối CSDL SQL Server:\n{ex.Message}\n\nVui lòng kiểm tra lại chuỗi kết nối trong appsettings.json và đảm bảo SQL Server đang chạy.",
-                        "Lỗi Cơ Sở Dữ Liệu",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
-                    return;
-                }
-                // Tự động kiểm tra và áp dụng Migration sinh Database/bảng nếu chưa có
-                try
-                {
-                    using (var db = new AppDbContext(options))
-                    {
                         try
                         {
                             db.Database.Migrate();
@@ -129,7 +109,19 @@ namespace QuanLyVanTai.UI
                             SessionManager.CurrentUser?.Username ?? "Guest", 
                             SessionManager.CurrentUser?.Role ?? "Unknown");
 
-                        Application.Run(new FormMain());
+                        string role = SessionManager.CurrentUser?.Role ?? string.Empty;
+
+                        // Vai trò 1 (Nhân viên bán vé / Khách hàng): Mở FormMain_KhachHang
+                        if (role.Contains("bán vé", StringComparison.OrdinalIgnoreCase) ||
+                            role.Contains("khách hàng", StringComparison.OrdinalIgnoreCase))
+                        {
+                            Application.Run(new FormMain_KhachHang());
+                        }
+                        else
+                        {
+                            // Vai trò 2 (Quản trị viên / Quản lý): Mở FormMain
+                            Application.Run(new FormMain());
+                        }
 
                         // Khi FormMain đóng:
                         // Nếu session đã bị xóa (do người dùng bấm Đăng xuất) -> quay lại mở FrmAuth
