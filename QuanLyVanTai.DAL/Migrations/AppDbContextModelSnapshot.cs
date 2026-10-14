@@ -123,7 +123,7 @@ namespace QuanLyVanTai.DAL.Migrations
                     b.HasIndex("Username")
                         .IsUnique();
 
-                    b.ToTable("Accounts", (string)null);
+                    b.ToTable("Accounts");
 
                     b.HasData(
                         new
@@ -237,7 +237,7 @@ namespace QuanLyVanTai.DAL.Migrations
 
                     b.HasIndex("Username");
 
-                    b.ToTable("AuditLogs", (string)null);
+                    b.ToTable("AuditLogs");
                 });
 
             modelBuilder.Entity("QuanLyVanTai.DAL.Models.Driver", b =>
@@ -417,7 +417,7 @@ namespace QuanLyVanTai.DAL.Migrations
                     b.HasIndex("RoleName", "MenuCode")
                         .IsUnique();
 
-                    b.ToTable("RolePermissions", (string)null);
+                    b.ToTable("RolePermissions");
 
                     b.HasData(
                         new
@@ -836,7 +836,7 @@ namespace QuanLyVanTai.DAL.Migrations
                     b.HasIndex("RouteCode")
                         .IsUnique();
 
-                    b.ToTable("Routes", (string)null);
+                    b.ToTable("Routes");
                 });
 
             modelBuilder.Entity("QuanLyVanTai.DAL.Models.Schedule", b =>
@@ -978,7 +978,7 @@ namespace QuanLyVanTai.DAL.Migrations
                     b.HasIndex("StationCode")
                         .IsUnique();
 
-                    b.ToTable("Stations", (string)null);
+                    b.ToTable("Stations");
                 });
 
             modelBuilder.Entity("QuanLyVanTai.DAL.Models.Ticket", b =>
@@ -1075,7 +1075,7 @@ namespace QuanLyVanTai.DAL.Migrations
 
                     b.HasIndex("VehicleId");
 
-                    b.ToTable("Tickets", (string)null);
+                    b.ToTable("Tickets");
                 });
 
             modelBuilder.Entity("QuanLyVanTai.DAL.Models.Vehicle", b =>
@@ -1144,7 +1144,7 @@ namespace QuanLyVanTai.DAL.Migrations
 
                     b.HasIndex("RouteId");
 
-                    b.ToTable("Vehicles", (string)null);
+                    b.ToTable("Vehicles");
                 });
 
             modelBuilder.Entity("RouteStation", b =>
