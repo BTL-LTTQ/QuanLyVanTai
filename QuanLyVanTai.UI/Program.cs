@@ -78,40 +78,11 @@ namespace QuanLyVanTai.UI
                         MessageBoxIcon.Error);
                     return;
                 }
-                // Tự động kiểm tra và áp dụng Migration sinh Database/bảng nếu chưa có
-                try
-                {
-                    using (var db = new AppDbContext(options))
-                    {
-                        try
-                        {
-                            db.Database.Migrate();
-                        }
-                        catch
-                        {
-                            db.Database.EnsureCreated();
-                        }
 
-                        DatabaseSeeder.SeedSampleData(db);
-                    }
-
-                    LoggerService.Info("Kết nối và cập nhật cơ sở dữ liệu thành công.");
-                }
-                catch (Exception ex)
-                {
-                    LoggerService.Error(ex, "Lỗi khi khởi tạo hoặc kết nối CSDL SQL Server.");
-
-                    MessageBox.Show(
-                        $"Không thể khởi tạo hoặc kết nối CSDL SQL Server:\n{ex.Message}\n\nVui lòng kiểm tra lại chuỗi kết nối trong appsettings.json và đảm bảo SQL Server đang chạy.",
-                        "Lỗi Cơ Sở Dữ Liệu",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
-                    return;
-                }
-
-// 5. Vòng lặp xác thực người dùng (Login -> Main -> Logout -> Login)
+                // 5. Vòng lặp xác thực người dùng (Login -> Main -> Logout -> Login)
                 while (true)
                 {
+                    // Hiển thị form đăng nhập
                     using (var authForm = new FrmAuth())
                     {
                         var authResult = authForm.ShowDialog();
@@ -122,57 +93,30 @@ namespace QuanLyVanTai.UI
                         }
                     }
 
-                    // Nếu đăng nhập thành công -> Điều hướng theo vai trò người dùng
-                    if (SessionManager.IsLoggedIn)
+                    // Tại đây FrmAuth đã xác thực thành công và set session
+                    LoggerService.Info("Người dùng [{Username}] ({Role}) đã đăng nhập vào hệ thống.",
+                        SessionManager.CurrentUser?.Username ?? "Guest",
+                        SessionManager.CurrentUser?.Role ?? "Unknown");
+
+                    string role = SessionManager.CurrentUser?.Role ?? string.Empty;
+
+                    // Điều hướng theo vai trò người dùng
+                    if (role.Contains("bán vé", StringComparison.OrdinalIgnoreCase) ||
+                        role.Contains("khách hàng", StringComparison.OrdinalIgnoreCase))
                     {
-                        LoggerService.Info("Người dùng [{Username}] ({Role}) đã đăng nhập vào hệ thống.", 
-                            SessionManager.CurrentUser?.Username ?? "Guest", 
-                            SessionManager.CurrentUser?.Role ?? "Unknown");
-
-                        string role = SessionManager.CurrentUser?.Role ?? string.Empty;
-
-                        // Vai trò 1 (Nhân viên bán vé / Khách hàng): Mở FormMain_KhachHang
-                        if (role.Contains("bán vé", StringComparison.OrdinalIgnoreCase) ||
-                            role.Contains("khách hàng", StringComparison.OrdinalIgnoreCase))
-                        {
-                            Application.Run(new FormMain_KhachHang());
-                        }
-                        else
-                        {
-                            // Vai trò 2 (Quản trị viên / Quản lý): Mở FormMain
-                            Application.Run(new FormMain());
-                        }
-
-                        // Khi Form đóng:
-                        // Nếu session đã bị xóa (do người dùng bấm Đăng xuất) -> quay lại mở FrmAuth
-                        // Nếu session vẫn còn (người dùng bấm nút X tắt ứng dụng) -> thoát vòng lặp
-                        if (SessionManager.IsLoggedIn)
-                        {
-                            break;
-                        }
+                        // Vai trò: Nhân viên bán vé / Khách hàng
+                        Application.Run(new FormMain_KhachHang());
                     }
                     else
                     {
-                        break;
-                    }
-                }
-                    if (SessionManager.IsLoggedIn)
-                    {
-                        LoggerService.Info("Người dùng [{Username}] ({Role}) đã đăng nhập vào hệ thống.", 
-                            SessionManager.CurrentUser?.Username ?? "Guest", 
-                            SessionManager.CurrentUser?.Role ?? "Unknown");
-
+                        // Vai trò: Quản trị viên / Quản lý
                         Application.Run(new FormMain());
-
-                        // Khi FormMain đóng:
-                        // Nếu session đã bị xóa (do người dùng bấm Đăng xuất) -> quay lại mở FrmAuth
-                        // Nếu session vẫn còn (người dùng bấm nút X tắt ứng dụng) -> thoát vòng lặp
-                        if (SessionManager.IsLoggedIn)
-                        {
-                            break;
-                        }
                     }
-                    else
+
+                    // Khi Form chính đóng:
+                    // - IsLoggedIn = false: người dùng bấm Đăng xuất -> quay lại vòng lặp để mở FrmAuth
+                    // - IsLoggedIn = true:  người dùng bấm nút X đóng app -> thoát vòng lặp
+                    if (SessionManager.IsLoggedIn)
                     {
                         break;
                     }
