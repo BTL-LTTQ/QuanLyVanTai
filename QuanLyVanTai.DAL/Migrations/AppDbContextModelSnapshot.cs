@@ -240,6 +240,137 @@ namespace QuanLyVanTai.DAL.Migrations
                     b.ToTable("AuditLogs", (string)null);
                 });
 
+            modelBuilder.Entity("QuanLyVanTai.DAL.Models.Driver", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("DriverCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LicenseClass")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("nvarchar(5)");
+
+                    b.Property<DateTime>("LicenseExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LicenseNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DriverCode")
+                        .IsUnique();
+
+                    b.HasIndex("LicenseNumber")
+                        .IsUnique();
+
+                    b.ToTable("Drivers");
+                });
+
+            modelBuilder.Entity("QuanLyVanTai.DAL.Models.DriverAssignment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AssignmentStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("DriverId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("ScheduleId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DriverId");
+
+                    b.HasIndex("ScheduleId", "DriverId", "Role")
+                        .IsUnique();
+
+                    b.ToTable("DriverAssignments");
+                });
+
             modelBuilder.Entity("QuanLyVanTai.DAL.Models.RolePermission", b =>
                 {
                     b.Property<int>("Id")
@@ -708,6 +839,81 @@ namespace QuanLyVanTai.DAL.Migrations
                     b.ToTable("Routes", (string)null);
                 });
 
+            modelBuilder.Entity("QuanLyVanTai.DAL.Models.Schedule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("ActualArrivalTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("DepartureTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("EstimatedArrivalTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("RouteId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ScheduleCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("VehicleId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RouteId");
+
+                    b.HasIndex("ScheduleCode")
+                        .IsUnique();
+
+                    b.HasIndex("VehicleId", "DepartureTime");
+
+                    b.ToTable("Schedules");
+                });
+
             modelBuilder.Entity("QuanLyVanTai.DAL.Models.Station", b =>
                 {
                     b.Property<int>("Id")
@@ -956,6 +1162,44 @@ namespace QuanLyVanTai.DAL.Migrations
                     b.ToTable("RouteStations", (string)null);
                 });
 
+            modelBuilder.Entity("QuanLyVanTai.DAL.Models.DriverAssignment", b =>
+                {
+                    b.HasOne("QuanLyVanTai.DAL.Models.Driver", "Driver")
+                        .WithMany("Assignments")
+                        .HasForeignKey("DriverId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("QuanLyVanTai.DAL.Models.Schedule", "Schedule")
+                        .WithMany("DriverAssignments")
+                        .HasForeignKey("ScheduleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Driver");
+
+                    b.Navigation("Schedule");
+                });
+
+            modelBuilder.Entity("QuanLyVanTai.DAL.Models.Schedule", b =>
+                {
+                    b.HasOne("QuanLyVanTai.DAL.Models.Route", "Route")
+                        .WithMany()
+                        .HasForeignKey("RouteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("QuanLyVanTai.DAL.Models.Vehicle", "Vehicle")
+                        .WithMany()
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Route");
+
+                    b.Navigation("Vehicle");
+                });
+
             modelBuilder.Entity("QuanLyVanTai.DAL.Models.Ticket", b =>
                 {
                     b.HasOne("QuanLyVanTai.DAL.Models.Account", "Account")
@@ -1012,11 +1256,21 @@ namespace QuanLyVanTai.DAL.Migrations
                     b.Navigation("Tickets");
                 });
 
+            modelBuilder.Entity("QuanLyVanTai.DAL.Models.Driver", b =>
+                {
+                    b.Navigation("Assignments");
+                });
+
             modelBuilder.Entity("QuanLyVanTai.DAL.Models.Route", b =>
                 {
                     b.Navigation("Tickets");
 
                     b.Navigation("Vehicles");
+                });
+
+            modelBuilder.Entity("QuanLyVanTai.DAL.Models.Schedule", b =>
+                {
+                    b.Navigation("DriverAssignments");
                 });
 
             modelBuilder.Entity("QuanLyVanTai.DAL.Models.Vehicle", b =>
