@@ -441,8 +441,8 @@ namespace QuanLyVanTai.DAL.Migrations
                             CanEdit = true,
                             CanExport = true,
                             CanView = true,
-                            MenuCode = "TramDung",
-                            MenuName = "Quản lý Trạm dừng",
+                            MenuCode = "LichTrinh",
+                            MenuName = "Điều độ Lịch trình",
                             RoleName = "Quản trị viên",
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -454,8 +454,8 @@ namespace QuanLyVanTai.DAL.Migrations
                             CanEdit = true,
                             CanExport = true,
                             CanView = true,
-                            MenuCode = "PhuongTien",
-                            MenuName = "Quản lý Phương tiện",
+                            MenuCode = "TramDung",
+                            MenuName = "Quản lý Trạm dừng",
                             RoleName = "Quản trị viên",
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -467,8 +467,8 @@ namespace QuanLyVanTai.DAL.Migrations
                             CanEdit = true,
                             CanExport = true,
                             CanView = true,
-                            MenuCode = "NhanSu",
-                            MenuName = "Quản lý Nhân sự",
+                            MenuCode = "PhuongTien",
+                            MenuName = "Quản lý Phương tiện",
                             RoleName = "Quản trị viên",
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -480,8 +480,8 @@ namespace QuanLyVanTai.DAL.Migrations
                             CanEdit = true,
                             CanExport = true,
                             CanView = true,
-                            MenuCode = "DichVu",
-                            MenuName = "Quản lý Dịch vụ",
+                            MenuCode = "NhanSu",
+                            MenuName = "Quản lý Nhân sự",
                             RoleName = "Quản trị viên",
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -493,8 +493,8 @@ namespace QuanLyVanTai.DAL.Migrations
                             CanEdit = true,
                             CanExport = true,
                             CanView = true,
-                            MenuCode = "GiaVe",
-                            MenuName = "Quản lý Giá vé",
+                            MenuCode = "DichVu",
+                            MenuName = "Quản lý Dịch vụ",
                             RoleName = "Quản trị viên",
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -506,8 +506,8 @@ namespace QuanLyVanTai.DAL.Migrations
                             CanEdit = true,
                             CanExport = true,
                             CanView = true,
-                            MenuCode = "KhuyenMai",
-                            MenuName = "Quản lý Khuyến mãi",
+                            MenuCode = "GiaVe",
+                            MenuName = "Quản lý Giá vé",
                             RoleName = "Quản trị viên",
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -519,6 +519,19 @@ namespace QuanLyVanTai.DAL.Migrations
                             CanEdit = true,
                             CanExport = true,
                             CanView = true,
+                            MenuCode = "KhuyenMai",
+                            MenuName = "Quản lý Khuyến mãi",
+                            RoleName = "Quản trị viên",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 9,
+                            CanAdd = true,
+                            CanDelete = true,
+                            CanEdit = true,
+                            CanExport = true,
+                            CanView = true,
                             MenuCode = "PhanQuyen",
                             MenuName = "Quản lý Phân quyền",
                             RoleName = "Quản trị viên",
@@ -526,7 +539,7 @@ namespace QuanLyVanTai.DAL.Migrations
                         },
                         new
                         {
-                            Id = 9,
+                            Id = 10,
                             CanAdd = true,
                             CanDelete = true,
                             CanEdit = true,
@@ -539,7 +552,7 @@ namespace QuanLyVanTai.DAL.Migrations
                         },
                         new
                         {
-                            Id = 10,
+                            Id = 11,
                             CanAdd = true,
                             CanDelete = false,
                             CanEdit = true,
@@ -552,7 +565,20 @@ namespace QuanLyVanTai.DAL.Migrations
                         },
                         new
                         {
-                            Id = 11,
+                            Id = 12,
+                            CanAdd = true,
+                            CanDelete = false,
+                            CanEdit = true,
+                            CanExport = true,
+                            CanView = true,
+                            MenuCode = "LichTrinh",
+                            MenuName = "Điều độ Lịch trình",
+                            RoleName = "Quản lý",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 13,
                             CanAdd = true,
                             CanDelete = false,
                             CanEdit = true,
@@ -565,7 +591,7 @@ namespace QuanLyVanTai.DAL.Migrations
                         },
                         new
                         {
-                            Id = 12,
+                            Id = 14,
                             CanAdd = true,
                             CanDelete = false,
                             CanEdit = true,
@@ -578,7 +604,7 @@ namespace QuanLyVanTai.DAL.Migrations
                         },
                         new
                         {
-                            Id = 13,
+                            Id = 15,
                             CanAdd = true,
                             CanDelete = false,
                             CanEdit = true,
@@ -591,7 +617,7 @@ namespace QuanLyVanTai.DAL.Migrations
                         },
                         new
                         {
-                            Id = 14,
+                            Id = 16,
                             CanAdd = true,
                             CanDelete = false,
                             CanEdit = true,
@@ -604,7 +630,7 @@ namespace QuanLyVanTai.DAL.Migrations
                         },
                         new
                         {
-                            Id = 15,
+                            Id = 17,
                             CanAdd = true,
                             CanDelete = false,
                             CanEdit = true,
@@ -617,7 +643,7 @@ namespace QuanLyVanTai.DAL.Migrations
                         },
                         new
                         {
-                            Id = 16,
+                            Id = 18,
                             CanAdd = true,
                             CanDelete = false,
                             CanEdit = true,
@@ -630,7 +656,7 @@ namespace QuanLyVanTai.DAL.Migrations
                         },
                         new
                         {
-                            Id = 17,
+                            Id = 19,
                             CanAdd = false,
                             CanDelete = false,
                             CanEdit = false,
@@ -643,7 +669,7 @@ namespace QuanLyVanTai.DAL.Migrations
                         },
                         new
                         {
-                            Id = 18,
+                            Id = 20,
                             CanAdd = false,
                             CanDelete = false,
                             CanEdit = false,
@@ -656,7 +682,7 @@ namespace QuanLyVanTai.DAL.Migrations
                         },
                         new
                         {
-                            Id = 19,
+                            Id = 21,
                             CanAdd = false,
                             CanDelete = false,
                             CanEdit = false,
@@ -669,7 +695,20 @@ namespace QuanLyVanTai.DAL.Migrations
                         },
                         new
                         {
-                            Id = 20,
+                            Id = 22,
+                            CanAdd = false,
+                            CanDelete = false,
+                            CanEdit = false,
+                            CanExport = false,
+                            CanView = false,
+                            MenuCode = "LichTrinh",
+                            MenuName = "Điều độ Lịch trình",
+                            RoleName = "Nhân viên bán vé",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 23,
                             CanAdd = false,
                             CanDelete = false,
                             CanEdit = false,
@@ -682,7 +721,7 @@ namespace QuanLyVanTai.DAL.Migrations
                         },
                         new
                         {
-                            Id = 21,
+                            Id = 24,
                             CanAdd = false,
                             CanDelete = false,
                             CanEdit = false,
@@ -695,7 +734,7 @@ namespace QuanLyVanTai.DAL.Migrations
                         },
                         new
                         {
-                            Id = 22,
+                            Id = 25,
                             CanAdd = false,
                             CanDelete = false,
                             CanEdit = false,
@@ -708,7 +747,7 @@ namespace QuanLyVanTai.DAL.Migrations
                         },
                         new
                         {
-                            Id = 23,
+                            Id = 26,
                             CanAdd = false,
                             CanDelete = false,
                             CanEdit = false,
@@ -721,7 +760,7 @@ namespace QuanLyVanTai.DAL.Migrations
                         },
                         new
                         {
-                            Id = 24,
+                            Id = 27,
                             CanAdd = true,
                             CanDelete = false,
                             CanEdit = false,
@@ -734,7 +773,7 @@ namespace QuanLyVanTai.DAL.Migrations
                         },
                         new
                         {
-                            Id = 25,
+                            Id = 28,
                             CanAdd = false,
                             CanDelete = false,
                             CanEdit = false,
@@ -747,7 +786,7 @@ namespace QuanLyVanTai.DAL.Migrations
                         },
                         new
                         {
-                            Id = 26,
+                            Id = 29,
                             CanAdd = false,
                             CanDelete = false,
                             CanEdit = false,
@@ -760,7 +799,7 @@ namespace QuanLyVanTai.DAL.Migrations
                         },
                         new
                         {
-                            Id = 27,
+                            Id = 30,
                             CanAdd = false,
                             CanDelete = false,
                             CanEdit = false,

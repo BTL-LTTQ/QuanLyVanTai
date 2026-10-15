@@ -104,6 +104,7 @@ namespace QuanLyVanTai.UI
         private void UpdateMenuPermissions()
         {
             mnuTuyenXe.Enabled = UserSession.HasPermission(SystemMenus.Route, PermissionAction.View);
+            mnuLichTrinh.Enabled = UserSession.HasPermission(SystemMenus.Schedule, PermissionAction.View);
             mnuPhuongTien.Enabled = UserSession.HasPermission(SystemMenus.Vehicle, PermissionAction.View);
             mnuGiaVe.Enabled = UserSession.HasPermission(SystemMenus.Ticket, PermissionAction.View);
             mnuNhanSu.Enabled = UserSession.HasPermission(SystemMenus.Staff, PermissionAction.View);
@@ -249,6 +250,11 @@ namespace QuanLyVanTai.UI
             OpenMenu(SystemMenus.Route, "QUẢN LÝ TUYẾN XE & LỘ TRÌNH", () => new UcManageRoute());
         }
 
+        private void mnuLichTrinh_Click(object? sender, EventArgs e)
+        {
+            OpenMenu(SystemMenus.Schedule, "ĐIỀU ĐỘ LỊCH TRÌNH & PHÂN CÔNG TÀI XẾ", () => new UcManageSchedule());
+        }
+
         private void mnuPhuongTien_Click(object? sender, EventArgs e)
         {
             OpenMenu(SystemMenus.Vehicle, "QUẢN LÝ PHƯƠNG TIỆN & TRẠM DỪNG", () => new UcManageVehicleAndStation());
@@ -288,6 +294,8 @@ namespace QuanLyVanTai.UI
         {
             if (_currentView is UcManageRoute)
                 mnuTuyenXe_Click(sender, e);
+            else if (_currentView is UcManageSchedule)
+                mnuLichTrinh_Click(sender, e);
             else if (_currentView is UcManageVehicleAndStation)
                 mnuPhuongTien_Click(sender, e);
             else if (_currentView is UcManageTicket)

@@ -68,6 +68,31 @@ namespace QuanLyVanTai.BLL.Services
             catch (Exception ex) { throw new DataAccessException("Schedule", "GetScheduleDetail", ex); }
         }
 
+        /// <summary>
+        /// Lấy danh sách tài xế đang hoạt động (Status = Active) để phân công vào chuyến.
+        /// Màn hình điều độ dùng API này thay vì truy cập trực tiếp tầng DAL.
+        /// </summary>
+        public async Task<List<DriverLookupDto>> GetActiveDriversAsync()
+        {
+            try
+            {
+                using var db = new AppDbContext();
+                var drivers = await new DriverRepository(db).GetActiveDriversAsync();
+                return drivers.Select(d => new DriverLookupDto
+                {
+                    Id            = d.Id,
+                    DriverCode    = d.DriverCode,
+                    FullName      = d.FullName,
+                    LicenseNumber = d.LicenseNumber,
+                    LicenseClass  = d.LicenseClass
+                }).ToList();
+            }
+            catch (Exception ex) when (ex is not BusStationException)
+            {
+                throw new DataAccessException("Driver", "GetActiveDrivers", ex);
+            }
+        }
+
         // ── Tạo mới chuyến xe ─────────────────────────────────────────────────
 
         /// <summary>
@@ -506,8 +531,10 @@ namespace QuanLyVanTai.BLL.Services
                 ScheduleCode         = s.ScheduleCode,
                 RouteName            = s.Route?.RouteName ?? string.Empty,
                 RouteCode            = s.Route?.RouteCode ?? string.Empty,
+                VehicleId            = s.VehicleId,
                 LicensePlate         = s.Vehicle?.LicensePlate ?? string.Empty,
                 VehicleType          = s.Vehicle?.VehicleType ?? string.Empty,
+                TotalSeats           = s.Vehicle?.TotalSeats ?? 0,
                 DepartureTime        = s.DepartureTime,
                 EstimatedArrivalTime = s.EstimatedArrivalTime,
                 ActualArrivalTime    = s.ActualArrivalTime,

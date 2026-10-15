@@ -33,10 +33,10 @@ namespace QuanLyVanTai.DAL
                 {
                     var vehicles = new List<Vehicle>
                     {
-                        new Vehicle { LicensePlate = "29B-123.45", VehicleType = "Giường nằm 36 chỗ", TotalSeats = 36, Status = "Active" },
-                        new Vehicle { LicensePlate = "29B-678.90", VehicleType = "Limousine VIP 22 phòng", TotalSeats = 22, Status = "Active" },
-                        new Vehicle { LicensePlate = "43B-555.88", VehicleType = "Giường nằm 40 chỗ", TotalSeats = 40, Status = "Active" },
-                        new Vehicle { LicensePlate = "51B-999.66", VehicleType = "Limousine VIP 24 phòng", TotalSeats = 24, Status = "Active" }
+                        new Vehicle { LicensePlate = "29B-123.45", VehicleType = "Giường nằm 36 chỗ", TotalSeats = 36, Status = "Ready" },
+                        new Vehicle { LicensePlate = "29B-678.90", VehicleType = "Limousine VIP 22 phòng", TotalSeats = 22, Status = "Ready" },
+                        new Vehicle { LicensePlate = "43B-555.88", VehicleType = "Giường nằm 40 chỗ", TotalSeats = 40, Status = "Ready" },
+                        new Vehicle { LicensePlate = "51B-999.66", VehicleType = "Limousine VIP 24 phòng", TotalSeats = 24, Status = "Ready" }
                     };
                     db.Vehicles.AddRange(vehicles);
                     db.SaveChanges();
@@ -113,12 +113,16 @@ namespace QuanLyVanTai.DAL
                     db.SaveChanges();
                 }
 
-                // 5. Seed Lịch trình (Schedule) kèm Phân công tài xế (DriverAssignment) nếu chưa có.
-                //    Dữ liệu trải đều 3 trạng thái (Completed / InProgress / Scheduled) để test bộ lọc,
-                //    và mỗi xe - mỗi tài xế chỉ nằm trong 1 chuyến tại một thời điểm nên không vi phạm
-                //    quy tắc kiểm tra chồng lấn (kể cả thời gian đệm) của ScheduleService.
-                if (!db.Schedules.Any())
+                // 5. Seed Lịch trình (Schedule) kèm Phân công tài xế (DriverAssignment)
+                //    Dữ liệu trải đều 3 trạng thái (Completed / InProgress / Scheduled) để test bộ lọc.
                 {
+                    // Tự động làm sạch bảng Schedules để seed dữ liệu mới nhất (dành cho môi trường dev/test)
+                    if (db.Schedules.Any())
+                    {
+                        db.Schedules.ExecuteDelete();
+                        db.SaveChanges();
+                    }
+
                     var now = DateTime.Now;
                     var today = now.Date;
 
@@ -135,14 +139,15 @@ namespace QuanLyVanTai.DAL
 
                         var arrival = departure.AddHours((double)route.EstimatedHours);
 
+                        // Cột DepartureTime / EstimatedArrivalTime lưu UTC theo quy ước của entity Schedule.
                         return new Schedule
                         {
                             ScheduleCode = code,
                             RouteId = route.Id,
                             VehicleId = vehicle.Id,
-                            DepartureTime = departure,
-                            EstimatedArrivalTime = arrival,
-                            ActualArrivalTime = status == "Completed" ? arrival.AddMinutes(15) : null,
+                            DepartureTime = departure.ToUniversalTime(),
+                            EstimatedArrivalTime = arrival.ToUniversalTime(),
+                            ActualArrivalTime = status == "Completed" ? arrival.AddMinutes(15).ToUniversalTime() : null,
                             Status = status,
                             Notes = notes,
                             CreatedBy = "System"
@@ -165,18 +170,27 @@ namespace QuanLyVanTai.DAL
                     var yesterdayHaiPhong = BuildSchedule($"SCH-{today.AddDays(-1):yyyyMMdd}-001", "HN-HP-01", "29B-123.45", today.AddDays(-1).AddHours(7), "Completed", "Chạy đúng giờ");
                     var yesterdayVungTau  = BuildSchedule($"SCH-{today.AddDays(-1):yyyyMMdd}-002", "SG-VT-01", "51B-999.66", today.AddDays(-1).AddHours(13), "Completed", null);
                     var runningDaNang     = BuildSchedule($"SCH-{today:yyyyMMdd}-001", "HN-DN-01", "43B-555.88", now.AddHours(-3), "InProgress", "Đang trên đường");
-                    var tomorrowSaiGon    = BuildSchedule($"SCH-{today.AddDays(1):yyyyMMdd}-001", "HN-SG-01", "29B-678.90", today.AddDays(1).AddHours(8), "Scheduled", null);
-                    var nextDayHaiPhong   = BuildSchedule($"SCH-{today.AddDays(2):yyyyMMdd}-001", "HN-HP-01", "29B-123.45", today.AddDays(2).AddHours(6), "Scheduled", null);
+                    
+                    // 3 chuyến "Scheduled" trong ngày hiện tại để màn hình đặt vé của khách hàng
+                    // có chuyến hiển thị ngay; 1 chuyến +2 ngày để kiểm tra bộ lọc theo khoảng ngày.
+                    var todayDaNang        = BuildSchedule($"SCH-{today:yyyyMMdd}-005", "HN-DN-01", "43B-555.88", today.AddHours(14), "Scheduled", "Chuyến đi Đà Nẵng chiều nay");
+                    var todaySaiGon        = BuildSchedule($"SCH-{today:yyyyMMdd}-002", "HN-SG-01", "29B-678.90", today.AddHours(20), "Scheduled", "Chuyến tối đi Sài Gòn");
+                    var todayVungTau       = BuildSchedule($"SCH-{today:yyyyMMdd}-003", "SG-VT-01", "51B-999.66", today.AddHours(8), "Scheduled", "Chuyến sáng đi Vũng Tàu");
+                    var todayDaLat         = BuildSchedule($"SCH-{today:yyyyMMdd}-004", "SG-DL-01", "49B-222.33", today.AddHours(22), "Scheduled", "Chuyến đêm đi Đà Lạt");
+                    var nextDayHaiPhong    = BuildSchedule($"SCH-{today.AddDays(2):yyyyMMdd}-001", "HN-HP-01", "29B-123.45", today.AddDays(2).AddHours(6), "Scheduled", null);
 
                     Assign(yesterdayHaiPhong, "TX-001", "Primary");
                     Assign(yesterdayHaiPhong, "TX-002", "Secondary");
                     Assign(yesterdayVungTau, "TX-003", "Primary");
                     Assign(runningDaNang, "TX-004", "Primary");
-                    Assign(tomorrowSaiGon, "TX-001", "Primary");
-                    Assign(tomorrowSaiGon, "TX-003", "Secondary");
+                    Assign(todayDaNang, "TX-004", "Primary");
+                    Assign(todaySaiGon, "TX-001", "Primary");
+                    Assign(todaySaiGon, "TX-003", "Secondary");
+                    Assign(todayVungTau, "TX-002", "Primary");
+                    Assign(todayDaLat, "TX-004", "Primary");
                     Assign(nextDayHaiPhong, "TX-002", "Primary");
 
-                    var schedules = new[] { yesterdayHaiPhong, yesterdayVungTau, runningDaNang, tomorrowSaiGon, nextDayHaiPhong }
+                    var schedules = new[] { yesterdayHaiPhong, yesterdayVungTau, runningDaNang, todayDaNang, todaySaiGon, todayVungTau, todayDaLat, nextDayHaiPhong }
                         .Where(s => s != null)
                         .Cast<Schedule>()
                         .ToList();
@@ -210,6 +224,60 @@ namespace QuanLyVanTai.DAL
                     });
                     db.SaveChanges();
                 }
+
+                // 7. Gán tuyến phụ trách cho xe và chuẩn hóa dữ liệu phương tiện.
+                //    Màn hình đặt vé của khách hàng chỉ liệt kê các xe có RouteId trùng với tuyến
+                //    đã chọn, nên xe thiếu RouteId sẽ khiến mục "Chuyến xe" bị bỏ trống.
+                var routeByCode = db.Routes.ToDictionary(r => r.RouteCode);
+                var vehiclesByPlate = db.Vehicles.ToDictionary(v => v.LicensePlate);
+                bool vehicleChanged = false;
+
+                // 7a. Chuẩn hóa trạng thái xe về đúng bộ giá trị hợp lệ (Ready / InTransit / Maintenance).
+                foreach (var vehicle in vehiclesByPlate.Values)
+                {
+                    if (vehicle.Status == "Active")
+                    {
+                        vehicle.Status = "Ready";
+                        vehicleChanged = true;
+                    }
+                }
+
+                // 7b. Gán tuyến phụ trách cho từng xe theo biển số.
+                void AssignVehicleRoute(string licensePlate, string routeCode)
+                {
+                    if (vehiclesByPlate.TryGetValue(licensePlate, out var vehicle) &&
+                        vehicle.RouteId == null &&
+                        routeByCode.TryGetValue(routeCode, out var route))
+                    {
+                        vehicle.RouteId = route.Id;
+                        vehicleChanged = true;
+                    }
+                }
+
+                AssignVehicleRoute("29B-123.45", "HN-HP-01");
+                AssignVehicleRoute("29B-678.90", "HN-SG-01");
+                AssignVehicleRoute("43B-555.88", "HN-DN-01");
+                AssignVehicleRoute("51B-999.66", "SG-VT-01");
+
+                // 7c. Bổ sung xe cho tuyến chưa có xe phụ trách để mọi tuyến đều đặt vé được.
+                if (routeByCode.TryGetValue("SG-DL-01", out var daLatRoute) &&
+                    !vehiclesByPlate.ContainsKey("49B-222.33") &&
+                    !vehiclesByPlate.Values.Any(v => v.RouteId == daLatRoute.Id))
+                {
+                    db.Vehicles.Add(new Vehicle
+                    {
+                        LicensePlate = "49B-222.33",
+                        VehicleType = "Giường nằm 34 chỗ",
+                        TotalSeats = 34,
+                        Status = "Ready",
+                        RouteId = daLatRoute.Id,
+                        CreatedBy = "System"
+                    });
+                    vehicleChanged = true;
+                }
+
+                if (vehicleChanged)
+                    db.SaveChanges();
             }
             catch (Exception ex)
             {

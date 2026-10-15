@@ -28,6 +28,19 @@ namespace QuanLyVanTai.BLL.DTOs
         public string? Notes { get; set; }
     }
 
+    /// <summary>DTO tối giản cho ComboBox chọn tài xế khi phân công chuyến.</summary>
+    public class DriverLookupDto
+    {
+        public int Id { get; set; }
+        public string DriverCode { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
+        public string LicenseNumber { get; set; } = string.Empty;
+        public string LicenseClass { get; set; } = string.Empty;
+
+        /// <summary>Chuỗi hiển thị trong ComboBox: "TX-001 - Nguyễn Văn A (B2)".</summary>
+        public string Display => $"{DriverCode} - {FullName} ({LicenseClass})";
+    }
+
     /// <summary>DTO phân công 1 tài xế vào chuyến xe.</summary>
     public class AssignDriverDto
     {
@@ -45,8 +58,16 @@ namespace QuanLyVanTai.BLL.DTOs
         public string ScheduleCode { get; set; } = string.Empty;
         public string RouteName { get; set; } = string.Empty;
         public string RouteCode { get; set; } = string.Empty;
+
+        /// <summary>ID phương tiện thực hiện chuyến — cần cho tra cứu sơ đồ ghế.</summary>
+        public int VehicleId { get; set; }
+
         public string LicensePlate { get; set; } = string.Empty;
         public string VehicleType { get; set; } = string.Empty;
+
+        /// <summary>Tổng số chỗ của phương tiện.</summary>
+        public int TotalSeats { get; set; }
+
         public DateTime DepartureTime { get; set; }
         public DateTime EstimatedArrivalTime { get; set; }
         public DateTime? ActualArrivalTime { get; set; }
