@@ -58,20 +58,14 @@ namespace QuanLyVanTai.UI
                     .UseSqlServer(connectionString)
                     .Options;
 
-                // Tự động kiểm tra và áp dụng Migration sinh Database/bảng nếu chưa có
+                // Áp dụng Migration để tạo Database và toàn bộ bảng nếu chưa có.
+                // Chỉ dùng duy nhất cơ chế Migration (không trộn với EnsureCreated) để lịch sử
+                // __EFMigrationsHistory luôn được ghi nhận và các bảng mới luôn được tạo.
                 try
                 {
                     using (var db = new AppDbContext(options))
                     {
-                        try
-                        {
-                            db.Database.Migrate();
-                        }
-                        catch
-                        {
-                            db.Database.EnsureCreated();
-                        }
-
+                        db.Database.Migrate();
                         DatabaseSeeder.SeedSampleData(db);
                     }
 

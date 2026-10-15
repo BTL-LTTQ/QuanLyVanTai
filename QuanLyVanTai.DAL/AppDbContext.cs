@@ -68,12 +68,51 @@ namespace QuanLyVanTai.DAL
         public virtual DbSet<Schedule> Schedules { get; set; } = null!;
         public virtual DbSet<DriverAssignment> DriverAssignments { get; set; } = null!;
 
+        // Chuỗi kết nối mặc định, chỉ dùng khi không đọc được appsettings.json
+        // (ví dụ khi chạy Migration từ Package Manager Console hoặc .NET CLI)
+        private const string FallbackConnectionString =
+            "Server=.;Database=QuanLyVanTaiDb;Trusted_Connection=True;TrustServerCertificate=True;";
+
+        private static string? _resolvedConnectionString;
+
+        /// <summary>
+        /// Đọc chuỗi kết nối "DefaultConnection" từ appsettings.json để DbContext luôn dùng
+        /// đúng cấu hình như tầng UI, tránh việc Migration tạo bảng ở một database nhưng
+        /// ứng dụng lại kết nối sang database khác.
+        /// </summary>
+        private static string ResolveConnectionString()
+        {
+            if (_resolvedConnectionString is not null)
+                return _resolvedConnectionString;
+
+            try
+            {
+                string configPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
+                if (File.Exists(configPath))
+                {
+                    using var document = JsonDocument.Parse(File.ReadAllText(configPath));
+                    if (document.RootElement.TryGetProperty("ConnectionStrings", out var section) &&
+                        section.TryGetProperty("DefaultConnection", out var value) &&
+                        value.GetString() is { Length: > 0 } connectionString)
+                    {
+                        return _resolvedConnectionString = connectionString;
+                    }
+                }
+            }
+            catch
+            {
+                // Không đọc được file cấu hình -> dùng chuỗi kết nối mặc định bên dưới
+            }
+
+            return _resolvedConnectionString = FallbackConnectionString;
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
             {
-                // Fallback connection string hỗ trợ chạy Migration từ PMC hoặc CLI
-                optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=QuanLyVanTaiDb;Trusted_Connection=True;TrustServerCertificate=True;");
+                // Dùng thống nhất một nguồn cấu hình duy nhất là appsettings.json
+                optionsBuilder.UseSqlServer(ResolveConnectionString());
             }
         }
 

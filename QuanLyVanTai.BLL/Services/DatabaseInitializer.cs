@@ -10,7 +10,8 @@ namespace QuanLyVanTai.BLL.Services
     {
         public static async Task SeedSampleDataAsync(AppDbContext context)
         {
-            await context.Database.EnsureCreatedAsync();
+            // Không gọi EnsureCreatedAsync tại đây: việc tạo Database/bảng chỉ do Migration
+            // tại Program.cs đảm nhiệm, tránh trộn 2 cơ chế khởi tạo schema của EF Core.
 
             // 1. Kiểm tra và thêm Trạm dừng nếu chưa có
             if (!await context.Stations.AnyAsync())
