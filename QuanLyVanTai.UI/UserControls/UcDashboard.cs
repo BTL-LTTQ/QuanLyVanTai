@@ -39,66 +39,25 @@ namespace QuanLyVanTai.UI.UserControls
         public UcDashboard()
         {
             InitializeComponent();
-            Build();
+
+            if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime || this.DesignMode)
+            {
+                return;
+            }
+
+            SetupDashboardRuntime();
         }
 
         // ═══════════════════════════════════════════════════════════════
-        //  LAYOUT
+        //  RUNTIME SETUP
         // ═══════════════════════════════════════════════════════════════
-        private void Build()
+        private void SetupDashboardRuntime()
         {
             this.BackColor = Color.FromArgb(245, 247, 250);
             this.Font = ThemeConfig.MainFont;
 
-            // ── outer TableLayout: rows = header | stats | body | footer
-            var root = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                RowCount = 4,
-                ColumnCount = 1,
-                BackColor = Color.Transparent,
-                CellBorderStyle = TableLayoutPanelCellBorderStyle.None
-            };
-            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 70));   // header
-            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 115));  // stats cards
-            root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));   // chart + map
-            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));   // footer
-            this.Controls.Add(root);
-
-            root.Controls.Add(BuildHeader(),    0, 0);
-            root.Controls.Add(BuildStatCards(), 0, 1);
-            root.Controls.Add(BuildBody(),      0, 2);
-            root.Controls.Add(BuildFooter(),    0, 3);
-        }
-
-        // ── Header ────────────────────────────────────────────────────
-        private Panel BuildHeader()
-        {
-            var p = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, Padding = new Padding(20, 0, 20, 0) };
-            p.Controls.Add(new Label
-            {
-                Text = "Operations Dashboard",
-                Font = new Font("Segoe UI", 15F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(30, 41, 59),
-                Location = new Point(20, 12),
-                AutoSize = true
-            });
-            p.Controls.Add(new Label
-            {
-                Text = $"{DateTime.Now:dddd, dd MMMM yyyy}  –  TP. Hồ Chí Minh",
-                Font = new Font("Segoe UI", 9F),
-                ForeColor = Color.FromArgb(100, 116, 139),
-                Location = new Point(22, 44),
-                AutoSize = true
-            });
-            return p;
-        }
-
-        // ── Stat Cards ────────────────────────────────────────────────
-        private Panel BuildStatCards()
-        {
-            var p = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(245, 247, 250), Padding = new Padding(20, 10, 20, 10) };
-
+            // Stat Cards
+            flpStatCards.Controls.Clear();
             var cards = new (string title, string value, string sub, IconChar icon, Color color)[]
             {
                 ("Today's Revenue",  "₫128.6M", "+12.4% vs yesterday",   IconChar.MoneyBillWave, Color.FromArgb(59,130,246)),
@@ -107,18 +66,57 @@ namespace QuanLyVanTai.UI.UserControls
                 ("Passengers",       "3,876",    "Current occupancy 79%",  IconChar.Users,         Color.FromArgb(239,68,68)),
             };
 
-            int x = 0;
             foreach (var (title, value, sub, icon, color) in cards)
             {
                 var card = MakeStatCard(title, value, sub, icon, color);
-                card.Location = new Point(x, 0);
-                p.Controls.Add(card);
-                x += 285;
+                flpStatCards.Controls.Add(card);
             }
-            return p;
+
+            // Legend on Chart Panel
+            int lx = 320;
+            foreach (var (txt, col) in new (string, Color)[] { ("Revenue", Color.FromArgb(16,185,129)), ("Ticket sales", Color.FromArgb(59,130,246)), ("Operating cost", Color.FromArgb(239,68,68)) })
+            {
+                pnlChartWrap.Controls.Add(new Panel { Size = new Size(10, 3), Location = new Point(lx, 22), BackColor = col });
+                pnlChartWrap.Controls.Add(new Label { Text = txt, Font = new Font("Segoe UI", 8F), ForeColor = Color.FromArgb(100,116,139), Location = new Point(lx + 14, 16), AutoSize = true });
+                lx += 110;
+            }
+
+            pnlChartCanvas.Paint += Canvas_Paint;
+            pnlChartCanvas.Resize += (_, _) => pnlChartCanvas.Invalidate();
+
+            // Map Setup
+            pnlMapCanvas.Paint += (s, e) => PaintMap(e.Graphics, pnlMapCanvas.Width, pnlMapCanvas.Height);
+            pnlMapCanvas.Resize += (_, _) => pnlMapCanvas.Invalidate();
+
+            // Bus List
+            pnlBusScroll.Controls.Clear();
+            int by = 0;
+            foreach (var bus in _buses)
+            {
+                var card = MakeBusCard(bus);
+                card.Top = by;
+                pnlBusScroll.Controls.Add(card);
+                by += card.Height + 4;
+            }
+
+            pnlMapWrap.Resize += (_, _) =>
+            {
+                int mapH = (int)(pnlMapWrap.Height * 0.45);
+                pnlMapCanvas.Size = new Size(pnlMapWrap.Width - 20, mapH);
+                pnlBusScroll.Location = new Point(10, 55 + mapH + 8);
+                pnlBusScroll.Size = new Size(pnlMapWrap.Width - 20, pnlMapWrap.Height - 55 - mapH - 20);
+                foreach (Control c in pnlBusScroll.Controls) c.Width = pnlBusScroll.Width - 4;
+            };
+
+            // Footer
+            lblDashboardDate.Text = $"{DateTime.Now:dddd, dd MMMM yyyy}  –  TP. Hồ Chí Minh";
+            lblFooterTime.Text = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
+            var timer = new System.Windows.Forms.Timer { Interval = 1000 };
+            timer.Tick += (_, _) => lblFooterTime.Text = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
+            timer.Start();
         }
 
-        private Panel MakeStatCard(string title, string value, string sub, IconChar icon, Color color)
+        private static Panel MakeStatCard(string title, string value, string sub, IconChar icon, Color color)
         {
             var card = new Panel { Size = new Size(275, 95), BackColor = Color.White };
 
@@ -143,68 +141,6 @@ namespace QuanLyVanTai.UI.UserControls
                 e.Graphics.DrawRectangle(pen, 0, 0, card.Width - 1, card.Height - 1);
             };
             return card;
-        }
-
-        // ── Body: Chart (left) + Map (right) ─────────────────────────
-        private TableLayoutPanel BuildBody()
-        {
-            var tbl = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                RowCount = 1,
-                ColumnCount = 2,
-                BackColor = Color.Transparent,
-                Padding = new Padding(20, 10, 20, 10)
-            };
-            tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 58));
-            tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 42));
-
-            tbl.Controls.Add(BuildChartPanel(), 0, 0);
-            tbl.Controls.Add(BuildMapPanel(),   1, 0);
-            return tbl;
-        }
-
-        // ── Chart Panel ───────────────────────────────────────────────
-        private Panel BuildChartPanel()
-        {
-            var wrap = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, Margin = new Padding(0, 0, 8, 0) };
-
-            wrap.Controls.Add(new Label
-            {
-                Text = "Revenue & Ticket Performance — Last 10 Days",
-                Font = new Font("Segoe UI", 10.5F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(30, 41, 59),
-                Location = new Point(16, 14), AutoSize = true
-            });
-            wrap.Controls.Add(new Label
-            {
-                Text = "Unit: million VNĐ",
-                Font = new Font("Segoe UI", 8.5F),
-                ForeColor = Color.FromArgb(100, 116, 139),
-                Location = new Point(16, 36), AutoSize = true
-            });
-
-            // legend
-            int lx = 320;
-            foreach (var (txt, col) in new (string, Color)[] { ("Revenue", Color.FromArgb(16,185,129)), ("Ticket sales", Color.FromArgb(59,130,246)), ("Operating cost", Color.FromArgb(239,68,68)) })
-            {
-                wrap.Controls.Add(new Panel { Size = new Size(10, 3), Location = new Point(lx, 22), BackColor = col });
-                wrap.Controls.Add(new Label { Text = txt, Font = new Font("Segoe UI", 8F), ForeColor = Color.FromArgb(100,116,139), Location = new Point(lx + 14, 16), AutoSize = true });
-                lx += 110;
-            }
-
-            // actual drawing area
-            var canvas = new Panel { Dock = DockStyle.None, BackColor = Color.White, Left = 10, Top = 55, Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom };
-            canvas.Paint += Canvas_Paint;
-            wrap.Controls.Add(canvas);
-
-            // resize canvas with parent
-            wrap.Resize += (_, _) =>
-            {
-                canvas.Size = new Size(wrap.Width - 20, wrap.Height - 65);
-            };
-
-            return wrap;
         }
 
         private void Canvas_Paint(object? sender, PaintEventArgs e)
@@ -477,26 +413,7 @@ namespace QuanLyVanTai.UI.UserControls
             return card;
         }
 
-        // ── Footer ───────────────────────────────────────────────────
-        private Panel BuildFooter()
-        {
-            var p = new Panel { Dock = DockStyle.Fill, BackColor = Color.White };
-            p.Controls.Add(new Label { Text = "Ready · Data synchronized", Font = new Font("Segoe UI", 8.5f), ForeColor = Color.FromArgb(100,116,139), Location = new Point(20, 10), AutoSize = true });
-            p.Controls.Add(new Label
-            {
-                Text = $"42 vehicles online · 3 alerts",
-                Font = new Font("Segoe UI", 8.5f), ForeColor = Color.FromArgb(100,116,139),
-                Location = new Point(450, 10), AutoSize = true
-            });
-            var lblTime = new Label { Text = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"), Font = new Font("Segoe UI", 8.5f), ForeColor = Color.FromArgb(100,116,139), Location = new Point(900, 10), AutoSize = true };
-            p.Controls.Add(lblTime);
 
-            var timer = new System.Windows.Forms.Timer { Interval = 1000 };
-            timer.Tick += (_, _) => lblTime.Text = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
-            timer.Start();
-
-            return p;
-        }
 
         // ═══════════════════════════════════════════════════════════════
         //  DATA MODELS

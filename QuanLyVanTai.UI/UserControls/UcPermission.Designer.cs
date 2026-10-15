@@ -1,4 +1,4 @@
-﻿namespace QuanLyVanTai.UI.UserControls
+namespace QuanLyVanTai.UI.UserControls
 {
     partial class UcPermission
     {
@@ -84,6 +84,7 @@
             // 
             // dgvPhanQuyen
             // 
+            dgvPhanQuyen.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvPhanQuyen.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvPhanQuyen.Columns.AddRange(new DataGridViewColumn[] { colMenu, colXem, colThem, colSua, colXoa });
             dgvPhanQuyen.Location = new Point(36, 195);

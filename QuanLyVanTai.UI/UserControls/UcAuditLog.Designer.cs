@@ -87,6 +87,7 @@ namespace QuanLyVanTai.UI.UserControls
             btnXuat.Text = "Xuất";
             btnXuat.UseVisualStyleBackColor = true;
             // dgvAuditLog
+            dgvAuditLog.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvAuditLog.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvAuditLog.Columns.AddRange(new DataGridViewColumn[] { colThoiGian, colNguoiDung, colVaiTro, colHanhDong, colDoiTuong, colDiaChiIP });
             dgvAuditLog.Location = new Point(34, 215);

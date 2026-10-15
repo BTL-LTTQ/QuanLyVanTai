@@ -7,37 +7,51 @@ namespace QuanLyVanTai.BLL.Services
 {
     public class PermissionService
     {
-        private readonly AppDbContext _context;
+        private readonly AppDbContext? _injectedContext;
 
         public PermissionService(AppDbContext context)
         {
-            _context = context;
+            _injectedContext = context;
         }
 
-        public PermissionService() : this(new AppDbContext())
+        public PermissionService()
         {
         }
+
+        private AppDbContext CreateContext() => _injectedContext ?? new AppDbContext();
+        private bool ShouldDisposeContext => _injectedContext == null;
 
         /// <summary>
         /// Lấy danh sách quyền của một vai trò từ Database
         /// </summary>
         public async Task<List<RolePermission>> GetPermissionsByRoleAsync(string roleName)
         {
-            var list = await _context.RolePermissions
-                .Where(p => p.RoleName == roleName)
-                .OrderBy(p => p.Id)
-                .AsNoTracking()
-                .ToListAsync();
-
-            // Nếu DB chưa có bản ghi quyền cho vai trò này, khởi tạo mặc định theo SystemMenus
-            if (list.Count == 0)
+            var context = CreateContext();
+            try
             {
-                list = InitializeDefaultPermissionsForRole(roleName);
-                _context.RolePermissions.AddRange(list);
-                await _context.SaveChangesAsync();
-            }
+                var list = await context.RolePermissions
+                    .Where(p => p.RoleName == roleName)
+                    .OrderBy(p => p.Id)
+                    .AsNoTracking()
+                    .ToListAsync();
 
-            return list;
+                // Nếu DB chưa có bản ghi quyền cho vai trò này, khởi tạo mặc định theo SystemMenus
+                if (list.Count == 0)
+                {
+                    list = InitializeDefaultPermissionsForRole(roleName);
+                    context.RolePermissions.AddRange(list);
+                    await context.SaveChangesAsync();
+                }
+
+                return list;
+            }
+            finally
+            {
+                if (ShouldDisposeContext)
+                {
+                    await context.DisposeAsync();
+                }
+            }
         }
 
         /// <summary>
@@ -45,9 +59,10 @@ namespace QuanLyVanTai.BLL.Services
         /// </summary>
         public async Task<(bool Success, string Message)> SavePermissionsAsync(string roleName, List<RolePermission> permissions)
         {
+            var context = CreateContext();
             try
             {
-                var existing = await _context.RolePermissions
+                var existing = await context.RolePermissions
                     .Where(p => p.RoleName == roleName)
                     .ToListAsync();
 
@@ -65,7 +80,7 @@ namespace QuanLyVanTai.BLL.Services
                     }
                     else
                     {
-                        _context.RolePermissions.Add(new RolePermission
+                        context.RolePermissions.Add(new RolePermission
                         {
                             RoleName = roleName,
                             MenuCode = perm.MenuCode,
@@ -80,7 +95,7 @@ namespace QuanLyVanTai.BLL.Services
                     }
                 }
 
-                await _context.SaveChangesAsync();
+                await context.SaveChangesAsync();
 
                 // Nếu vai trò vừa cập nhật trùng với người dùng hiện tại -> cập nhật UserSession ngay lập tức!
                 if (UserSession.CurrentRole == roleName)
@@ -93,6 +108,13 @@ namespace QuanLyVanTai.BLL.Services
             catch (Exception ex)
             {
                 return (false, $"Lỗi khi lưu phân quyền: {ex.Message}");
+            }
+            finally
+            {
+                if (ShouldDisposeContext)
+                {
+                    await context.DisposeAsync();
+                }
             }
         }
 

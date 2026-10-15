@@ -13,13 +13,17 @@ namespace QuanLyVanTai.UI.UserControls
         public UcPermission()
         {
             InitializeComponent();
+
+            if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime || this.DesignMode)
+            {
+                return;
+            }
+
             SetupGiaoDien();
             SetupDataGridView();
             LoadVaiTro();
 
             btnLuu.Click += async (s, e) => await LuuQuyenAsync();
-
-            _ = LoadQuyenTheoVaiTroAsync();
         }
 
         private async void cboVaiTro_SelectedIndexChanged(object? sender, EventArgs e)
@@ -147,12 +151,18 @@ namespace QuanLyVanTai.UI.UserControls
             });
         }
 
+        private bool _isLoading = false;
+
         private async Task LoadQuyenTheoVaiTroAsync()
         {
-            string vaiTro = cboVaiTro.SelectedItem?.ToString() ?? SystemRoles.Admin;
-            var perms = await _permissionService.GetPermissionsByRoleAsync(vaiTro);
+            if (_isLoading) return;
+            _isLoading = true;
+            try
+            {
+                string vaiTro = cboVaiTro.SelectedItem?.ToString() ?? SystemRoles.Admin;
+                var perms = await _permissionService.GetPermissionsByRoleAsync(vaiTro);
 
-            dgvPhanQuyen.Rows.Clear();
+                dgvPhanQuyen.Rows.Clear();
 
             foreach (var menu in SystemMenus.AllMenus)
             {
@@ -186,6 +196,11 @@ namespace QuanLyVanTai.UI.UserControls
             }
 
             btnLuu.Enabled = !isReadOnly && AuthorizationGuard.CheckAccess(SystemMenus.Permission, PermissionAction.Edit, showWarning: false);
+            }
+            finally
+            {
+                _isLoading = false;
+            }
         }
 
         private async Task LuuQuyenAsync()

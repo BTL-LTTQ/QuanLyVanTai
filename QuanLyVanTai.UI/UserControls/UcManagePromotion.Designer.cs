@@ -1,4 +1,4 @@
-﻿namespace QuanLyVanTai.UI.UserControls
+namespace QuanLyVanTai.UI.UserControls
 {
     partial class UcManagePromotion
     {
@@ -45,6 +45,7 @@
             // 
             // dgvKhuyenMai
             // 
+            dgvKhuyenMai.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvKhuyenMai.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvKhuyenMai.Columns.AddRange(new DataGridViewColumn[] { colTen, colLoai, colGiaTri, colThoiGian, ColTrangThai, colThaoTac });
             dgvKhuyenMai.Dock = DockStyle.Bottom;

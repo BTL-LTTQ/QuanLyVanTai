@@ -4,34 +4,50 @@ using FontAwesome.Sharp;
 using QuanLyVanTai.BLL.DTOs;
 using QuanLyVanTai.BLL.Services;
 using QuanLyVanTai.DAL.Models;
+using QuanLyVanTai.UI.Forms;
+using QuanLyVanTai.UI.Models;
 
-namespace QuanLyVanTai.UI.Forms
+namespace QuanLyVanTai.UI.UserControls
 {
-    public partial class FrmCustomerTicketHistory : Form
+    public partial class UcCustomerTicketHistory : UserControl
     {
         private readonly TicketService _ticketService = new();
         private readonly CustomerBookingService _bookingService = new();
         private List<TicketDisplayModel> _displayedTickets = new();
-        private string? _initialPhoneOrCode;
 
-        public FrmCustomerTicketHistory() : this(null)
+        public event Action<string, bool>? OnStatusChanged;
+        public event Action? OnNavigateToBooking;
+
+        public UcCustomerTicketHistory() : this(null)
         {
         }
 
-        public FrmCustomerTicketHistory(string? searchKeyword)
+        public UcCustomerTicketHistory(string? searchKeyword)
         {
             InitializeComponent();
-            _initialPhoneOrCode = searchKeyword;
 
-            // 🛡️ BẢO VỆ DESIGNER: Chặn Visual Studio Designer thực thi kết nối CSDL hoặc gọi Service (Mục 2.2 SKILL)
+            // Chống crash Visual Studio Designer
             if (LicenseManager.UsageMode == LicenseUsageMode.Designtime || this.DesignMode)
             {
                 return;
             }
 
-            this.KeyPreview = true;
             SetupUi();
             WireEvents();
+
+            if (!string.IsNullOrWhiteSpace(searchKeyword))
+            {
+                txtTimKiem.Text = searchKeyword.Trim();
+            }
+        }
+
+        public void SetSearchKeyword(string? keyword)
+        {
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                txtTimKiem.Text = keyword.Trim();
+                _ = LoadTicketsAsync();
+            }
         }
 
         private void SetupUi()
@@ -39,65 +55,29 @@ namespace QuanLyVanTai.UI.Forms
             this.Font = ThemeConfig.MainFont;
             this.BackColor = ThemeConfig.BackgroundColor;
 
-            // Áp dụng theme button theo chuẩn (ThemeConfig & SKILL Mục 13)
+            // Áp dụng theme button theo chuẩn ThemeConfig
             ThemeConfig.StylePrimaryButton(btnChiTiet, IconChar.CircleInfo);
-            btnChiTiet.Size = new Size(150, 42);
-
             ThemeConfig.StylePrimaryButton(btnTimKiem, IconChar.Search);
-            btnTimKiem.Size = new Size(120, 36);
-
             ThemeConfig.StyleSecondaryButton(btnLamMoi, IconChar.RotateLeft);
-            btnLamMoi.Size = new Size(118, 36);
-
             ThemeConfig.StyleSuccessButton(btnInVe, IconChar.Print);
-            btnInVe.Size = new Size(150, 42);
-
             ThemeConfig.StyleDangerButton(btnHuyVe, IconChar.Trash);
-            btnHuyVe.Size = new Size(140, 42);
+            ThemeConfig.StyleSecondaryButton(btnQuayLai, IconChar.ArrowLeft);
 
-            ThemeConfig.StyleSecondaryButton(btnDong, IconChar.Xmark);
-            btnDong.Size = new Size(110, 42);
-
-            // Cấu hình danh sách trạng thái lọc
             cboTrangThai.Items.Clear();
             cboTrangThai.Items.AddRange(new object[] { "Tất cả", "Booked", "Cancelled", "Completed" });
             cboTrangThai.SelectedIndex = 0;
 
-            if (!string.IsNullOrWhiteSpace(_initialPhoneOrCode))
-            {
-                txtTimKiem.Text = _initialPhoneOrCode.Trim();
-            }
-
-            // Đảm bảo không tự động sinh thêm cột từ model (chỉ giữ đúng 5 cột thiết kế)
             dgvTickets.AutoGenerateColumns = false;
             dgvTickets.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.False;
-
-            lblClock.Text = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
         }
 
         private void WireEvents()
         {
             this.Load += async (s, e) => await LoadTicketsAsync();
-            this.KeyDown += FrmCustomerTicketHistory_KeyDown;
 
-            // Đồng hồ StatusStrip (Đồng nhất với FormMain_KhachHang)
-            timerClock.Interval = 1000;
-            timerClock.Tick += (s, e) =>
-            {
-                lblClock.Text = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
-            };
-            timerClock.Start();
-
-            // MenuStrip handlers
-            mnuLamMoi.Click += async (s, e) => await RefreshDataAsync();
-            mnuDong.Click += (s, e) => this.Close();
-            mnuChiTiet.Click += (s, e) => ViewSelectedTicketDetail();
-            mnuInVe.Click += async (s, e) => await PrintSelectedTicketAsync();
-            mnuHuyVe.Click += async (s, e) => await CancelSelectedTicketAsync();
-
-            // Nút bấm tác vụ
             btnTimKiem.Click += async (s, e) => await LoadTicketsAsync();
             btnLamMoi.Click += async (s, e) => await RefreshDataAsync();
+            btnQuayLai.Click += (s, e) => OnNavigateToBooking?.Invoke();
 
             txtTimKiem.KeyDown += async (s, e) =>
             {
@@ -113,9 +93,7 @@ namespace QuanLyVanTai.UI.Forms
             btnChiTiet.Click += (s, e) => ViewSelectedTicketDetail();
             btnInVe.Click += async (s, e) => await PrintSelectedTicketAsync();
             btnHuyVe.Click += async (s, e) => await CancelSelectedTicketAsync();
-            btnDong.Click += (s, e) => this.Close();
 
-            // Nhấp đúp chuột vào dòng DataGridView để xem chi tiết vé
             dgvTickets.CellDoubleClick += (s, e) =>
             {
                 if (e.RowIndex >= 0)
@@ -124,23 +102,20 @@ namespace QuanLyVanTai.UI.Forms
                 }
             };
 
-            // Định dạng màu sắc hàng theo trạng thái
             dgvTickets.CellFormatting += DgvTickets_CellFormatting;
-
-            // Tự động bật/tắt các nút In vé, Hủy vé theo trạng thái dòng đang chọn
             dgvTickets.SelectionChanged += (s, e) => UpdateActionButtonsState();
         }
 
-        private async Task RefreshDataAsync()
+        public async Task RefreshDataAsync()
         {
             txtTimKiem.Clear();
             cboTrangThai.SelectedIndex = 0;
             await LoadTicketsAsync();
         }
 
-        private async Task LoadTicketsAsync()
+        public async Task LoadTicketsAsync()
         {
-            SetLoading(true, "Đang tải danh sách vé...");
+            SetStatus("Đang tải danh sách vé...", true);
             try
             {
                 string kw = txtTimKiem.Text.Trim();
@@ -183,13 +158,12 @@ namespace QuanLyVanTai.UI.Forms
                 dgvTickets.AutoGenerateColumns = false;
                 dgvTickets.DataSource = _displayedTickets;
 
-                lblTotalCount.Text = $"Tổng cộng: {_displayedTickets.Count} vé";
-                SetLoading(false, $"Đã tải {_displayedTickets.Count} vé");
+                SetStatus($"Tổng cộng: {_displayedTickets.Count} vé", false);
                 UpdateActionButtonsState();
             }
             catch (Exception ex)
             {
-                SetLoading(false, "Lỗi tải vé");
+                SetStatus("Lỗi tải vé", false);
                 MessageBox.Show("Lỗi tải danh sách lịch sử vé: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -203,7 +177,6 @@ namespace QuanLyVanTai.UI.Forms
                 return;
             }
 
-            // ⚠️ RÀNG BUỘC NGHIỆP VỤ: Tuyệt đối không cho phép in thẻ lên xe cho vé đã hủy
             if (selected.TicketStatus == "Cancelled")
             {
                 MessageBox.Show(
@@ -214,7 +187,7 @@ namespace QuanLyVanTai.UI.Forms
                 return;
             }
 
-            SetLoading(true, $"Đang chuẩn bị mẫu in vé [{selected.TicketCode}]...");
+            SetStatus($"Đang chuẩn bị mẫu in vé [{selected.TicketCode}]...", true);
             try
             {
                 var receipts = await _bookingService.GetTicketReceiptsAsync(new List<int> { selected.Id });
@@ -225,7 +198,7 @@ namespace QuanLyVanTai.UI.Forms
                 }
 
                 using var previewForm = new FrmTicketPrintPreview(receipts);
-                previewForm.ShowDialog(this);
+                previewForm.ShowDialog(this.FindForm());
             }
             catch (Exception ex)
             {
@@ -233,7 +206,7 @@ namespace QuanLyVanTai.UI.Forms
             }
             finally
             {
-                SetLoading(false, "Sẵn sàng");
+                SetStatus("Sẵn sàng", false);
             }
         }
 
@@ -246,14 +219,12 @@ namespace QuanLyVanTai.UI.Forms
                 return;
             }
 
-            // 1. Kiểm tra trạng thái đã hủy chưa
             if (selected.TicketStatus == "Cancelled")
             {
                 MessageBox.Show($"Vé [{selected.TicketCode}] đã được hủy trước đó rồi!", "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
-            // 2. Kiểm tra giờ xuất bến
             if (selected.DepartureTime <= DateTime.Now)
             {
                 MessageBox.Show($"Chuyến xe đã xuất bến vào lúc {selected.DepartureTime:HH:mm dd/MM/yyyy}.\nKhông thể hủy vé đối với chuyến xe đã chạy!",
@@ -261,7 +232,6 @@ namespace QuanLyVanTai.UI.Forms
                 return;
             }
 
-            // 3. Quy tắc cốt lõi: Chỉ cho phép hủy trước tối thiểu 1 giờ (60 phút)
             TimeSpan timeUntilDeparture = selected.DepartureTime - DateTime.Now;
             if (timeUntilDeparture < TimeSpan.FromHours(1))
             {
@@ -275,7 +245,6 @@ namespace QuanLyVanTai.UI.Forms
                 return;
             }
 
-            // 4. Xác nhận hủy vé
             string confirmMsg = $"XÁC NHẬN HỦY VÉ XE:\n\n" +
                                 $"• Mã vé: {selected.TicketCode}\n" +
                                 $"• Tuyến xe: {selected.RouteName}\n" +
@@ -289,7 +258,7 @@ namespace QuanLyVanTai.UI.Forms
                 return;
             }
 
-            SetLoading(true, $"Đang tiến hành hủy vé [{selected.TicketCode}]...");
+            SetStatus($"Đang tiến hành hủy vé [{selected.TicketCode}]...", true);
             try
             {
                 var result = await _ticketService.CancelTicketAsync(selected.Id);
@@ -310,7 +279,7 @@ namespace QuanLyVanTai.UI.Forms
             }
             finally
             {
-                SetLoading(false, "Sẵn sàng");
+                SetStatus("Sẵn sàng", false);
             }
         }
 
@@ -337,7 +306,7 @@ namespace QuanLyVanTai.UI.Forms
             }
 
             using var detailForm = new FrmTicketDetail(selected.Id);
-            detailForm.ShowDialog(this);
+            detailForm.ShowDialog(this.FindForm());
             if (detailForm.WasCancelled)
             {
                 _ = LoadTicketsAsync();
@@ -352,21 +321,14 @@ namespace QuanLyVanTai.UI.Forms
                 btnChiTiet.Enabled = false;
                 btnInVe.Enabled = false;
                 btnHuyVe.Enabled = false;
-                mnuChiTiet.Enabled = false;
-                mnuInVe.Enabled = false;
-                mnuHuyVe.Enabled = false;
                 return;
             }
 
             btnChiTiet.Enabled = true;
-            mnuChiTiet.Enabled = true;
 
-            // Ràng buộc nghiệp vụ: Vé đã hủy thì không được In vé và không được Hủy thêm lần nữa
             bool isCancelled = selected.TicketStatus == "Cancelled";
             btnInVe.Enabled = !isCancelled;
             btnHuyVe.Enabled = !isCancelled;
-            mnuInVe.Enabled = !isCancelled;
-            mnuHuyVe.Enabled = !isCancelled;
         }
 
         private void DgvTickets_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
@@ -378,88 +340,23 @@ namespace QuanLyVanTai.UI.Forms
             {
                 if (item.TicketStatus == "Cancelled")
                 {
-                    row.DefaultCellStyle.ForeColor = Color.FromArgb(156, 163, 175);
-                    if (dgvTickets.Columns[e.ColumnIndex].Name == "colTicketStatus")
-                    {
-                        e.CellStyle!.ForeColor = Color.FromArgb(220, 38, 38);
-                        e.CellStyle!.Font = new Font(dgvTickets.Font, FontStyle.Bold);
-                    }
+                    row.DefaultCellStyle.ForeColor = Color.FromArgb(148, 163, 184);
+                    row.DefaultCellStyle.SelectionForeColor = Color.FromArgb(148, 163, 184);
                 }
-                else if (item.TicketStatus == "Booked")
+                else if (item.TicketStatus == "Completed")
                 {
-                    if (dgvTickets.Columns[e.ColumnIndex].Name == "colTicketStatus")
-                    {
-                        e.CellStyle!.ForeColor = Color.FromArgb(16, 124, 65);
-                        e.CellStyle!.Font = new Font(dgvTickets.Font, FontStyle.Bold);
-                    }
+                    row.DefaultCellStyle.ForeColor = Color.FromArgb(71, 85, 105);
+                }
+                else
+                {
+                    row.DefaultCellStyle.ForeColor = Color.FromArgb(15, 23, 42);
                 }
             }
         }
 
-        private void FrmCustomerTicketHistory_KeyDown(object? sender, KeyEventArgs e)
+        private void SetStatus(string msg, bool isLoading)
         {
-            if (e.KeyCode == Keys.Escape)
-            {
-                e.Handled = true;
-                this.Close();
-            }
-            else if (e.KeyCode == Keys.F5)
-            {
-                e.Handled = true;
-                _ = RefreshDataAsync();
-            }
-            else if (e.Control && e.KeyCode == Keys.D)
-            {
-                e.Handled = true;
-                ViewSelectedTicketDetail();
-            }
-            else if (e.KeyCode == Keys.Delete)
-            {
-                e.Handled = true;
-                _ = CancelSelectedTicketAsync();
-            }
-            else if (e.Control && e.KeyCode == Keys.P)
-            {
-                e.Handled = true;
-                _ = PrintSelectedTicketAsync();
-            }
-        }
-
-        private void SetLoading(bool isLoading, string statusText = "Đang xử lý...")
-        {
-            prgAction.Visible = isLoading;
-            lblStatus.Text = statusText;
-            btnTimKiem.Enabled = !isLoading;
-            btnLamMoi.Enabled = !isLoading;
-            if (isLoading)
-            {
-                btnChiTiet.Enabled = false;
-                btnInVe.Enabled = false;
-                btnHuyVe.Enabled = false;
-            }
-            else
-            {
-                UpdateActionButtonsState();
-            }
-        }
-
-        public class TicketDisplayModel
-        {
-            public int Id { get; set; }
-            public string TicketCode { get; set; } = string.Empty;
-            public string CustomerName { get; set; } = string.Empty;
-            public string CustomerPhone { get; set; } = string.Empty;
-            public string RouteName { get; set; } = string.Empty;
-            public string LicensePlate { get; set; } = string.Empty;
-            public string SeatNumber { get; set; } = string.Empty;
-            public DateTime DepartureTime { get; set; }
-            public string DepartureTimeDisplay { get; set; } = string.Empty;
-            public decimal Price { get; set; }
-            public string PriceDisplay { get; set; } = string.Empty;
-            public string TicketStatus { get; set; } = string.Empty;
-            public string TicketStatusDisplay { get; set; } = string.Empty;
-            public DateTime CreatedAt { get; set; }
-            public string CreatedAtDisplay { get; set; } = string.Empty;
+            OnStatusChanged?.Invoke(msg, isLoading);
         }
     }
 }

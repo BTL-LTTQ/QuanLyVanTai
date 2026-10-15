@@ -71,8 +71,10 @@ namespace QuanLyVanTai.Tests.BLL
 
         [Theory]
         [InlineData("TET2026", 1000000, true, 200000, 800000)]
+        [InlineData("TET2026", 2000000, true, 300000, 1700000)]
         [InlineData("VIP10", 500000, true, 50000, 450000)]
         [InlineData("GIAM50K", 300000, true, 50000, 250000)]
+        [InlineData("GIAM50K", 100000, false, 0, 100000)]
         [InlineData("CHAOBANMOI", 200000, true, 30000, 170000)]
         [InlineData("INVALID_CODE", 500000, false, 0, 500000)]
         [InlineData("", 500000, false, 0, 500000)]
@@ -153,6 +155,82 @@ namespace QuanLyVanTai.Tests.BLL
             Assert.NotNull(account);
             Assert.Equal(Core.Security.SystemRoles.Customer, account.Role);
             Assert.Equal("Khách hàng", account.Role);
+        }
+
+        [Fact]
+        public async Task BookTicketsAsync_ValidationFails_WhenInputsInvalid()
+        {
+            var service = new CustomerBookingService();
+
+            var res1 = await service.BookTicketsAsync(new BookingRequestDto { CustomerName = "" });
+            Assert.False(res1.Success);
+            Assert.Contains("Họ và tên", res1.Message);
+
+            var res2 = await service.BookTicketsAsync(new BookingRequestDto { CustomerName = "Nguyễn Văn A", CustomerPhone = "" });
+            Assert.False(res2.Success);
+            Assert.Contains("Số điện thoại", res2.Message);
+
+            var res3 = await service.BookTicketsAsync(new BookingRequestDto { CustomerName = "Nguyễn Văn A", CustomerPhone = "0987654321", SelectedSeats = new List<string>() });
+            Assert.False(res3.Success);
+            Assert.Contains("chọn ít nhất 1 chỗ", res3.Message);
+        }
+
+        [Fact]
+        public async Task BookTicketsAsync_Success_AndDetectsSeatConflict()
+        {
+            using var db = QuanLyVanTai.Tests.Helpers.TestDbContextFactory.Create();
+            await QuanLyVanTai.Tests.Helpers.SeedData.SeedBasicAsync(db);
+
+            var service = new CustomerBookingService(db);
+            var departureTime = DateTime.UtcNow.Date.AddDays(2).AddHours(8);
+
+            var request = new BookingRequestDto
+            {
+                CustomerName = "Trần Thị Lan",
+                CustomerPhone = "0905123456",
+                VehicleId = 1,
+                RouteId = 1,
+                DepartureTime = departureTime,
+                SelectedSeats = new List<string> { "A01", "A02" },
+                PromotionCode = "VIP10",
+                AccountId = 1
+            };
+
+            // Lần 1: Đặt thành công
+            var result = await service.BookTicketsAsync(request);
+            Assert.True(result.Success);
+            Assert.Equal(2, result.CreatedTicketIds.Count);
+            Assert.Equal(2, result.CreatedTicketCodes.Count);
+
+            // Kiểm tra tính toán giá: 350.000 * 2 = 700.000; VIP10 (-10%) = 70.000 -> 630.000
+            Assert.Equal(700000m, result.TotalAmount);
+            Assert.Equal(70000m, result.DiscountAmount);
+            Assert.Equal(630000m, result.FinalAmount);
+
+            // Lần 2: Người khác cố đặt trùng ghế "A01" trên cùng chuyến -> phát hiện tranh chấp
+            var conflictRequest = new BookingRequestDto
+            {
+                CustomerName = "Lê Văn B",
+                CustomerPhone = "0912999888",
+                VehicleId = 1,
+                RouteId = 1,
+                DepartureTime = departureTime,
+                SelectedSeats = new List<string> { "A01", "A03" }
+            };
+            var conflictResult = await service.BookTicketsAsync(conflictRequest);
+            Assert.False(conflictResult.Success);
+            Assert.Contains("A01", conflictResult.Message);
+
+            // Kiểm tra GetTicketReceiptsAsync
+            var receipts = await service.GetTicketReceiptsAsync(result.CreatedTicketIds);
+            Assert.Equal(2, receipts.Count);
+            Assert.Contains(receipts, r => r.SeatNumber == "A01");
+            Assert.All(receipts, r =>
+            {
+                Assert.Equal("Trần Thị Lan", r.CustomerName);
+                Assert.StartsWith("QLVT|MAVE:", r.QrCodeContent);
+                Assert.NotNull(r.TicketCode);
+            });
         }
     }
 }

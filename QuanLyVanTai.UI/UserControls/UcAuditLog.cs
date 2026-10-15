@@ -14,6 +14,12 @@ namespace QuanLyVanTai.UI.UserControls
         public UcAuditLog()
         {
             InitializeComponent();
+
+            if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime || this.DesignMode)
+            {
+                return;
+            }
+
             SetupGiaoDien();
             SetupFilterControls();
 
