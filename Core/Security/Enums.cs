@@ -23,6 +23,7 @@ namespace Core.Security
     public static class SystemMenus
     {
         public const string Route = "TuyenXe";
+        public const string Schedule = "LichTrinh";
         public const string Station = "TramDung";
         public const string Vehicle = "PhuongTien";
         public const string Staff = "NhanSu";
@@ -35,6 +36,7 @@ namespace Core.Security
         public static readonly (string Code, string Name)[] AllMenus =
         [
             (Route, "Quản lý Tuyến xe"),
+            (Schedule, "Điều độ Lịch trình"),
             (Station, "Quản lý Trạm dừng"),
             (Vehicle, "Quản lý Phương tiện"),
             (Staff, "Quản lý Nhân sự"),

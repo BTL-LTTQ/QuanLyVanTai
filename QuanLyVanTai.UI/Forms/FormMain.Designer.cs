@@ -29,6 +29,7 @@ namespace QuanLyVanTai.UI
             mnuPhuongTien = new ToolStripMenuItem();
             mnuGiaVe = new ToolStripMenuItem();
             mnuNghiepVu = new ToolStripMenuItem();
+            mnuLichTrinh = new ToolStripMenuItem();
             mnuNhanSu = new ToolStripMenuItem();
             mnuKhuyenMai = new ToolStripMenuItem();
             mnuDichVu = new ToolStripMenuItem();
@@ -184,6 +185,7 @@ namespace QuanLyVanTai.UI
             // mnuNghiepVu
             // 
             mnuNghiepVu.DropDownItems.AddRange(new ToolStripItem[] {
+                mnuLichTrinh,
                 mnuNhanSu,
                 mnuKhuyenMai,
                 mnuDichVu
@@ -191,6 +193,15 @@ namespace QuanLyVanTai.UI
             mnuNghiepVu.Name = "mnuNghiepVu";
             mnuNghiepVu.Size = new Size(94, 25);
             mnuNghiepVu.Text = "&Nghiệp vụ";
+
+            // 
+            // mnuLichTrinh
+            // 
+            mnuLichTrinh.Name = "mnuLichTrinh";
+            mnuLichTrinh.ShortcutKeys = Keys.Control | Keys.D3;
+            mnuLichTrinh.Size = new Size(280, 26);
+            mnuLichTrinh.Text = "&Điều độ Lịch trình";
+            mnuLichTrinh.Click += mnuLichTrinh_Click;
 
             // 
             // mnuNhanSu
@@ -624,6 +635,7 @@ namespace QuanLyVanTai.UI
         private ToolStripMenuItem mnuPhuongTien;
         private ToolStripMenuItem mnuGiaVe;
         private ToolStripMenuItem mnuNghiepVu;
+        private ToolStripMenuItem mnuLichTrinh;
         private ToolStripMenuItem mnuNhanSu;
         private ToolStripMenuItem mnuKhuyenMai;
         private ToolStripMenuItem mnuDichVu;

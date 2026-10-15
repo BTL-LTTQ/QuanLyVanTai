@@ -14,9 +14,9 @@ namespace QuanLyVanTai.UI.UserControls
         private readonly TicketService _ticketService = new();
         private readonly SeatMapService _seatMapService = new();
         private readonly CustomerBookingService _bookingService = new();
+        private readonly ScheduleService _scheduleService = new();
 
         private List<Route> _routes = new();
-        private List<Vehicle> _vehicles = new();
         private VehicleSeatMapDto? _currentSeatMap;
         private PromotionVerifyResultDto? _currentPromotion;
 
@@ -136,38 +136,32 @@ namespace QuanLyVanTai.UI.UserControls
 
             try
             {
-                SetStatus("Đang tìm phương tiện phục vụ tuyến...", true);
-                _vehicles = await _ticketService.GetVehiclesByRouteAsync(routeId);
+                SetStatus("Đang tìm chuyến xe phục vụ tuyến...", true);
 
-                var tripItems = new List<TripDisplayItem>();
-                DateTime chosenDate = dtpNgayDi.Value.Date;
+                // Chuyến xe thực tế được điều độ ở màn hình Lịch trình (bảng Schedules).
+                // Chỉ lấy các chuyến đang ở trạng thái 'Scheduled' trong ngày khách chọn.
+                DateTime from = dtpNgayDi.Value.Date.ToUniversalTime();
+                DateTime to = dtpNgayDi.Value.Date.AddDays(1).ToUniversalTime();
 
-                int[] departureHours = { 6, 8, 12, 14, 18, 20, 22 };
+                var schedules = await _scheduleService.GetSchedulesAsync(
+                    from, to, status: "Scheduled", routeId: routeId);
 
-                if (_vehicles.Any())
+                var tripItems = schedules.Select(s => new TripDisplayItem
                 {
-                    int hourIdx = 0;
-                    foreach (var v in _vehicles)
-                    {
-                        int h = departureHours[hourIdx % departureHours.Length];
-                        var depTime = chosenDate.AddHours(h);
-
-                        tripItems.Add(new TripDisplayItem
-                        {
-                            VehicleId = v.Id,
-                            LicensePlate = v.LicensePlate,
-                            VehicleType = v.VehicleType,
-                            TotalSeats = v.TotalSeats,
-                            DepartureTime = depTime,
-                            DisplayText = $"{depTime:HH:mm} | {v.LicensePlate} ({v.VehicleType} - {v.TotalSeats} chỗ)"
-                        });
-                        hourIdx++;
-                    }
-                }
+                    ScheduleId = s.Id,
+                    VehicleId = s.VehicleId,
+                    LicensePlate = s.LicensePlate,
+                    VehicleType = s.VehicleType,
+                    TotalSeats = s.TotalSeats,
+                    // DB lưu UTC → hiển thị & đặt vé theo giờ local của máy khách.
+                    DepartureTime = s.DepartureTime.ToLocalTime(),
+                    DisplayText = $"{s.DepartureTime.ToLocalTime():HH:mm} | {s.LicensePlate} " +
+                                  $"({s.VehicleType} - {s.TotalSeats} chỗ)"
+                }).ToList();
 
                 cboChuyenXe.DataSource = null;
                 cboChuyenXe.DisplayMember = "DisplayText";
-                cboChuyenXe.ValueMember = "VehicleId";
+                cboChuyenXe.ValueMember = "ScheduleId";
                 cboChuyenXe.DataSource = tripItems;
 
                 if (tripItems.Any())
@@ -179,6 +173,7 @@ namespace QuanLyVanTai.UI.UserControls
                 {
                     seatMapControl.LoadSeatMap(new VehicleSeatMapDto());
                     lblDonGia.Text = "0 VNĐ";
+                    SetStatus("Tuyến này chưa có chuyến xe nào được điều độ trong ngày đã chọn.", false);
                 }
             }
             catch (Exception ex)
@@ -418,6 +413,7 @@ namespace QuanLyVanTai.UI.UserControls
 
                 var bookingRequest = new BookingRequestDto
                 {
+                    ScheduleId = trip.ScheduleId,
                     RouteId = routeId,
                     VehicleId = trip.VehicleId,
                     DepartureTime = trip.DepartureTime,
@@ -476,6 +472,8 @@ namespace QuanLyVanTai.UI.UserControls
 
         private class TripDisplayItem
         {
+            /// <summary>ID chuyến xe trong bảng Schedules — dùng để liên kết vé với lịch trình.</summary>
+            public int ScheduleId { get; set; }
             public int VehicleId { get; set; }
             public string LicensePlate { get; set; } = string.Empty;
             public string VehicleType { get; set; } = string.Empty;
