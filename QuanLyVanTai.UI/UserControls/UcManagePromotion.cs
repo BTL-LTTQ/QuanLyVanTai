@@ -21,6 +21,12 @@ namespace QuanLyVanTai.UI.UserControls
         public UcManagePromotion()
         {
             InitializeComponent();
+
+            if (LicenseManager.UsageMode == LicenseUsageMode.Designtime || this.DesignMode)
+            {
+                return;
+            }
+
             if (!AuthorizationGuard.GuardFormAccess(this, SystemMenus.Promotion))
                 return;
 

@@ -17,61 +17,6 @@ namespace QuanLyVanTai.UI.UserControls
         private readonly AuditLogService _auditLogService = new();
 
         // ==========================================
-        // UI CONTROLS - HEADER
-        // ==========================================
-        private readonly Panel pnlHeader = new();
-
-        // ==========================================
-        // UI CONTROLS - STATS
-        // ==========================================
-        private readonly Panel pnlStats = new();
-        private Label lblStatTotal = new();
-        private Label lblStatBooked = new();
-        private Label lblStatPaid = new();
-        private Label lblStatCancelled = new();
-
-        // ==========================================
-        // UI CONTROLS - TOOLBAR / FILTER
-        // ==========================================
-        private readonly Panel pnlToolbar = new();
-        private readonly TextBox txtKeyword = new();
-        private readonly ComboBox cboRoute = new();
-        private readonly ComboBox cboPayStatus = new();
-        private readonly ComboBox cboTicketStatus = new();
-        private readonly DateTimePicker dtpFrom = new();
-        private readonly DateTimePicker dtpTo = new();
-        private readonly CheckBox chkUseDateFilter = new();
-        private readonly IconButton btnRefresh = new();
-        private readonly IconButton btnAdd = new();
-        private readonly IconButton btnExport = new();
-
-        // ==========================================
-        // UI CONTROLS - DATAGRIDVIEW
-        // ==========================================
-        private readonly SplitContainer splitMain = new();
-        private readonly DataGridView dgvTickets = new();
-
-        // ==========================================
-        // UI CONTROLS - DETAIL PANEL
-        // ==========================================
-        private readonly Panel pnlDetail = new();
-        private readonly Label lblDetailTitle = new();
-        private readonly TextBox txtTicketCode = new();
-        private readonly TextBox txtCustomerName = new();
-        private readonly TextBox txtCustomerPhone = new();
-        private readonly TextBox txtSeatNumber = new();
-        private readonly NumericUpDown numPrice = new();
-        private readonly DateTimePicker dtpDeparture = new();
-        private readonly ComboBox cboDetailRoute = new();
-        private readonly ComboBox cboDetailVehicle = new();
-        private readonly ComboBox cboDetailPayStatus = new();
-        private readonly ComboBox cboDetailTicketStatus = new();
-        private readonly IconButton btnSave = new();
-        private readonly IconButton btnCancel = new();
-        private readonly IconButton btnDelete = new();
-        private readonly IconButton btnCancelTicket = new();
-
-        // ==========================================
         // STATE
         // ==========================================
         private bool _isAdding = false;
@@ -83,296 +28,82 @@ namespace QuanLyVanTai.UI.UserControls
         public UcManageTicket()
         {
             InitializeComponent();
+
+            if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime || this.DesignMode)
+            {
+                return;
+            }
+
             if (!AuthorizationGuard.GuardFormAccess(this, SystemMenus.Ticket))
                 return;
 
-            BuildUI();
+            SetupRuntimeUI();
             WireEvents();
             ApplySecurity();
             _ = LoadInitialDataAsync();
         }
 
         // ==========================================
-        // BUILD UI
+        // SETUP RUNTIME UI
         // ==========================================
-        private void BuildUI()
+        private void SetupRuntimeUI()
         {
             this.Font = ThemeConfig.MainFont;
             this.BackColor = ThemeConfig.BackgroundColor;
 
-            // --- HEADER ---
-            pnlHeader.Dock = DockStyle.Top;
-            pnlHeader.Height = 50;
-            pnlHeader.BackColor = Color.White;
-            pnlHeader.Padding = new Padding(20, 12, 20, 12);
-
-            var lblTitle = new Label
-            {
-                Text = "🎫 QUẢN LÝ VÉ XE",
-                Font = new Font("Segoe UI", 13F, FontStyle.Bold),
-                ForeColor = ThemeConfig.TextMain,
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleLeft
-            };
-            pnlHeader.Controls.Add(lblTitle);
-            this.Controls.Add(pnlHeader);
-
-            // --- STATS CARDS ---
-            pnlStats.Dock = DockStyle.Top;
-            pnlStats.Height = 80;
-            pnlStats.BackColor = ThemeConfig.BackgroundColor;
-            pnlStats.Padding = new Padding(15, 8, 15, 8);
-
+            // Stats cards
+            pnlStats.Controls.Clear();
             var cardTotal = CreateStatCard("📋 Tổng vé", "0", Color.FromArgb(59, 130, 246), 0, out lblStatTotal);
             var cardBooked = CreateStatCard("🟡 Đã đặt", "0", Color.FromArgb(245, 158, 11), 230, out lblStatBooked);
             var cardPaid = CreateStatCard("✅ Đã thanh toán", "0", Color.FromArgb(16, 185, 129), 460, out lblStatPaid);
             var cardCancelled = CreateStatCard("❌ Đã hủy", "0", Color.FromArgb(239, 68, 68), 690, out lblStatCancelled);
             pnlStats.Controls.AddRange([cardTotal, cardBooked, cardPaid, cardCancelled]);
-            this.Controls.Add(pnlStats);
 
-            // --- TOOLBAR ---
-            pnlToolbar.Dock = DockStyle.Top;
-            pnlToolbar.Height = 90;
-            pnlToolbar.BackColor = Color.White;
-            pnlToolbar.Padding = new Padding(15, 8, 15, 8);
-
-            // ROW 1: Search + Filters
-            txtKeyword.Location = new Point(15, 8);
-            txtKeyword.Size = new Size(200, 30);
-            txtKeyword.PlaceholderText = "🔍 Mã vé, tên KH, SĐT...";
-
-            cboRoute.Location = new Point(225, 8);
-            cboRoute.Size = new Size(160, 30);
-            cboRoute.DropDownStyle = ComboBoxStyle.DropDownList;
-
-            cboPayStatus.Location = new Point(395, 8);
-            cboPayStatus.Size = new Size(120, 30);
-            cboPayStatus.DropDownStyle = ComboBoxStyle.DropDownList;
+            // Toolbar items
+            cboPayStatus.Items.Clear();
             cboPayStatus.Items.AddRange(["Tất cả", "Pending", "Paid", "Refunded"]);
             cboPayStatus.SelectedIndex = 0;
 
-            cboTicketStatus.Location = new Point(525, 8);
-            cboTicketStatus.Size = new Size(120, 30);
-            cboTicketStatus.DropDownStyle = ComboBoxStyle.DropDownList;
+            cboTicketStatus.Items.Clear();
             cboTicketStatus.Items.AddRange(["Tất cả", "Booked", "Completed", "Cancelled"]);
             cboTicketStatus.SelectedIndex = 0;
 
-            // ROW 2: Date filter + Buttons
-            chkUseDateFilter.Text = "Ngày khởi hành:";
-            chkUseDateFilter.Location = new Point(15, 46);
-            chkUseDateFilter.Size = new Size(140, 26);
-            chkUseDateFilter.Font = new Font("Segoe UI", 9F);
-
-            dtpFrom.Location = new Point(160, 44);
-            dtpFrom.Size = new Size(140, 28);
-            dtpFrom.Format = DateTimePickerFormat.Short;
-            dtpFrom.Enabled = false;
-
-            var lblTo = new Label { Text = "→", Location = new Point(308, 48), AutoSize = true };
-            pnlToolbar.Controls.Add(lblTo);
-
-            dtpTo.Location = new Point(325, 44);
-            dtpTo.Size = new Size(140, 28);
-            dtpTo.Format = DateTimePickerFormat.Short;
-            dtpTo.Enabled = false;
-
             ThemeConfig.StyleSecondaryButton(btnRefresh, IconChar.RotateLeft);
-            btnRefresh.Text = " Làm mới";
-            btnRefresh.Size = new Size(105, 32);
-            btnRefresh.Location = new Point(480, 42);
-
             ThemeConfig.StyleSuccessButton(btnAdd, IconChar.Plus);
-            btnAdd.Text = " Thêm vé";
-            btnAdd.Size = new Size(110, 32);
-            btnAdd.Location = new Point(595, 42);
-
             ThemeConfig.StyleSecondaryButton(btnExport, IconChar.FileExcel);
-            btnExport.Text = " Xuất file";
-            btnExport.BackColor = Color.FromArgb(16, 185, 129);
-            btnExport.Size = new Size(110, 32);
-            btnExport.Location = new Point(715, 42);
 
-            pnlToolbar.Controls.AddRange([
-                txtKeyword, cboRoute, cboPayStatus, cboTicketStatus,
-                chkUseDateFilter, dtpFrom, dtpTo, btnRefresh, btnAdd, btnExport
-            ]);
-            this.Controls.Add(pnlToolbar);
-
-            // --- MAIN SPLIT (DataGrid + Detail) ---
-            splitMain.Dock = DockStyle.Fill;
-            splitMain.SplitterDistance = 720;
-            splitMain.BackColor = Color.FromArgb(226, 232, 240);
-
-            // DataGridView
-            dgvTickets.Dock = DockStyle.Fill;
-            dgvTickets.BackgroundColor = Color.White;
-            dgvTickets.BorderStyle = BorderStyle.None;
-            dgvTickets.AllowUserToAddRows = false;
-            dgvTickets.AllowUserToDeleteRows = false;
-            dgvTickets.ReadOnly = true;
-            dgvTickets.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvTickets.MultiSelect = false;
-            dgvTickets.RowHeadersVisible = false;
-            dgvTickets.RowTemplate.Height = 42;
-            dgvTickets.ColumnHeadersHeight = 42;
-            dgvTickets.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-            dgvTickets.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(241, 245, 249);
-            dgvTickets.ColumnHeadersDefaultCellStyle.ForeColor = ThemeConfig.TextMain;
-            dgvTickets.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dgvTickets.EnableHeadersVisualStyles = false;
-            dgvTickets.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(248, 250, 252);
-            dgvTickets.DefaultCellStyle.SelectionBackColor = Color.FromArgb(219, 234, 254);
-            dgvTickets.DefaultCellStyle.SelectionForeColor = Color.Black;
-
-            dgvTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colId", HeaderText = "ID", Visible = false });
-            dgvTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colCode", HeaderText = "Mã Vé", Width = 130, DefaultCellStyle = { Font = new Font("Segoe UI", 9F, FontStyle.Bold) } });
-            dgvTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colCustomer", HeaderText = "Tên Hành Khách", Width = 160 });
-            dgvTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colPhone", HeaderText = "Số Điện Thoại", Width = 115, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
-            dgvTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colRoute", HeaderText = "Tuyến Xe", Width = 180 });
-            dgvTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colSeat", HeaderText = "Số Ghế", Width = 75, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
-            dgvTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colDeparture", HeaderText = "Khởi Hành", Width = 140, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
-            dgvTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colPrice", HeaderText = "Giá Vé (đ)", Width = 105, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleRight } });
-            dgvTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colPayStatus", HeaderText = "Thanh Toán", Width = 100, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
-            dgvTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colTicketStatus", HeaderText = "Trạng Thái", Width = 100, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
+            // DataGridView setup
+            if (dgvTickets.Columns.Count == 0)
+            {
+                dgvTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colId", HeaderText = "ID", Visible = false });
+                dgvTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colCode", HeaderText = "Mã Vé", Width = 130, DefaultCellStyle = { Font = new Font("Segoe UI", 9F, FontStyle.Bold) } });
+                dgvTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colCustomer", HeaderText = "Tên Hành Khách", Width = 160 });
+                dgvTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colPhone", HeaderText = "Số Điện Thoại", Width = 115, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
+                dgvTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colRoute", HeaderText = "Tuyến Xe", Width = 180 });
+                dgvTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colSeat", HeaderText = "Số Ghế", Width = 75, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
+                dgvTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colDeparture", HeaderText = "Khởi Hành", Width = 140, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
+                dgvTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colPrice", HeaderText = "Giá Vé (đ)", Width = 105, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleRight } });
+                dgvTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colPayStatus", HeaderText = "Thanh Toán", Width = 100, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
+                dgvTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colTicketStatus", HeaderText = "Trạng Thái", Width = 100, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
+            }
 
             DataGridViewHighlightHelper.AttachSearchHighlighter(dgvTickets, () => txtKeyword.Text);
-            splitMain.Panel1.Controls.Add(dgvTickets);
 
-            // Detail Panel
-            BuildDetailPanel();
-            splitMain.Panel2.Controls.Add(pnlDetail);
-
-            this.Controls.Add(splitMain);
-        }
-
-        private void BuildDetailPanel()
-        {
-            pnlDetail.Dock = DockStyle.Fill;
-            pnlDetail.BackColor = Color.White;
-            pnlDetail.Padding = new Padding(18);
-            pnlDetail.AutoScroll = true;
-
-            lblDetailTitle.Text = "CHI TIẾT VÉ XE";
-            lblDetailTitle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            lblDetailTitle.ForeColor = ThemeConfig.PrimaryColor;
-            lblDetailTitle.Location = new Point(18, 15);
-            lblDetailTitle.AutoSize = true;
-            pnlDetail.Controls.Add(lblDetailTitle);
-
-            int y = 50;
-
-            // Mã vé (readonly)
-            AddDetailLabel("Mã Vé:", y, pnlDetail);
-            txtTicketCode.Location = new Point(18, y + 22);
-            txtTicketCode.Size = new Size(330, 30);
-            txtTicketCode.ReadOnly = true;
-            txtTicketCode.BackColor = Color.FromArgb(241, 245, 249);
-            pnlDetail.Controls.Add(txtTicketCode);
-            y += 60;
-
-            // Tên hành khách
-            AddDetailLabel("Tên Hành Khách *:", y, pnlDetail);
-            txtCustomerName.Location = new Point(18, y + 22);
-            txtCustomerName.Size = new Size(330, 30);
-            pnlDetail.Controls.Add(txtCustomerName);
-            y += 60;
-
-            // SĐT
-            AddDetailLabel("Số Điện Thoại *:", y, pnlDetail);
-            txtCustomerPhone.Location = new Point(18, y + 22);
-            txtCustomerPhone.Size = new Size(160, 30);
-            pnlDetail.Controls.Add(txtCustomerPhone);
-
-            AddDetailLabel("Số Ghế *:", y, pnlDetail, 195);
-            txtSeatNumber.Location = new Point(195, y + 22);
-            txtSeatNumber.Size = new Size(153, 30);
-            txtSeatNumber.PlaceholderText = "VD: A01";
-            pnlDetail.Controls.Add(txtSeatNumber);
-            y += 60;
-
-            // Tuyến xe
-            AddDetailLabel("Tuyến Xe *:", y, pnlDetail);
-            cboDetailRoute.Location = new Point(18, y + 22);
-            cboDetailRoute.Size = new Size(330, 30);
-            cboDetailRoute.DropDownStyle = ComboBoxStyle.DropDownList;
-            pnlDetail.Controls.Add(cboDetailRoute);
-            y += 60;
-
-            // Phương tiện
-            AddDetailLabel("Phương Tiện *:", y, pnlDetail);
-            cboDetailVehicle.Location = new Point(18, y + 22);
-            cboDetailVehicle.Size = new Size(330, 30);
-            cboDetailVehicle.DropDownStyle = ComboBoxStyle.DropDownList;
-            pnlDetail.Controls.Add(cboDetailVehicle);
-            y += 60;
-
-            // Giá vé
-            AddDetailLabel("Giá Vé (VNĐ) *:", y, pnlDetail);
-            numPrice.Location = new Point(18, y + 22);
-            numPrice.Size = new Size(160, 30);
-            numPrice.Maximum = 10_000_000;
-            numPrice.Minimum = 0;
-            numPrice.DecimalPlaces = 0;
-            numPrice.ThousandsSeparator = true;
-            numPrice.Increment = 10000;
-            pnlDetail.Controls.Add(numPrice);
-            y += 60;
-
-            // Ngày khởi hành
-            AddDetailLabel("Ngày & Giờ Khởi Hành *:", y, pnlDetail);
-            dtpDeparture.Location = new Point(18, y + 22);
-            dtpDeparture.Size = new Size(240, 30);
-            dtpDeparture.Format = DateTimePickerFormat.Custom;
-            dtpDeparture.CustomFormat = "dd/MM/yyyy HH:mm";
-            dtpDeparture.Value = DateTime.Now.AddHours(1);
-            pnlDetail.Controls.Add(dtpDeparture);
-            y += 60;
-
-            // Trạng thái thanh toán
-            AddDetailLabel("Thanh Toán:", y, pnlDetail);
-            cboDetailPayStatus.Location = new Point(18, y + 22);
-            cboDetailPayStatus.Size = new Size(155, 30);
-            cboDetailPayStatus.DropDownStyle = ComboBoxStyle.DropDownList;
+            // Detail items
+            cboDetailPayStatus.Items.Clear();
             cboDetailPayStatus.Items.AddRange(["Pending", "Paid", "Refunded"]);
             cboDetailPayStatus.SelectedIndex = 0;
-            pnlDetail.Controls.Add(cboDetailPayStatus);
 
-            AddDetailLabel("Trạng Thái Vé:", y, pnlDetail, 185);
-            cboDetailTicketStatus.Location = new Point(185, y + 22);
-            cboDetailTicketStatus.Size = new Size(163, 30);
-            cboDetailTicketStatus.DropDownStyle = ComboBoxStyle.DropDownList;
+            cboDetailTicketStatus.Items.Clear();
             cboDetailTicketStatus.Items.AddRange(["Booked", "Completed", "Cancelled"]);
             cboDetailTicketStatus.SelectedIndex = 0;
-            pnlDetail.Controls.Add(cboDetailTicketStatus);
-            y += 68;
 
-            // Action Buttons
             ThemeConfig.StylePrimaryButton(btnSave, IconChar.FloppyDisk);
-            btnSave.Text = " Lưu";
-            btnSave.Size = new Size(82, 36);
-            btnSave.Location = new Point(12, y);
-            btnSave.Enabled = false;
-
             ThemeConfig.StyleSecondaryButton(btnCancel, IconChar.Xmark);
-            btnCancel.Text = " Hủy";
-            btnCancel.Size = new Size(82, 36);
-            btnCancel.Location = new Point(100, y);
-            btnCancel.Enabled = false;
-
             ThemeConfig.StyleDangerButton(btnDelete, IconChar.Trash);
-            btnDelete.Text = " Xóa";
-            btnDelete.Size = new Size(82, 36);
-            btnDelete.Location = new Point(188, y);
-            btnDelete.Enabled = false;
-
             ThemeConfig.StyleSecondaryButton(btnCancelTicket, IconChar.Ban);
-            btnCancelTicket.Text = " Hủy Vé";
-            btnCancelTicket.BackColor = Color.FromArgb(245, 158, 11);
-            btnCancelTicket.Size = new Size(95, 36);
-            btnCancelTicket.Location = new Point(276, y);
-            btnCancelTicket.Enabled = false;
 
-            pnlDetail.Controls.AddRange([btnSave, btnCancel, btnDelete, btnCancelTicket]);
+            SetDetailMode(false);
         }
 
         private static void AddDetailLabel(string text, int y, Panel parent, int x = 18)

@@ -10,7 +10,17 @@ namespace QuanLyVanTai.BLL.Services
     /// </summary>
     public class CustomerBookingService
     {
-        private static AppDbContext CreateContext() => new AppDbContext();
+        private readonly AppDbContext? _injectedContext;
+
+        public CustomerBookingService() { }
+
+        public CustomerBookingService(AppDbContext context)
+        {
+            _injectedContext = context;
+        }
+
+        private AppDbContext CreateContext() => _injectedContext ?? new AppDbContext();
+        private bool ShouldDisposeContext => _injectedContext == null;
 
         /// <summary>
         /// Xác thực và tính toán giá trị chiết khấu của mã khuyến mãi
@@ -132,134 +142,144 @@ namespace QuanLyVanTai.BLL.Services
             if (request.SelectedSeats == null || request.SelectedSeats.Count == 0)
                 return new BookingResultDto { Success = false, Message = "Vui lòng chọn ít nhất 1 chỗ ngồi trên sơ đồ!" };
 
-            using var db = CreateContext();
-            using var transaction = await db.Database.BeginTransactionAsync();
-
+            var db = CreateContext();
             try
             {
-                var vehicle = await db.Vehicles
-                    .Include(v => v.Route)
-                    .FirstOrDefaultAsync(v => v.Id == request.VehicleId);
+                using var transaction = await db.Database.BeginTransactionAsync();
 
-                if (vehicle == null)
-                    return new BookingResultDto { Success = false, Message = "Phương tiện không tồn tại!" };
+                try
+                {
+                    var vehicle = await db.Vehicles
+                        .Include(v => v.Route)
+                        .FirstOrDefaultAsync(v => v.Id == request.VehicleId);
 
-                int routeId = request.RouteId > 0 ? request.RouteId : (vehicle.RouteId ?? 0);
-                var route = await db.Routes.FindAsync(routeId);
-                if (route == null)
-                    return new BookingResultDto { Success = false, Message = "Không tìm thấy thông tin tuyến xe!" };
+                    if (vehicle == null)
+                        return new BookingResultDto { Success = false, Message = "Phương tiện không tồn tại!" };
 
-                decimal unitPrice = route.BasePrice > 0 ? route.BasePrice : 200000m;
+                    int routeId = request.RouteId > 0 ? request.RouteId : (vehicle.RouteId ?? 0);
+                    var route = await db.Routes.FindAsync(routeId);
+                    if (route == null)
+                        return new BookingResultDto { Success = false, Message = "Không tìm thấy thông tin tuyến xe!" };
 
-                // 1. Kiểm tra tranh chấp ghế đồng thời (Concurrency check)
-                var bookedSeats = await db.Tickets
-                    .Where(t => t.VehicleId == request.VehicleId &&
-                                t.DepartureTime.Date == request.DepartureTime.Date &&
-                                t.DepartureTime.Hour == request.DepartureTime.Hour &&
-                                t.TicketStatus != "Cancelled" &&
-                                request.SelectedSeats.Contains(t.SeatNumber))
-                    .Select(t => t.SeatNumber)
-                    .ToListAsync();
+                    decimal unitPrice = route.BasePrice > 0 ? route.BasePrice : 200000m;
 
-                if (bookedSeats.Any())
+                    // 1. Kiểm tra tranh chấp ghế đồng thời (Concurrency check)
+                    var bookedSeats = await db.Tickets
+                        .Where(t => t.VehicleId == request.VehicleId &&
+                                    t.DepartureTime.Date == request.DepartureTime.Date &&
+                                    t.DepartureTime.Hour == request.DepartureTime.Hour &&
+                                    t.TicketStatus != "Cancelled" &&
+                                    request.SelectedSeats.Contains(t.SeatNumber))
+                        .Select(t => t.SeatNumber)
+                        .ToListAsync();
+
+                    if (bookedSeats.Any())
+                    {
+                        await transaction.RollbackAsync();
+                        return new BookingResultDto
+                        {
+                            Success = false,
+                            Message = $"Rất tiếc! Ghế [{string.Join(", ", bookedSeats)}] vừa được người khác đặt trước. Vui lòng chọn ghế khác!"
+                        };
+                    }
+
+                    // 2. Tính tiền và khuyến mãi
+                    decimal subTotal = unitPrice * request.SelectedSeats.Count;
+                    var promoResult = await VerifyPromotionAsync(request.PromotionCode, subTotal);
+                    decimal discountPerSeat = promoResult.DiscountAmount / request.SelectedSeats.Count;
+
+                    string datePrefix = "TK" + DateTime.Now.ToString("yyyyMMdd");
+                    int currentCount = await db.Tickets.CountAsync(t => t.TicketCode.StartsWith(datePrefix));
+
+                    var createdTickets = new List<Ticket>();
+                    var createdTicketCodes = new List<string>();
+
+                    for (int i = 0; i < request.SelectedSeats.Count; i++)
+                    {
+                        string seat = request.SelectedSeats[i];
+                        currentCount++;
+                        string ticketCode = $"{datePrefix}{currentCount:D3}";
+
+                        decimal seatFinalPrice = Math.Max(0, unitPrice - discountPerSeat);
+
+                        var newTicket = new Ticket
+                        {
+                            TicketCode = ticketCode,
+                            CustomerName = request.CustomerName.Trim(),
+                            CustomerPhone = request.CustomerPhone.Trim(),
+                            SeatNumber = seat,
+                            Price = seatFinalPrice,
+                            DepartureTime = request.DepartureTime,
+                            PaymentStatus = "Paid",
+                            TicketStatus = "Booked",
+                            RouteId = route.Id,
+                            VehicleId = vehicle.Id,
+                            AccountId = request.AccountId,
+                            CreatedAt = DateTime.UtcNow,
+                            CreatedBy = request.CustomerName.Trim()
+                        };
+
+                        db.Tickets.Add(newTicket);
+                        createdTickets.Add(newTicket);
+                        createdTicketCodes.Add(ticketCode);
+                    }
+
+                    // Lưu các vé
+                    await db.SaveChangesAsync();
+
+                    // 3. Ghi vết Audit Log
+                    try
+                    {
+                        var auditLog = new AuditLog
+                        {
+                            Action = "Thêm",
+                            EntityName = "Vé xe",
+                            RecordId = createdTickets.First().Id.ToString(),
+                            UserId = request.AccountId,
+                            Username = request.CustomerName.Trim(),
+                            Role = "Khách hàng",
+                            OldValues = null,
+                            NewValues = $"Đặt {createdTickets.Count} vé ({string.Join(", ", request.SelectedSeats)}) cho khách {request.CustomerName} - SĐT: {request.CustomerPhone}. Tổng: {promoResult.FinalTotal:N0} VNĐ",
+                            Timestamp = DateTime.UtcNow,
+                            Details = $"Mã vé: {string.Join(", ", createdTicketCodes)}"
+                        };
+                        db.AuditLogs.Add(auditLog);
+                        await db.SaveChangesAsync();
+                    }
+                    catch
+                    {
+                        // Audit log không làm đổ transaction chính nếu có lỗi phụ
+                    }
+
+                    await transaction.CommitAsync();
+
+                    return new BookingResultDto
+                    {
+                        Success = true,
+                        Message = $"Đặt {createdTickets.Count} vé thành công! Mã: {string.Join(", ", createdTicketCodes)}",
+                        CreatedTicketIds = createdTickets.Select(t => t.Id).ToList(),
+                        CreatedTicketCodes = createdTicketCodes,
+                        TotalAmount = subTotal,
+                        DiscountAmount = promoResult.DiscountAmount,
+                        FinalAmount = promoResult.FinalTotal
+                    };
+                }
+                catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
                     return new BookingResultDto
                     {
                         Success = false,
-                        Message = $"Rất tiếc! Ghế [{string.Join(", ", bookedSeats)}] vừa được người khác đặt trước. Vui lòng chọn ghế khác!"
+                        Message = $"Lỗi hệ thống khi đặt vé: {ex.Message}"
                     };
                 }
-
-                // 2. Tính tiền và khuyến mãi
-                decimal subTotal = unitPrice * request.SelectedSeats.Count;
-                var promoResult = await VerifyPromotionAsync(request.PromotionCode, subTotal);
-                decimal discountPerSeat = promoResult.DiscountAmount / request.SelectedSeats.Count;
-
-                string datePrefix = "TK" + DateTime.Now.ToString("yyyyMMdd");
-                int currentCount = await db.Tickets.CountAsync(t => t.TicketCode.StartsWith(datePrefix));
-
-                var createdTickets = new List<Ticket>();
-                var createdTicketCodes = new List<string>();
-
-                for (int i = 0; i < request.SelectedSeats.Count; i++)
-                {
-                    string seat = request.SelectedSeats[i];
-                    currentCount++;
-                    string ticketCode = $"{datePrefix}{currentCount:D3}";
-
-                    decimal seatFinalPrice = Math.Max(0, unitPrice - discountPerSeat);
-
-                    var newTicket = new Ticket
-                    {
-                        TicketCode = ticketCode,
-                        CustomerName = request.CustomerName.Trim(),
-                        CustomerPhone = request.CustomerPhone.Trim(),
-                        SeatNumber = seat,
-                        Price = seatFinalPrice,
-                        DepartureTime = request.DepartureTime,
-                        PaymentStatus = "Paid",
-                        TicketStatus = "Booked",
-                        RouteId = route.Id,
-                        VehicleId = vehicle.Id,
-                        AccountId = request.AccountId,
-                        CreatedAt = DateTime.UtcNow,
-                        CreatedBy = request.CustomerName.Trim()
-                    };
-
-                    db.Tickets.Add(newTicket);
-                    createdTickets.Add(newTicket);
-                    createdTicketCodes.Add(ticketCode);
-                }
-
-                // Lưu các vé
-                await db.SaveChangesAsync();
-
-                // 3. Ghi vết Audit Log
-                try
-                {
-                    var auditLog = new AuditLog
-                    {
-                        Action = "Thêm",
-                        EntityName = "Vé xe",
-                        RecordId = createdTickets.First().Id.ToString(),
-                        UserId = request.AccountId,
-                        Username = request.CustomerName.Trim(),
-                        Role = "Khách hàng",
-                        OldValues = null,
-                        NewValues = $"Đặt {createdTickets.Count} vé ({string.Join(", ", request.SelectedSeats)}) cho khách {request.CustomerName} - SĐT: {request.CustomerPhone}. Tổng: {promoResult.FinalTotal:N0} VNĐ",
-                        Timestamp = DateTime.UtcNow,
-                        Details = $"Mã vé: {string.Join(", ", createdTicketCodes)}"
-                    };
-                    db.AuditLogs.Add(auditLog);
-                    await db.SaveChangesAsync();
-                }
-                catch
-                {
-                    // Audit log không làm đổ transaction chính nếu có lỗi phụ
-                }
-
-                await transaction.CommitAsync();
-
-                return new BookingResultDto
-                {
-                    Success = true,
-                    Message = $"Đặt {createdTickets.Count} vé thành công! Mã: {string.Join(", ", createdTicketCodes)}",
-                    CreatedTicketIds = createdTickets.Select(t => t.Id).ToList(),
-                    CreatedTicketCodes = createdTicketCodes,
-                    TotalAmount = subTotal,
-                    DiscountAmount = promoResult.DiscountAmount,
-                    FinalAmount = promoResult.FinalTotal
-                };
             }
-            catch (Exception ex)
+            finally
             {
-                await transaction.RollbackAsync();
-                return new BookingResultDto
+                if (ShouldDisposeContext)
                 {
-                    Success = false,
-                    Message = $"Lỗi hệ thống khi đặt vé: {ex.Message}"
-                };
+                    await db.DisposeAsync();
+                }
             }
         }
 
@@ -268,78 +288,87 @@ namespace QuanLyVanTai.BLL.Services
         /// </summary>
         public async Task<List<TicketReceiptDto>> GetTicketReceiptsAsync(List<int> ticketIds)
         {
-            using var db = CreateContext();
-
-            var tickets = await db.Tickets
-                .Include(t => t.Route)
-                .ThenInclude(r => r!.Stations)
-                .Include(t => t.Vehicle)
-                .Include(t => t.Account)
-                .Where(t => ticketIds.Contains(t.Id))
-                .ToListAsync();
-
-            var result = new List<TicketReceiptDto>();
-
-            foreach (var t in tickets)
+            var db = CreateContext();
+            try
             {
-                string routeName = t.Route?.RouteName ?? "Tuyến liên tỉnh";
-                string routeCode = t.Route?.RouteCode ?? "HN-DN-01";
-                string plate = t.Vehicle?.LicensePlate ?? "29B-123.45";
-                string vType = t.Vehicle?.VehicleType ?? "Giường nằm 40 chỗ";
-                string depStation = t.Route?.Stations?.FirstOrDefault()?.StationName ?? "";
-                string arrStation = t.Route?.Stations?.LastOrDefault()?.StationName ?? "";
+                var tickets = await db.Tickets
+                    .Include(t => t.Route)
+                    .ThenInclude(r => r!.Stations)
+                    .Include(t => t.Vehicle)
+                    .Include(t => t.Account)
+                    .Where(t => ticketIds.Contains(t.Id))
+                    .ToListAsync();
 
-                // Nếu Route chưa liên kết bảng trung gian trạm hoặc trạm rỗng, lấy chính xác từ tên tuyến trong DB (VD: Hà Nội - Đà Nẵng)
-                if (string.IsNullOrWhiteSpace(depStation) || depStation == "Bến xe xuất phát")
+                var result = new List<TicketReceiptDto>();
+
+                foreach (var t in tickets)
                 {
-                    if (!string.IsNullOrWhiteSpace(routeName) && routeName.Contains('-'))
+                    string routeName = t.Route?.RouteName ?? "Tuyến liên tỉnh";
+                    string routeCode = t.Route?.RouteCode ?? "HN-DN-01";
+                    string plate = t.Vehicle?.LicensePlate ?? "29B-123.45";
+                    string vType = t.Vehicle?.VehicleType ?? "Giường nằm 40 chỗ";
+                    string depStation = t.Route?.Stations?.FirstOrDefault()?.StationName ?? "";
+                    string arrStation = t.Route?.Stations?.LastOrDefault()?.StationName ?? "";
+
+                    // Nếu Route chưa liên kết bảng trung gian trạm hoặc trạm rỗng, lấy chính xác từ tên tuyến trong DB (VD: Hà Nội - Đà Nẵng)
+                    if (string.IsNullOrWhiteSpace(depStation) || depStation == "Bến xe xuất phát")
                     {
-                        var parts = routeName.Split('-');
-                        depStation = parts[0].Trim();
-                        arrStation = parts.Length > 1 ? parts[1].Split('(')[0].Trim() : "Bến xe đến";
+                        if (!string.IsNullOrWhiteSpace(routeName) && routeName.Contains('-'))
+                        {
+                            var parts = routeName.Split('-');
+                            depStation = parts[0].Trim();
+                            arrStation = parts.Length > 1 ? parts[1].Split('(')[0].Trim() : "Bến xe đến";
+                        }
+                        else
+                        {
+                            depStation = "Bến xe trung tâm";
+                            arrStation = "Bến xe đến";
+                        }
                     }
-                    else
+                    string staff = t.Account?.FullName ?? "Nhân viên bán vé";
+
+                    int floor = 1;
+                    if (t.SeatNumber.StartsWith("B", StringComparison.OrdinalIgnoreCase)) floor = 2;
+                    else if (t.SeatNumber.StartsWith("P", StringComparison.OrdinalIgnoreCase) && int.TryParse(t.SeatNumber.Substring(1), out int pNum) && pNum > 16) floor = 2;
+
+                    // Chuỗi mã QR tiêu chuẩn: QLVT|MAVE:...|TUYEN:...|GHE:...|GIA:...|NGAY:...
+                    string qrData = $"QLVT|MAVE:{t.TicketCode}|TUYEN:{routeCode}|GHE:{t.SeatNumber}|GIA:{t.Price:0}|NGAY:{t.DepartureTime:yyyy-MM-dd HH:mm}";
+
+                    result.Add(new TicketReceiptDto
                     {
-                        depStation = "Bến xe trung tâm";
-                        arrStation = "Bến xe đến";
-                    }
+                        TicketId = t.Id,
+                        TicketCode = t.TicketCode,
+                        CustomerName = t.CustomerName,
+                        CustomerPhone = t.CustomerPhone,
+                        RouteName = routeName,
+                        RouteCode = routeCode,
+                        LicensePlate = plate,
+                        VehicleType = vType,
+                        SeatNumber = t.SeatNumber,
+                        Floor = floor,
+                        DepartureTime = t.DepartureTime,
+                        DepartureStation = depStation,
+                        ArrivalStation = arrStation,
+                        OriginalPrice = t.Price,
+                        DiscountAmount = 0,
+                        FinalPrice = t.Price,
+                        PaymentStatus = t.PaymentStatus,
+                        TicketStatus = t.TicketStatus,
+                        BookingTime = t.CreatedAt.ToLocalTime(),
+                        StaffName = staff,
+                        QrCodeContent = qrData
+                    });
                 }
-                string staff = t.Account?.FullName ?? "Nhân viên bán vé";
 
-                int floor = 1;
-                if (t.SeatNumber.StartsWith("B", StringComparison.OrdinalIgnoreCase)) floor = 2;
-                else if (t.SeatNumber.StartsWith("P", StringComparison.OrdinalIgnoreCase) && int.TryParse(t.SeatNumber.Substring(1), out int pNum) && pNum > 16) floor = 2;
-
-                // Chuỗi mã QR tiêu chuẩn: QLVT|MAVE:...|TUYEN:...|GHE:...|GIA:...|NGAY:...
-                string qrData = $"QLVT|MAVE:{t.TicketCode}|TUYEN:{routeCode}|GHE:{t.SeatNumber}|GIA:{t.Price:0}|NGAY:{t.DepartureTime:yyyy-MM-dd HH:mm}";
-
-                result.Add(new TicketReceiptDto
-                {
-                    TicketId = t.Id,
-                    TicketCode = t.TicketCode,
-                    CustomerName = t.CustomerName,
-                    CustomerPhone = t.CustomerPhone,
-                    RouteName = routeName,
-                    RouteCode = routeCode,
-                    LicensePlate = plate,
-                    VehicleType = vType,
-                    SeatNumber = t.SeatNumber,
-                    Floor = floor,
-                    DepartureTime = t.DepartureTime,
-                    DepartureStation = depStation,
-                    ArrivalStation = arrStation,
-                    OriginalPrice = t.Price,
-                    DiscountAmount = 0,
-                    FinalPrice = t.Price,
-                    PaymentStatus = t.PaymentStatus,
-                    TicketStatus = t.TicketStatus,
-                    BookingTime = t.CreatedAt.ToLocalTime(),
-                    StaffName = staff,
-                    QrCodeContent = qrData
-                });
+                return result;
             }
-
-            return result;
+            finally
+            {
+                if (ShouldDisposeContext)
+                {
+                    await db.DisposeAsync();
+                }
+            }
         }
     }
 }

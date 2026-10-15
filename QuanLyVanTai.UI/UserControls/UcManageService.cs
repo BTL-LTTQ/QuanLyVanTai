@@ -13,14 +13,6 @@ namespace QuanLyVanTai.UI.UserControls
 {
     public partial class UcManageService : UserControl
     {
-        // UI Controls
-        private readonly Panel pnlHeader = new();
-        private readonly FlowLayoutPanel flpServiceCards = new();
-        private readonly TextBox txtSearch = new();
-        private readonly ComboBox cboFilterCategory = new();
-        private readonly IconButton btnAddService = new();
-        private readonly IconButton btnRefresh = new();
-
         // Service Categories & Data (Demo data - có thể thay bằng database)
         private List<ServiceItem> _allServices = new();
         private List<ServiceItem> _filteredServices = new();
@@ -28,105 +20,26 @@ namespace QuanLyVanTai.UI.UserControls
         public UcManageService()
         {
             InitializeComponent();
-            BuildModernLayout();
+            if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
+                return;
+            SetupRuntimeUI();
             LoadDemoServices();
             ApplySecurity();
         }
 
-        private void BuildModernLayout()
+        private void SetupRuntimeUI()
         {
             this.Font = ThemeConfig.MainFont;
             this.BackColor = Color.FromArgb(248, 250, 252);
 
-            // ==========================================
-            // 1. HEADER với Search & Filters
-            // ==========================================
-            pnlHeader.Dock = DockStyle.Top;
-            pnlHeader.Height = 140;
-            pnlHeader.BackColor = Color.White;
-            pnlHeader.Padding = new Padding(25, 20, 25, 20);
-
-            // Page Title
-            Label lblPageTitle = new Label
-            {
-                Text = "🎯 QUẢN LÝ DỊCH VỤ VẬN TẢI",
-                Font = new Font("Segoe UI", 14F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(30, 41, 59),
-                Location = new Point(25, 20),
-                AutoSize = true
-            };
-            pnlHeader.Controls.Add(lblPageTitle);
-
-            // Search Box
-            Label lblSearch = new Label
-            {
-                Text = "Tìm kiếm dịch vụ:",
-                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
-                ForeColor = Color.FromArgb(100, 116, 139),
-                Location = new Point(25, 60),
-                AutoSize = true
-            };
-            pnlHeader.Controls.Add(lblSearch);
-
-            txtSearch.Location = new Point(25, 82);
-            txtSearch.Size = new Size(350, 35);
-            txtSearch.Font = new Font("Segoe UI", 10.5F);
-            txtSearch.PlaceholderText = "🔍 Nhập tên dịch vụ, mô tả...";
-            txtSearch.BorderStyle = BorderStyle.FixedSingle;
-            txtSearch.TextChanged += (s, e) => FilterServices();
-            pnlHeader.Controls.Add(txtSearch);
-
-            // Category Filter
-            Label lblCategory = new Label
-            {
-                Text = "Loại dịch vụ:",
-                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
-                ForeColor = Color.FromArgb(100, 116, 139),
-                Location = new Point(395, 60),
-                AutoSize = true
-            };
-            pnlHeader.Controls.Add(lblCategory);
-
-            cboFilterCategory.Location = new Point(395, 82);
-            cboFilterCategory.Size = new Size(220, 35);
-            cboFilterCategory.Font = new Font("Segoe UI", 10F);
-            cboFilterCategory.DropDownStyle = ComboBoxStyle.DropDownList;
-            cboFilterCategory.Items.AddRange(new string[] { "Tất cả", "Vận chuyển", "Bảo hiểm", "Ưu đãi", "Hỗ trợ" });
-            cboFilterCategory.SelectedIndex = 0;
-            cboFilterCategory.SelectedIndexChanged += (s, e) => FilterServices();
-            pnlHeader.Controls.Add(cboFilterCategory);
-
-            // Add Button
             ThemeConfig.StyleSuccessButton(btnAddService, IconChar.PlusCircle);
-            btnAddService.Text = " Thêm Dịch Vụ";
-            btnAddService.Size = new Size(150, 42);
-            btnAddService.Location = new Point(640, 78);
-            btnAddService.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            btnAddService.Click += BtnAddService_Click;
-            pnlHeader.Controls.Add(btnAddService);
-
-            // Refresh Button
             ThemeConfig.StyleSecondaryButton(btnRefresh, IconChar.ArrowsRotate);
-            btnRefresh.Text = " Làm Mới";
-            btnRefresh.Size = new Size(130, 42);
-            btnRefresh.Location = new Point(800, 78);
-            btnRefresh.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             btnRefresh.BackColor = Color.FromArgb(100, 116, 139);
+
+            txtSearch.TextChanged += (s, e) => FilterServices();
+            cboFilterCategory.SelectedIndexChanged += (s, e) => FilterServices();
+            btnAddService.Click += BtnAddService_Click;
             btnRefresh.Click += (s, e) => { LoadDemoServices(); FilterServices(); };
-            pnlHeader.Controls.Add(btnRefresh);
-
-            this.Controls.Add(pnlHeader);
-
-            // ==========================================
-            // 2. CARD GRID Layout (FlowLayoutPanel)
-            // ==========================================
-            flpServiceCards.Dock = DockStyle.Fill;
-            flpServiceCards.BackColor = Color.FromArgb(248, 250, 252);
-            flpServiceCards.Padding = new Padding(25, 20, 25, 20);
-            flpServiceCards.AutoScroll = true;
-            flpServiceCards.WrapContents = true;
-
-            this.Controls.Add(flpServiceCards);
         }
 
         private void LoadDemoServices()

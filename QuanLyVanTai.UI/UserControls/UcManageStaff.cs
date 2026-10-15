@@ -17,55 +17,6 @@ namespace QuanLyVanTai.UI.UserControls
         private readonly AuditLogService _auditLogService = new();
 
         // ==========================================
-        // UI CONTROLS - HEADER
-        // ==========================================
-        private readonly Panel pnlHeader = new();
-
-        // ==========================================
-        // UI CONTROLS - STATS
-        // ==========================================
-        private readonly Panel pnlStats = new();
-        private Label lblStatTotal = new();
-        private Label lblStatActive = new();
-        private Label lblStatLocked = new();
-        private Label lblStatAdmin = new();
-
-        // ==========================================
-        // UI CONTROLS - TOOLBAR
-        // ==========================================
-        private readonly Panel pnlToolbar = new();
-        private readonly TextBox txtKeyword = new();
-        private readonly ComboBox cboRole = new();
-        private readonly ComboBox cboStatus = new();
-        private readonly IconButton btnRefresh = new();
-        private readonly IconButton btnAdd = new();
-        private readonly IconButton btnExport = new();
-
-        // ==========================================
-        // UI CONTROLS - DATAGRIDVIEW
-        // ==========================================
-        private readonly SplitContainer splitMain = new();
-        private readonly DataGridView dgvStaff = new();
-
-        // ==========================================
-        // UI CONTROLS - DETAIL PANEL
-        // ==========================================
-        private readonly Panel pnlDetail = new();
-        private readonly Label lblDetailTitle = new();
-        private readonly TextBox txtUsername = new();
-        private readonly TextBox txtFullName = new();
-        private readonly TextBox txtEmail = new();
-        private readonly TextBox txtPhone = new();
-        private readonly ComboBox cboRole2 = new();
-        private readonly ComboBox cboDetailStatus = new();
-        private readonly TextBox txtNewPassword = new();
-        private readonly Label lblPasswordHint = new();
-        private readonly IconButton btnSave = new();
-        private readonly IconButton btnCancel = new();
-        private readonly IconButton btnDelete = new();
-        private readonly IconButton btnResetPwd = new();
-
-        // ==========================================
         // STATE
         // ==========================================
         private bool _isAdding = false;
@@ -82,240 +33,82 @@ namespace QuanLyVanTai.UI.UserControls
         public UcManageStaff()
         {
             InitializeComponent();
+
+            if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime || this.DesignMode)
+            {
+                return;
+            }
+
             if (!AuthorizationGuard.GuardFormAccess(this, SystemMenus.Staff))
                 return;
 
-            BuildUI();
+            SetupRuntimeUI();
             WireEvents();
             ApplySecurity();
             _ = LoadDataAsync();
         }
 
         // ==========================================
-        // BUILD UI
+        // SETUP RUNTIME UI
         // ==========================================
-        private void BuildUI()
+        private void SetupRuntimeUI()
         {
             this.Font = ThemeConfig.MainFont;
             this.BackColor = ThemeConfig.BackgroundColor;
 
-            // --- HEADER ---
-            pnlHeader.Dock = DockStyle.Top;
-            pnlHeader.Height = 50;
-            pnlHeader.BackColor = Color.White;
-            pnlHeader.Padding = new Padding(20, 12, 20, 12);
-            pnlHeader.Controls.Add(new Label
-            {
-                Text = "👥 QUẢN LÝ TÀI KHOẢN NHÂN VIÊN",
-                Font = new Font("Segoe UI", 13F, FontStyle.Bold),
-                ForeColor = ThemeConfig.TextMain,
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleLeft
-            });
-
-            // --- STATS ---
-            pnlStats.Dock = DockStyle.Top;
-            pnlStats.Height = 80;
-            pnlStats.BackColor = ThemeConfig.BackgroundColor;
-            pnlStats.Padding = new Padding(15, 8, 15, 8);
-
+            // Stats Cards
+            pnlStats.Controls.Clear();
             var cardTotal = CreateStatCard("👤 Tổng tài khoản", "0", Color.FromArgb(59, 130, 246), 0, out lblStatTotal);
             var cardActive = CreateStatCard("✅ Đang hoạt động", "0", Color.FromArgb(16, 185, 129), 230, out lblStatActive);
             var cardLocked = CreateStatCard("🔒 Bị khóa", "0", Color.FromArgb(239, 68, 68), 460, out lblStatLocked);
             var cardAdmin = CreateStatCard("⚙️ Quản trị viên", "0", Color.FromArgb(139, 92, 246), 690, out lblStatAdmin);
             pnlStats.Controls.AddRange([cardTotal, cardActive, cardLocked, cardAdmin]);
 
-            // --- TOOLBAR ---
-            pnlToolbar.Dock = DockStyle.Top;
-            pnlToolbar.Height = 58;
-            pnlToolbar.BackColor = Color.White;
-            pnlToolbar.Padding = new Padding(15, 12, 15, 12);
-
-            txtKeyword.Location = new Point(15, 13);
-            txtKeyword.Size = new Size(220, 30);
-            txtKeyword.PlaceholderText = "🔍 Tên đăng nhập, họ tên, email...";
-
-            cboRole.Location = new Point(245, 13);
-            cboRole.Size = new Size(160, 30);
-            cboRole.DropDownStyle = ComboBoxStyle.DropDownList;
+            // Toolbar items
+            cboRole.Items.Clear();
             cboRole.Items.Add("Tất cả vai trò");
             foreach (var r in Roles) cboRole.Items.Add(r);
             cboRole.SelectedIndex = 0;
 
-            cboStatus.Location = new Point(415, 13);
-            cboStatus.Size = new Size(110, 30);
-            cboStatus.DropDownStyle = ComboBoxStyle.DropDownList;
+            cboStatus.Items.Clear();
             cboStatus.Items.AddRange(["Tất cả", "Active", "Locked"]);
             cboStatus.SelectedIndex = 0;
 
             ThemeConfig.StyleSecondaryButton(btnRefresh, IconChar.RotateLeft);
-            btnRefresh.Text = " Làm mới";
-            btnRefresh.Size = new Size(105, 30);
-            btnRefresh.Location = new Point(535, 13);
-
             ThemeConfig.StyleSuccessButton(btnAdd, IconChar.UserPlus);
-            btnAdd.Text = " Thêm";
-            btnAdd.Size = new Size(95, 30);
-            btnAdd.Location = new Point(648, 13);
-
             ThemeConfig.StyleSecondaryButton(btnExport, IconChar.FileExcel);
-            btnExport.Text = " Xuất file";
-            btnExport.BackColor = Color.FromArgb(16, 185, 129);
-            btnExport.Size = new Size(110, 30);
-            btnExport.Location = new Point(750, 13);
 
-            pnlToolbar.Controls.AddRange([txtKeyword, cboRole, cboStatus, btnRefresh, btnAdd, btnExport]);
-
-            // --- SPLIT MAIN (Fill — add trước, các DockStyle.Top add sau sẽ đẩy xuống đúng) ---
-            splitMain.Dock = DockStyle.Fill;
-            splitMain.SplitterDistance = 720;
-            splitMain.BackColor = Color.FromArgb(226, 232, 240);
-
-            // DataGridView
-            dgvStaff.Dock = DockStyle.Fill;
-            dgvStaff.BackgroundColor = Color.White;
-            dgvStaff.BorderStyle = BorderStyle.None;
-            dgvStaff.AllowUserToAddRows = false;
-            dgvStaff.AllowUserToDeleteRows = false;
-            dgvStaff.ReadOnly = true;
-            dgvStaff.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvStaff.MultiSelect = false;
-            dgvStaff.RowHeadersVisible = false;
-            dgvStaff.RowTemplate.Height = 42;
-            dgvStaff.ColumnHeadersVisible = true;
-            dgvStaff.ColumnHeadersHeight = 42;
-            dgvStaff.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            dgvStaff.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-            dgvStaff.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(241, 245, 249);
-            dgvStaff.ColumnHeadersDefaultCellStyle.ForeColor = ThemeConfig.TextMain;
-            dgvStaff.EnableHeadersVisualStyles = false;
-            dgvStaff.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(248, 250, 252);
-            dgvStaff.DefaultCellStyle.SelectionBackColor = Color.FromArgb(219, 234, 254);
-            dgvStaff.DefaultCellStyle.SelectionForeColor = Color.Black;
-
-            dgvStaff.Columns.Add(new DataGridViewTextBoxColumn { Name = "colId", HeaderText = "ID", Visible = false });
-            dgvStaff.Columns.Add(new DataGridViewTextBoxColumn { Name = "colSTT", HeaderText = "STT", Width = 50, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
-            dgvStaff.Columns.Add(new DataGridViewTextBoxColumn { Name = "colUsername", HeaderText = "Tên Đăng Nhập", Width = 140, DefaultCellStyle = { Font = new Font("Segoe UI", 9F, FontStyle.Bold) } });
-            dgvStaff.Columns.Add(new DataGridViewTextBoxColumn { Name = "colFullName", HeaderText = "Họ Và Tên", Width = 170 });
-            dgvStaff.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEmail", HeaderText = "Email", Width = 185 });
-            dgvStaff.Columns.Add(new DataGridViewTextBoxColumn { Name = "colPhone", HeaderText = "Điện Thoại", Width = 115, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
-            dgvStaff.Columns.Add(new DataGridViewTextBoxColumn { Name = "colRole", HeaderText = "Vai Trò", Width = 140, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
-            dgvStaff.Columns.Add(new DataGridViewTextBoxColumn { Name = "colStatus", HeaderText = "Trạng Thái", Width = 100, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
-            dgvStaff.Columns.Add(new DataGridViewTextBoxColumn { Name = "colCreated", HeaderText = "Ngày Tạo", Width = 110, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
+            // DataGridView setup
+            if (dgvStaff.Columns.Count == 0)
+            {
+                dgvStaff.Columns.Add(new DataGridViewTextBoxColumn { Name = "colId", HeaderText = "ID", Visible = false });
+                dgvStaff.Columns.Add(new DataGridViewTextBoxColumn { Name = "colSTT", HeaderText = "STT", Width = 50, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
+                dgvStaff.Columns.Add(new DataGridViewTextBoxColumn { Name = "colUsername", HeaderText = "Tên Đăng Nhập", Width = 140, DefaultCellStyle = { Font = new Font("Segoe UI", 9F, FontStyle.Bold) } });
+                dgvStaff.Columns.Add(new DataGridViewTextBoxColumn { Name = "colFullName", HeaderText = "Họ Và Tên", Width = 170 });
+                dgvStaff.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEmail", HeaderText = "Email", Width = 185 });
+                dgvStaff.Columns.Add(new DataGridViewTextBoxColumn { Name = "colPhone", HeaderText = "Điện Thoại", Width = 115, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
+                dgvStaff.Columns.Add(new DataGridViewTextBoxColumn { Name = "colRole", HeaderText = "Vai Trò", Width = 140, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
+                dgvStaff.Columns.Add(new DataGridViewTextBoxColumn { Name = "colStatus", HeaderText = "Trạng Thái", Width = 100, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
+                dgvStaff.Columns.Add(new DataGridViewTextBoxColumn { Name = "colCreated", HeaderText = "Ngày Tạo", Width = 110, DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter } });
+            }
 
             DataGridViewHighlightHelper.AttachSearchHighlighter(dgvStaff, () => txtKeyword.Text);
-            splitMain.Panel1.Controls.Add(dgvStaff);
 
-            // Detail Panel
-            BuildDetailPanel();
-            splitMain.Panel2.Controls.Add(pnlDetail);
-
-            // Add controls vào UserControl theo thứ tự: Fill trước, DockStyle.Top sau (ngược lại)
-            this.Controls.Add(splitMain);      // Fill - add trước
-            this.Controls.Add(pnlToolbar);     // Top - add sau sẽ nằm trên
-            this.Controls.Add(pnlStats);       // Top
-            this.Controls.Add(pnlHeader);      // Top - add cuối sẽ nằm trên cùng
-        }
-
-        private void BuildDetailPanel()
-        {
-            pnlDetail.Dock = DockStyle.Fill;
-            pnlDetail.BackColor = Color.White;
-            pnlDetail.Padding = new Padding(18);
-            pnlDetail.AutoScroll = true;
-
-            lblDetailTitle.Text = "CHI TIẾT TÀI KHOẢN";
-            lblDetailTitle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            lblDetailTitle.ForeColor = ThemeConfig.PrimaryColor;
-            lblDetailTitle.Location = new Point(18, 15);
-            lblDetailTitle.AutoSize = true;
-            pnlDetail.Controls.Add(lblDetailTitle);
-
-            int y = 50;
-
-            AddLabel("Tên Đăng Nhập *:", y, pnlDetail);
-            txtUsername.Location = new Point(18, y + 22);
-            txtUsername.Size = new Size(330, 30);
-            pnlDetail.Controls.Add(txtUsername);
-            y += 60;
-
-            AddLabel("Họ Và Tên *:", y, pnlDetail);
-            txtFullName.Location = new Point(18, y + 22);
-            txtFullName.Size = new Size(330, 30);
-            pnlDetail.Controls.Add(txtFullName);
-            y += 60;
-
-            AddLabel("Email:", y, pnlDetail);
-            txtEmail.Location = new Point(18, y + 22);
-            txtEmail.Size = new Size(330, 30);
-            pnlDetail.Controls.Add(txtEmail);
-            y += 60;
-
-            AddLabel("Số Điện Thoại:", y, pnlDetail);
-            txtPhone.Location = new Point(18, y + 22);
-            txtPhone.Size = new Size(160, 30);
-            pnlDetail.Controls.Add(txtPhone);
-
-            AddLabel("Trạng Thái:", y, pnlDetail, 190);
-            cboDetailStatus.Location = new Point(190, y + 22);
-            cboDetailStatus.Size = new Size(158, 30);
-            cboDetailStatus.DropDownStyle = ComboBoxStyle.DropDownList;
+            // Detail items
+            cboDetailStatus.Items.Clear();
             cboDetailStatus.Items.AddRange(["Active", "Locked"]);
             cboDetailStatus.SelectedIndex = 0;
-            pnlDetail.Controls.Add(cboDetailStatus);
-            y += 60;
 
-            AddLabel("Vai Trò *:", y, pnlDetail);
-            cboRole2.Location = new Point(18, y + 22);
-            cboRole2.Size = new Size(330, 30);
-            cboRole2.DropDownStyle = ComboBoxStyle.DropDownList;
+            cboRole2.Items.Clear();
             foreach (var r in Roles) cboRole2.Items.Add(r);
-            cboRole2.SelectedIndex = Roles.Length > 0 ? Roles.Length - 1 : 0; // Mặc định: TicketStaff
-            pnlDetail.Controls.Add(cboRole2);
-            y += 60;
+            cboRole2.SelectedIndex = Roles.Length > 0 ? Roles.Length - 1 : 0;
 
-            // Mật khẩu (chỉ hiện khi Thêm mới)
-            AddLabel("Mật Khẩu *:", y, pnlDetail);
-            txtNewPassword.Location = new Point(18, y + 22);
-            txtNewPassword.Size = new Size(330, 30);
-            txtNewPassword.UseSystemPasswordChar = true;
-            pnlDetail.Controls.Add(txtNewPassword);
-
-            lblPasswordHint.Text = "(Để trống nếu không đổi mật khẩu)";
-            lblPasswordHint.Font = new Font("Segoe UI", 8F, FontStyle.Italic);
-            lblPasswordHint.ForeColor = Color.FromArgb(100, 116, 139);
-            lblPasswordHint.Location = new Point(18, y + 56);
-            lblPasswordHint.AutoSize = true;
-            pnlDetail.Controls.Add(lblPasswordHint);
-            y += 75;
-
-            // Buttons
             ThemeConfig.StylePrimaryButton(btnSave, IconChar.FloppyDisk);
-            btnSave.Text = " Lưu";
-            btnSave.Size = new Size(82, 36);
-            btnSave.Location = new Point(12, y);
-            btnSave.Enabled = false;
-
             ThemeConfig.StyleSecondaryButton(btnCancel, IconChar.Xmark);
-            btnCancel.Text = " Hủy";
-            btnCancel.Size = new Size(82, 36);
-            btnCancel.Location = new Point(100, y);
-            btnCancel.Enabled = false;
-
             ThemeConfig.StyleDangerButton(btnDelete, IconChar.Trash);
-            btnDelete.Text = " Xóa";
-            btnDelete.Size = new Size(82, 36);
-            btnDelete.Location = new Point(188, y);
-            btnDelete.Enabled = false;
-
             ThemeConfig.StyleSecondaryButton(btnResetPwd, IconChar.Key);
-            btnResetPwd.Text = " Đặt lại MK";
-            btnResetPwd.BackColor = Color.FromArgb(245, 158, 11);
-            btnResetPwd.Size = new Size(102, 36);
-            btnResetPwd.Location = new Point(276, y);
-            btnResetPwd.Enabled = false;
 
-            pnlDetail.Controls.AddRange([btnSave, btnCancel, btnDelete, btnResetPwd]);
+            SetDetailMode(false);
         }
 
         private static void AddLabel(string text, int y, Panel parent, int x = 18)
