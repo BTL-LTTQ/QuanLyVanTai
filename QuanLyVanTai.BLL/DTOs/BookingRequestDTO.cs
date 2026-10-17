@@ -45,4 +45,39 @@ namespace QuanLyVanTai.BLL.DTOs
         public decimal DiscountAmount { get; set; }
         public decimal FinalAmount { get; set; }
     }
+
+    /// <summary>
+    /// Tiêu chuẩn tìm kiếm chuyến xe đa tiêu chí cho Khách hàng
+    /// </summary>
+    public class TripSearchCriteriaDto
+    {
+        public string? Keyword { get; set; }
+        public DateTime? DepartureDate { get; set; }
+        public decimal? MinPrice { get; set; }
+        public decimal? MaxPrice { get; set; }
+        public int? RouteId { get; set; }
+    }
+
+    /// <summary>
+    /// DTO chuyến xe khả dụng hiển thị trên DataGridView tìm kiếm chuyến xe
+    /// </summary>
+    public class AvailableTripDto
+    {
+        public int ScheduleId { get; set; }
+        public string ScheduleCode { get; set; } = string.Empty;
+        public int RouteId { get; set; }
+        public string RouteCode { get; set; } = string.Empty;
+        public string RouteName { get; set; } = string.Empty;
+        public int VehicleId { get; set; }
+        public string LicensePlate { get; set; } = string.Empty;
+        public string VehicleType { get; set; } = string.Empty;
+        public int TotalSeats { get; set; }
+        public int BookedSeats { get; set; }
+        public int AvailableSeats { get; set; }
+        public decimal BasePrice { get; set; }
+        public DateTime DepartureTime { get; set; }
+        public DateTime EstimatedArrivalTime { get; set; }
+        public string DisplayText => $"{DepartureTime:HH:mm} | {RouteName} | {LicensePlate} ({AvailableSeats}/{TotalSeats} chỗ trống) - {BasePrice:N0} đ";
+    }
 }
+

@@ -33,6 +33,7 @@ namespace QuanLyVanTai.UI
             mnuNhanSu = new ToolStripMenuItem();
             mnuKhuyenMai = new ToolStripMenuItem();
             mnuDichVu = new ToolStripMenuItem();
+            mnuCheckInQr = new ToolStripMenuItem();
             mnuBaoCao = new ToolStripMenuItem();
             mnuDashboard = new ToolStripMenuItem();
             mnuNhatKy = new ToolStripMenuItem();
@@ -44,6 +45,7 @@ namespace QuanLyVanTai.UI
             tsBtnDashboard = new ToolStripButton();
             tsBtnLamMoi = new ToolStripButton();
             tsBtnDatVe = new ToolStripButton();
+            tsBtnCheckInQr = new ToolStripButton();
             tsBtnTuyenXe = new ToolStripButton();
             tsBtnNhatKy = new ToolStripButton();
             toolStripSeparator2 = new ToolStripSeparator();
@@ -156,7 +158,13 @@ namespace QuanLyVanTai.UI
             // 
             // mnuNghiepVu
             // 
-            mnuNghiepVu.DropDownItems.AddRange(new ToolStripItem[] { mnuLichTrinh, mnuNhanSu, mnuKhuyenMai, mnuDichVu });
+            mnuNghiepVu.DropDownItems.AddRange(new ToolStripItem[] {
+                mnuLichTrinh,
+                mnuNhanSu,
+                mnuKhuyenMai,
+                mnuDichVu,
+                mnuCheckInQr
+            });
             mnuNghiepVu.Name = "mnuNghiepVu";
             mnuNghiepVu.Size = new Size(96, 25);
             mnuNghiepVu.Text = "&Nghiệp vụ";
@@ -192,6 +200,15 @@ namespace QuanLyVanTai.UI
             mnuDichVu.Size = new Size(328, 26);
             mnuDichVu.Text = "&Dịch vụ Vận tải";
             mnuDichVu.Click += mnuDichVu_Click;
+            // 
+            // mnuCheckInQr
+            // 
+            mnuCheckInQr.Name = "mnuCheckInQr";
+            mnuCheckInQr.ShortcutKeys = Keys.Control | Keys.Q;
+            mnuCheckInQr.Size = new Size(280, 26);
+            mnuCheckInQr.Text = "&Check-in Quét mã QR";
+            mnuCheckInQr.Click += mnuCheckInQr_Click;
+
             // 
             // mnuBaoCao
             // 
@@ -252,7 +269,19 @@ namespace QuanLyVanTai.UI
             tsMain.Font = new Font("Segoe UI", 9F);
             tsMain.GripStyle = ToolStripGripStyle.Hidden;
             tsMain.ImageScalingSize = new Size(20, 20);
-            tsMain.Items.AddRange(new ToolStripItem[] { tsBtnDashboard, tsBtnLamMoi, tsBtnDatVe, tsBtnTuyenXe, tsBtnNhatKy, toolStripSeparator2, tsLblLanguage, tsCboLanguage, toolStripSeparator3, tsBtnDangXuat });
+            tsMain.Items.AddRange(new ToolStripItem[] {
+                tsBtnDashboard,
+                tsBtnLamMoi,
+                tsBtnDatVe,
+                tsBtnCheckInQr,
+                tsBtnTuyenXe,
+                tsBtnNhatKy,
+                toolStripSeparator2,
+                tsLblLanguage,
+                tsCboLanguage,
+                toolStripSeparator3,
+                tsBtnDangXuat
+            });
             tsMain.Location = new Point(0, 33);
             tsMain.Name = "tsMain";
             tsMain.Padding = new Padding(12, 4, 12, 4);
@@ -290,6 +319,18 @@ namespace QuanLyVanTai.UI
             tsBtnDatVe.Text = "🎫 Bán vé & Giá";
             tsBtnDatVe.ToolTipText = "Mở nhanh Bảng quản lý giá vé & Đặt vé (Ctrl+3)";
             tsBtnDatVe.Click += mnuGiaVe_Click;
+            // 
+            // tsBtnCheckInQr
+            // 
+            tsBtnCheckInQr.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            tsBtnCheckInQr.ForeColor = Color.FromArgb(14, 165, 233);
+            tsBtnCheckInQr.Name = "tsBtnCheckInQr";
+            tsBtnCheckInQr.Padding = new Padding(6, 2, 6, 2);
+            tsBtnCheckInQr.Size = new Size(155, 29);
+            tsBtnCheckInQr.Text = "📷 Quét QR Check-in";
+            tsBtnCheckInQr.ToolTipText = "Mở cửa sổ Quét mã QR Check-in hành khách lên xe (Ctrl+Q)";
+            tsBtnCheckInQr.Click += mnuCheckInQr_Click;
+
             // 
             // tsBtnTuyenXe
             // 
@@ -523,7 +564,6 @@ namespace QuanLyVanTai.UI
         }
 
         #endregion
-
         private MenuStrip msMain;
         private ToolStripMenuItem mnuHeThong;
         private ToolStripMenuItem mnuLamMoi;
@@ -539,6 +579,7 @@ namespace QuanLyVanTai.UI
         private ToolStripMenuItem mnuNhanSu;
         private ToolStripMenuItem mnuKhuyenMai;
         private ToolStripMenuItem mnuDichVu;
+        private ToolStripMenuItem mnuCheckInQr;
         private ToolStripMenuItem mnuBaoCao;
         private ToolStripMenuItem mnuDashboard;
         private ToolStripMenuItem mnuNhatKy;
@@ -551,6 +592,7 @@ namespace QuanLyVanTai.UI
         private ToolStripButton tsBtnDashboard;
         private ToolStripButton tsBtnLamMoi;
         private ToolStripButton tsBtnDatVe;
+        private ToolStripButton tsBtnCheckInQr;
         private ToolStripButton tsBtnTuyenXe;
         private ToolStripButton tsBtnNhatKy;
         private ToolStripSeparator toolStripSeparator2;

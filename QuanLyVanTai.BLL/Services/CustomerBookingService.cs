@@ -370,5 +370,100 @@ namespace QuanLyVanTai.BLL.Services
                 }
             }
         }
+
+        /// <summary>
+        /// Tìm kiếm chuyến xe khả dụng theo đa tiêu chí (từ khóa tuyến/xe/trạm, ngày đi, khoảng giá)
+        /// </summary>
+        public async Task<List<AvailableTripDto>> SearchAvailableTripsAsync(TripSearchCriteriaDto criteria)
+        {
+            var db = CreateContext();
+            try
+            {
+                var query = db.Schedules
+                    .Include(s => s.Route)
+                    .ThenInclude(r => r!.Stations)
+                    .Include(s => s.Vehicle)
+                    .Where(s => !s.IsDeleted && s.Status == "Scheduled");
+
+                if (criteria.RouteId.HasValue && criteria.RouteId.Value > 0)
+                {
+                    query = query.Where(s => s.RouteId == criteria.RouteId.Value);
+                }
+
+                if (criteria.DepartureDate.HasValue)
+                {
+                    var fromUtc = criteria.DepartureDate.Value.Date.ToUniversalTime();
+                    var toUtc = criteria.DepartureDate.Value.Date.AddDays(1).ToUniversalTime();
+                    query = query.Where(s => s.DepartureTime >= fromUtc && s.DepartureTime < toUtc);
+                }
+
+                if (criteria.MinPrice.HasValue && criteria.MinPrice.Value > 0)
+                {
+                    query = query.Where(s => s.Route != null && s.Route.BasePrice >= criteria.MinPrice.Value);
+                }
+
+                if (criteria.MaxPrice.HasValue && criteria.MaxPrice.Value > 0)
+                {
+                    query = query.Where(s => s.Route != null && s.Route.BasePrice <= criteria.MaxPrice.Value);
+                }
+
+                if (!string.IsNullOrWhiteSpace(criteria.Keyword))
+                {
+                    string kw = criteria.Keyword.Trim().ToLower();
+                    query = query.Where(s =>
+                        (s.Route != null && (s.Route.RouteName.ToLower().Contains(kw) || s.Route.RouteCode.ToLower().Contains(kw))) ||
+                        (s.Vehicle != null && (s.Vehicle.LicensePlate.ToLower().Contains(kw) || s.Vehicle.VehicleType.ToLower().Contains(kw))) ||
+                        s.ScheduleCode.ToLower().Contains(kw) ||
+                        (s.Route != null && s.Route.Stations.Any(st => st.StationName.ToLower().Contains(kw) || st.City.ToLower().Contains(kw))));
+                }
+
+                var schedules = await query
+                    .OrderBy(s => s.DepartureTime)
+                    .ToListAsync();
+
+                var result = new List<AvailableTripDto>();
+
+                foreach (var s in schedules)
+                {
+                    int bookedCount = await db.Tickets
+                        .CountAsync(t => !t.IsDeleted &&
+                                         t.RouteId == s.RouteId &&
+                                         t.VehicleId == s.VehicleId &&
+                                         t.DepartureTime == s.DepartureTime &&
+                                         t.TicketStatus != "Cancelled");
+
+                    int total = s.Vehicle?.TotalSeats ?? 40;
+                    int avail = Math.Max(0, total - bookedCount);
+
+                    result.Add(new AvailableTripDto
+                    {
+                        ScheduleId = s.Id,
+                        ScheduleCode = s.ScheduleCode,
+                        RouteId = s.RouteId,
+                        RouteCode = s.Route?.RouteCode ?? "—",
+                        RouteName = s.Route?.RouteName ?? "—",
+                        VehicleId = s.VehicleId,
+                        LicensePlate = s.Vehicle?.LicensePlate ?? "—",
+                        VehicleType = s.Vehicle?.VehicleType ?? "—",
+                        TotalSeats = total,
+                        BookedSeats = bookedCount,
+                        AvailableSeats = avail,
+                        BasePrice = s.Route?.BasePrice ?? 0m,
+                        DepartureTime = s.DepartureTime.ToLocalTime(),
+                        EstimatedArrivalTime = s.EstimatedArrivalTime.ToLocalTime()
+                    });
+                }
+
+                return result;
+            }
+            finally
+            {
+                if (ShouldDisposeContext)
+                {
+                    await db.DisposeAsync();
+                }
+            }
+        }
     }
 }
+

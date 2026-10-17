@@ -46,6 +46,7 @@ namespace QuanLyVanTai.UI.UserControls
             ThemeConfig.StyleSuccessButton(btnDatVe, IconChar.Ticket);
             ThemeConfig.StyleSecondaryButton(btnHuyChon, IconChar.RotateLeft);
             ThemeConfig.StyleSecondaryButton(btnTaiSoDo, IconChar.RotateLeft);
+            ThemeConfig.StylePrimaryButton(btnTimChuyen, IconChar.MagnifyingGlass);
 
             // Điền thông tin người dùng từ phiên đăng nhập nếu có
             if (SessionManager.IsLoggedIn && SessionManager.CurrentUser != null)
@@ -65,6 +66,10 @@ namespace QuanLyVanTai.UI.UserControls
         private void WireEvents()
         {
             this.Load += async (s, e) => await LoadRoutesAsync();
+
+            // Tìm kiếm chuyến xe gõ đến đâu lọc đến đó (debounce 300ms)
+            txtTimChuyen.TextChanged += (s, e) => ScheduleTripFilterDebounce();
+            btnTimChuyen.Click += async (s, e) => await OpenSearchTripsModalAsync();
 
             // Sự kiện chọn tuyến và ngày đi
             cboTuyenXe.SelectedIndexChanged += async (s, e) => await OnRouteChangedAsync();
@@ -127,6 +132,99 @@ namespace QuanLyVanTai.UI.UserControls
             finally
             {
                 SetStatus("Sẵn sàng", false);
+            }
+        }
+
+        private System.Windows.Forms.Timer? _tripDebounceTimer;
+
+        private void ScheduleTripFilterDebounce()
+        {
+            _tripDebounceTimer?.Stop();
+            _tripDebounceTimer?.Dispose();
+            _tripDebounceTimer = new System.Windows.Forms.Timer { Interval = 300 };
+            _tripDebounceTimer.Tick += async (s, e) =>
+            {
+                _tripDebounceTimer?.Stop();
+                _tripDebounceTimer?.Dispose();
+                _tripDebounceTimer = null;
+                await FilterRoutesByKeywordAsync();
+            };
+            _tripDebounceTimer.Start();
+        }
+
+        private async Task FilterRoutesByKeywordAsync()
+        {
+            string kw = txtTimChuyen.Text.Trim().ToLower();
+            if (string.IsNullOrWhiteSpace(kw))
+            {
+                cboTuyenXe.DataSource = null;
+                cboTuyenXe.DisplayMember = "RouteName";
+                cboTuyenXe.ValueMember = "Id";
+                cboTuyenXe.DataSource = _routes;
+            }
+            else
+            {
+                var filtered = _routes.Where(r =>
+                    r.RouteName.ToLower().Contains(kw) ||
+                    r.RouteCode.ToLower().Contains(kw)).ToList();
+
+                cboTuyenXe.DataSource = null;
+                cboTuyenXe.DisplayMember = "RouteName";
+                cboTuyenXe.ValueMember = "Id";
+                cboTuyenXe.DataSource = filtered;
+            }
+
+            if (cboTuyenXe.Items.Count > 0)
+            {
+                cboTuyenXe.SelectedIndex = 0;
+                await OnRouteChangedAsync();
+            }
+            else
+            {
+                cboChuyenXe.DataSource = null;
+                seatMapControl.LoadSeatMap(new VehicleSeatMapDto());
+                lblDonGia.Text = "0 VNĐ";
+                SetStatus("Không tìm thấy tuyến xe nào phù hợp với từ khóa.", false);
+            }
+        }
+
+        private async Task OpenSearchTripsModalAsync()
+        {
+            try
+            {
+                using var frm = new Forms.FrmSearchTrips(dtpNgayDi.Value, txtTimChuyen.Text);
+                if (frm.ShowDialog(this.FindForm()) == DialogResult.OK && frm.SelectedTrip != null)
+                {
+                    var trip = frm.SelectedTrip;
+                    txtTimChuyen.Text = trip.RouteName;
+
+                    await FilterRoutesByKeywordAsync();
+
+                    for (int i = 0; i < cboTuyenXe.Items.Count; i++)
+                    {
+                        if (cboTuyenXe.Items[i] is Route r && r.Id == trip.RouteId)
+                        {
+                            cboTuyenXe.SelectedIndex = i;
+                            break;
+                        }
+                    }
+
+                    dtpNgayDi.Value = trip.DepartureTime.Date;
+                    await OnRouteChangedAsync();
+
+                    for (int i = 0; i < cboChuyenXe.Items.Count; i++)
+                    {
+                        if (cboChuyenXe.Items[i] is TripDisplayItem t && t.ScheduleId == trip.ScheduleId)
+                        {
+                            cboChuyenXe.SelectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi tìm kiếm chuyến xe: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

@@ -48,13 +48,17 @@ namespace QuanLyVanTai.UI.UserControls
             txtGhiChu = new TextBox();
             grpTimChuyen = new GroupBox();
             tlpTimChuyen = new TableLayoutPanel();
+            lblTimChuyen = new Label();
+            txtTimChuyen = new TextBox();
             lblTuyenXe = new Label();
             cboTuyenXe = new ComboBox();
             lblNgayDi = new Label();
             dtpNgayDi = new DateTimePicker();
             lblChuyenXe = new Label();
             cboChuyenXe = new ComboBox();
+            flpTripButtons = new FlowLayoutPanel();
             btnTaiSoDo = new FontAwesome.Sharp.IconButton();
+            btnTimChuyen = new FontAwesome.Sharp.IconButton();
             pnlRight = new Panel();
             seatMapControl = new QuanLyVanTai.UI.Components.SeatMapControl();
             pnlLegend = new Panel();
@@ -517,7 +521,7 @@ namespace QuanLyVanTai.UI.UserControls
             grpTimChuyen.Margin = new Padding(3, 4, 3, 10);
             grpTimChuyen.Name = "grpTimChuyen";
             grpTimChuyen.Padding = new Padding(12);
-            grpTimChuyen.Size = new Size(452, 220);
+            grpTimChuyen.Size = new Size(452, 265);
             grpTimChuyen.TabIndex = 0;
             grpTimChuyen.TabStop = false;
             grpTimChuyen.Text = " 1. Chọn Tuyến & Chuyến Xe ";
@@ -527,23 +531,49 @@ namespace QuanLyVanTai.UI.UserControls
             tlpTimChuyen.ColumnCount = 2;
             tlpTimChuyen.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 130F));
             tlpTimChuyen.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tlpTimChuyen.Controls.Add(lblTuyenXe, 0, 0);
-            tlpTimChuyen.Controls.Add(cboTuyenXe, 1, 0);
-            tlpTimChuyen.Controls.Add(lblNgayDi, 0, 1);
-            tlpTimChuyen.Controls.Add(dtpNgayDi, 1, 1);
-            tlpTimChuyen.Controls.Add(lblChuyenXe, 0, 2);
-            tlpTimChuyen.Controls.Add(cboChuyenXe, 1, 2);
-            tlpTimChuyen.Controls.Add(btnTaiSoDo, 1, 3);
+            tlpTimChuyen.Controls.Add(lblTimChuyen, 0, 0);
+            tlpTimChuyen.Controls.Add(txtTimChuyen, 1, 0);
+            tlpTimChuyen.Controls.Add(lblTuyenXe, 0, 1);
+            tlpTimChuyen.Controls.Add(cboTuyenXe, 1, 1);
+            tlpTimChuyen.Controls.Add(lblNgayDi, 0, 2);
+            tlpTimChuyen.Controls.Add(dtpNgayDi, 1, 2);
+            tlpTimChuyen.Controls.Add(lblChuyenXe, 0, 3);
+            tlpTimChuyen.Controls.Add(cboChuyenXe, 1, 3);
+            tlpTimChuyen.Controls.Add(flpTripButtons, 1, 4);
             tlpTimChuyen.Dock = DockStyle.Fill;
             tlpTimChuyen.Location = new Point(12, 34);
             tlpTimChuyen.Name = "tlpTimChuyen";
-            tlpTimChuyen.RowCount = 4;
+            tlpTimChuyen.RowCount = 5;
+            tlpTimChuyen.RowStyles.Add(new RowStyle(SizeType.Absolute, 42F));
             tlpTimChuyen.RowStyles.Add(new RowStyle(SizeType.Absolute, 42F));
             tlpTimChuyen.RowStyles.Add(new RowStyle(SizeType.Absolute, 42F));
             tlpTimChuyen.RowStyles.Add(new RowStyle(SizeType.Absolute, 42F));
             tlpTimChuyen.RowStyles.Add(new RowStyle(SizeType.Absolute, 44F));
-            tlpTimChuyen.Size = new Size(428, 174);
+            tlpTimChuyen.Size = new Size(428, 219);
             tlpTimChuyen.TabIndex = 0;
+            // 
+            // lblTimChuyen
+            // 
+            lblTimChuyen.Anchor = AnchorStyles.Left;
+            lblTimChuyen.AutoSize = true;
+            lblTimChuyen.Font = new Font("Segoe UI", 9F);
+            lblTimChuyen.ForeColor = Color.FromArgb(71, 85, 105);
+            lblTimChuyen.Location = new Point(3, 11);
+            lblTimChuyen.Name = "lblTimChuyen";
+            lblTimChuyen.Size = new Size(73, 20);
+            lblTimChuyen.TabIndex = 0;
+            lblTimChuyen.Text = "Tìm kiếm:";
+            // 
+            // txtTimChuyen
+            // 
+            txtTimChuyen.Dock = DockStyle.Fill;
+            txtTimChuyen.Font = new Font("Segoe UI", 9F);
+            txtTimChuyen.Location = new Point(133, 6);
+            txtTimChuyen.Margin = new Padding(3, 6, 3, 3);
+            txtTimChuyen.Name = "txtTimChuyen";
+            txtTimChuyen.PlaceholderText = "🔍 Tìm bến đi, đến, loại xe...";
+            txtTimChuyen.Size = new Size(292, 27);
+            txtTimChuyen.TabIndex = 1;
             // 
             // lblTuyenXe
             // 
@@ -551,10 +581,10 @@ namespace QuanLyVanTai.UI.UserControls
             lblTuyenXe.AutoSize = true;
             lblTuyenXe.Font = new Font("Segoe UI", 9F);
             lblTuyenXe.ForeColor = Color.FromArgb(71, 85, 105);
-            lblTuyenXe.Location = new Point(3, 11);
+            lblTuyenXe.Location = new Point(3, 53);
             lblTuyenXe.Name = "lblTuyenXe";
             lblTuyenXe.Size = new Size(70, 20);
-            lblTuyenXe.TabIndex = 0;
+            lblTuyenXe.TabIndex = 2;
             lblTuyenXe.Text = "Tuyến xe:";
             // 
             // cboTuyenXe
@@ -563,11 +593,11 @@ namespace QuanLyVanTai.UI.UserControls
             cboTuyenXe.DropDownStyle = ComboBoxStyle.DropDownList;
             cboTuyenXe.Font = new Font("Segoe UI", 9F);
             cboTuyenXe.FormattingEnabled = true;
-            cboTuyenXe.Location = new Point(133, 6);
+            cboTuyenXe.Location = new Point(133, 48);
             cboTuyenXe.Margin = new Padding(3, 6, 3, 3);
             cboTuyenXe.Name = "cboTuyenXe";
             cboTuyenXe.Size = new Size(292, 28);
-            cboTuyenXe.TabIndex = 1;
+            cboTuyenXe.TabIndex = 3;
             // 
             // lblNgayDi
             // 
@@ -575,10 +605,10 @@ namespace QuanLyVanTai.UI.UserControls
             lblNgayDi.AutoSize = true;
             lblNgayDi.Font = new Font("Segoe UI", 9F);
             lblNgayDi.ForeColor = Color.FromArgb(71, 85, 105);
-            lblNgayDi.Location = new Point(3, 53);
+            lblNgayDi.Location = new Point(3, 95);
             lblNgayDi.Name = "lblNgayDi";
             lblNgayDi.Size = new Size(64, 20);
-            lblNgayDi.TabIndex = 2;
+            lblNgayDi.TabIndex = 4;
             lblNgayDi.Text = "Ngày đi:";
             // 
             // dtpNgayDi
@@ -587,12 +617,12 @@ namespace QuanLyVanTai.UI.UserControls
             dtpNgayDi.Dock = DockStyle.Fill;
             dtpNgayDi.Font = new Font("Segoe UI", 9F);
             dtpNgayDi.Format = DateTimePickerFormat.Custom;
-            dtpNgayDi.Location = new Point(133, 48);
+            dtpNgayDi.Location = new Point(133, 90);
             dtpNgayDi.Margin = new Padding(3, 6, 3, 3);
             dtpNgayDi.MinDate = new DateTime(2025, 1, 1, 0, 0, 0, 0);
             dtpNgayDi.Name = "dtpNgayDi";
             dtpNgayDi.Size = new Size(292, 27);
-            dtpNgayDi.TabIndex = 3;
+            dtpNgayDi.TabIndex = 5;
             // 
             // lblChuyenXe
             // 
@@ -600,10 +630,10 @@ namespace QuanLyVanTai.UI.UserControls
             lblChuyenXe.AutoSize = true;
             lblChuyenXe.Font = new Font("Segoe UI", 9F);
             lblChuyenXe.ForeColor = Color.FromArgb(71, 85, 105);
-            lblChuyenXe.Location = new Point(3, 95);
+            lblChuyenXe.Location = new Point(3, 137);
             lblChuyenXe.Name = "lblChuyenXe";
             lblChuyenXe.Size = new Size(79, 20);
-            lblChuyenXe.TabIndex = 4;
+            lblChuyenXe.TabIndex = 6;
             lblChuyenXe.Text = "Chuyến xe:";
             // 
             // cboChuyenXe
@@ -612,11 +642,21 @@ namespace QuanLyVanTai.UI.UserControls
             cboChuyenXe.DropDownStyle = ComboBoxStyle.DropDownList;
             cboChuyenXe.Font = new Font("Segoe UI", 9F);
             cboChuyenXe.FormattingEnabled = true;
-            cboChuyenXe.Location = new Point(133, 90);
+            cboChuyenXe.Location = new Point(133, 132);
             cboChuyenXe.Margin = new Padding(3, 6, 3, 3);
             cboChuyenXe.Name = "cboChuyenXe";
             cboChuyenXe.Size = new Size(292, 28);
-            cboChuyenXe.TabIndex = 5;
+            cboChuyenXe.TabIndex = 7;
+            // 
+            // flpTripButtons
+            // 
+            flpTripButtons.Controls.Add(btnTaiSoDo);
+            flpTripButtons.Controls.Add(btnTimChuyen);
+            flpTripButtons.Dock = DockStyle.Fill;
+            flpTripButtons.Location = new Point(133, 171);
+            flpTripButtons.Name = "flpTripButtons";
+            flpTripButtons.Size = new Size(292, 45);
+            flpTripButtons.TabIndex = 8;
             // 
             // btnTaiSoDo
             // 
@@ -629,18 +669,40 @@ namespace QuanLyVanTai.UI.UserControls
             btnTaiSoDo.IconChar = FontAwesome.Sharp.IconChar.RotateBack;
             btnTaiSoDo.IconColor = Color.FromArgb(71, 85, 105);
             btnTaiSoDo.IconFont = FontAwesome.Sharp.IconFont.Auto;
-            btnTaiSoDo.IconSize = 16;
+            btnTaiSoDo.IconSize = 15;
             btnTaiSoDo.ImageAlign = ContentAlignment.MiddleLeft;
-            btnTaiSoDo.Location = new Point(133, 131);
-            btnTaiSoDo.Margin = new Padding(3, 5, 3, 3);
+            btnTaiSoDo.Location = new Point(3, 3);
             btnTaiSoDo.Name = "btnTaiSoDo";
-            btnTaiSoDo.Padding = new Padding(8, 0, 10, 0);
-            btnTaiSoDo.Size = new Size(160, 34);
-            btnTaiSoDo.TabIndex = 6;
-            btnTaiSoDo.Text = "  Tải lại sơ đồ";
+            btnTaiSoDo.Padding = new Padding(6, 0, 8, 0);
+            btnTaiSoDo.Size = new Size(130, 36);
+            btnTaiSoDo.TabIndex = 0;
+            btnTaiSoDo.Text = " Tải sơ đồ";
             btnTaiSoDo.TextAlign = ContentAlignment.MiddleRight;
             btnTaiSoDo.TextImageRelation = TextImageRelation.ImageBeforeText;
             btnTaiSoDo.UseVisualStyleBackColor = false;
+            // 
+            // btnTimChuyen
+            // 
+            btnTimChuyen.BackColor = Color.FromArgb(14, 165, 233);
+            btnTimChuyen.Cursor = Cursors.Hand;
+            btnTimChuyen.FlatAppearance.BorderSize = 0;
+            btnTimChuyen.FlatStyle = FlatStyle.Flat;
+            btnTimChuyen.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+            btnTimChuyen.ForeColor = Color.White;
+            btnTimChuyen.IconChar = FontAwesome.Sharp.IconChar.MagnifyingGlass;
+            btnTimChuyen.IconColor = Color.White;
+            btnTimChuyen.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            btnTimChuyen.IconSize = 14;
+            btnTimChuyen.ImageAlign = ContentAlignment.MiddleLeft;
+            btnTimChuyen.Location = new Point(139, 3);
+            btnTimChuyen.Name = "btnTimChuyen";
+            btnTimChuyen.Padding = new Padding(6, 0, 8, 0);
+            btnTimChuyen.Size = new Size(145, 36);
+            btnTimChuyen.TabIndex = 1;
+            btnTimChuyen.Text = " Bảng chuyến";
+            btnTimChuyen.TextAlign = ContentAlignment.MiddleRight;
+            btnTimChuyen.TextImageRelation = TextImageRelation.ImageBeforeText;
+            btnTimChuyen.UseVisualStyleBackColor = false;
             // 
             // pnlRight
             // 
@@ -814,13 +876,17 @@ namespace QuanLyVanTai.UI.UserControls
         private Panel pnlLeftScroll;
         private GroupBox grpTimChuyen;
         private TableLayoutPanel tlpTimChuyen;
+        private Label lblTimChuyen;
+        private TextBox txtTimChuyen;
         private Label lblTuyenXe;
         private ComboBox cboTuyenXe;
         private Label lblNgayDi;
         private DateTimePicker dtpNgayDi;
         private Label lblChuyenXe;
         private ComboBox cboChuyenXe;
+        private FlowLayoutPanel flpTripButtons;
         private FontAwesome.Sharp.IconButton btnTaiSoDo;
+        private FontAwesome.Sharp.IconButton btnTimChuyen;
         private GroupBox grpThongTinKhach;
         private TableLayoutPanel tlpKhachHang;
         private Label lblTenKhachHang;

@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Core.Configs;
 using Core.Helpers;
+using Core.Security;
 using QuanLyVanTai.UI.UserControls;
 
 namespace QuanLyVanTai.UI.Forms
@@ -29,25 +30,75 @@ namespace QuanLyVanTai.UI.Forms
             this.Font = ThemeConfig.MainFont;
             this.BackColor = ThemeConfig.BackgroundColor;
 
-            // Cập nhật thông tin phiên đăng nhập
-            if (SessionManager.IsLoggedIn && SessionManager.CurrentUser != null)
-            {
-                var user = SessionManager.CurrentUser;
-                lblCurrentUser.Text = $"👤 {user.FullName} ({user.Role})";
-            }
-            else
-            {
-                lblCurrentUser.Text = "👤 Khách Hàng Trực Tuyến";
-            }
+            ApplyRolePermissions();
 
             lblClock.Text = $"🕒 {DateTime.Now:dd/MM/yyyy HH:mm:ss}";
             timerClock.Interval = 1000;
             timerClock.Start();
         }
 
+        private void ApplyRolePermissions()
+        {
+            bool isStaff = IsStaffRole();
+
+            // Phân quyền chuẩn: Chỉ hiển thị nút và menu Quét QR Check-in cho Nhân viên / Lơ xe
+            tsBtnCheckInQr.Visible = isStaff;
+            mnuCheckInQr.Visible = isStaff;
+
+            if (SessionManager.IsLoggedIn && SessionManager.CurrentUser != null)
+            {
+                var user = SessionManager.CurrentUser;
+                if (isStaff)
+                {
+                    this.Text = "Hệ Thống Bán Vé & Quét QR Check-in (Dành Cho Nhân Viên / Lơ Xe)";
+                    lblCurrentUser.Text = $"👤 {user.FullName} ({user.Role} - Nhà xe)";
+                    tsBtnCheckInQr.ToolTipText = "Chức năng dành riêng cho Nhân viên / Lơ xe: Quét mã QR Check-in hành khách lên xe (Ctrl+Q)";
+                }
+                else
+                {
+                    this.Text = "Hệ Thống Đặt Vé Xe Trực Tuyến - Dành Cho Khách Hàng";
+                    lblCurrentUser.Text = $"👤 {user.FullName} (Khách hàng)";
+                }
+            }
+            else
+            {
+                this.Text = "Hệ Thống Đặt Vé Xe Trực Tuyến - Khách Hàng";
+                lblCurrentUser.Text = "👤 Khách Hàng Trực Tuyến";
+            }
+        }
+
+        private bool IsStaffRole()
+        {
+            if (!SessionManager.IsLoggedIn || SessionManager.CurrentUser == null)
+            {
+                return false;
+            }
+
+            string role = SessionManager.CurrentUser.Role ?? string.Empty;
+
+            // Khách hàng hoặc Khách vãng lai -> KHÔNG PHẢI nhân viên
+            if (string.Equals(role, SystemRoles.Customer, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(role, "Khách hàng", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(role, "Guest", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            // Chỉ các vai trò nhân sự nhà xe (Nhân viên bán vé, Nhân viên, Lơ xe, Quản lý, Admin)
+            return role.Contains("bán vé", StringComparison.OrdinalIgnoreCase) ||
+                   role.Contains("nhân viên", StringComparison.OrdinalIgnoreCase) ||
+                   role.Contains("lơ xe", StringComparison.OrdinalIgnoreCase) ||
+                   role.Contains("quản lý", StringComparison.OrdinalIgnoreCase) ||
+                   role.Contains("admin", StringComparison.OrdinalIgnoreCase);
+        }
+
         private void WireEvents()
         {
-            this.Load += (s, e) => ShowBookingView();
+            this.Load += (s, e) =>
+            {
+                ApplyRolePermissions();
+                ShowBookingView();
+            };
             this.KeyDown += FormMain_KhachHang_KeyDown;
 
             timerClock.Tick += (s, e) =>
@@ -61,6 +112,10 @@ namespace QuanLyVanTai.UI.Forms
 
             mnuLichSuDatVe.Click += (s, e) => ShowHistoryView();
             tsBtnHistory.Click += (s, e) => ShowHistoryView();
+
+            // Quét mã QR Check-in hành khách (Ctrl+Q)
+            mnuCheckInQr.Click += (s, e) => OpenCheckInDialog();
+            tsBtnCheckInQr.Click += (s, e) => OpenCheckInDialog();
 
             // Làm mới
             mnuLamMoi.Click += (s, e) => RefreshCurrentView();
@@ -184,9 +239,33 @@ namespace QuanLyVanTai.UI.Forms
             }
             else if (e.Control && e.KeyCode == Keys.Q)
             {
+                if (IsStaffRole())
+                {
+                    e.Handled = true;
+                    OpenCheckInDialog();
+                }
+            }
+            else if (e.Control && e.KeyCode == Keys.L)
+            {
                 e.Handled = true;
                 PerformLogout();
             }
+        }
+
+        private void OpenCheckInDialog()
+        {
+            if (!IsStaffRole())
+            {
+                MessageBox.Show(
+                    "Chức năng Quét mã QR Check-in chỉ dành riêng cho Nhân viên / Lơ xe!",
+                    "Giới Hạn Quyền Hạn",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            using var frm = new FrmPassengerCheckIn();
+            frm.ShowDialog(this);
         }
 
         private void PerformLogout()

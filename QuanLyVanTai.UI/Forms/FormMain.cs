@@ -114,6 +114,8 @@ namespace QuanLyVanTai.UI
             mnuNhatKy.Enabled = UserSession.HasPermission(SystemMenus.AuditLog, PermissionAction.View);
 
             tsBtnDatVe.Enabled = UserSession.HasPermission(SystemMenus.Ticket, PermissionAction.View);
+            tsBtnCheckInQr.Enabled = UserSession.HasPermission(SystemMenus.Ticket, PermissionAction.View);
+            mnuCheckInQr.Enabled = UserSession.HasPermission(SystemMenus.Ticket, PermissionAction.View);
             tsBtnTuyenXe.Enabled = UserSession.HasPermission(SystemMenus.Route, PermissionAction.View);
             tsBtnNhatKy.Enabled = UserSession.HasPermission(SystemMenus.AuditLog, PermissionAction.View);
         }
@@ -278,6 +280,12 @@ namespace QuanLyVanTai.UI
         private void mnuDichVu_Click(object? sender, EventArgs e)
         {
             OpenMenu(SystemMenus.Vehicle, "QUẢN LÝ DỊCH VỤ VẬN TẢI", () => new UcManageService());
+        }
+
+        private void mnuCheckInQr_Click(object? sender, EventArgs e)
+        {
+            using var frm = new Forms.FrmPassengerCheckIn();
+            frm.ShowDialog(this);
         }
 
         private void mnuPhanQuyen_Click(object? sender, EventArgs e)
