@@ -59,6 +59,9 @@ namespace QuanLyVanTai.UI.Forms
             mnuDatVe.Click += (s, e) => ShowBookingView();
             tsBtnBooking.Click += (s, e) => ShowBookingView();
 
+            mnuBanDoLoTrinh.Click += (s, e) => ShowRouteMapView();
+            tsBtnRouteMap.Click += (s, e) => ShowRouteMapView();
+
             mnuLichSuDatVe.Click += (s, e) => ShowHistoryView();
             tsBtnHistory.Click += (s, e) => ShowHistoryView();
 
@@ -104,15 +107,27 @@ namespace QuanLyVanTai.UI.Forms
             }
         }
 
-        public void ShowBookingView()
+        public void ShowBookingView(int? initialRouteId = null)
         {
-            var bookingView = new UcCustomerBooking();
+            var bookingView = new UcCustomerBooking(initialRouteId);
             bookingView.OnStatusChanged += (msg, isLoading) => SetStatus(msg, isLoading);
             bookingView.OnNavigateToHistory += () => ShowHistoryView();
+            bookingView.OnNavigateToMap += (routeId) => ShowRouteMapView(routeId);
 
             SwitchView(bookingView);
             SetStatus("Màn hình: Đặt vé trực quan bằng sơ đồ ghế", false);
-            UpdateNavigationButtonState(isBooking: true);
+            UpdateNavigationButtonState(isBooking: true, isRouteMap: false);
+        }
+
+        public void ShowRouteMapView(int? initialRouteId = null)
+        {
+            var mapView = new UcCustomerRouteMap(initialRouteId);
+            mapView.OnStatusChanged += (msg, isLoading) => SetStatus(msg, isLoading);
+            mapView.OnNavigateToBooking += (targetRouteId) => ShowBookingView(targetRouteId);
+
+            SwitchView(mapView);
+            SetStatus("Màn hình: Bản đồ lộ trình tuyến xe & vị trí trạm dừng (Map API)", false);
+            UpdateNavigationButtonState(isBooking: false, isRouteMap: true);
         }
 
         public void ShowHistoryView(string? phoneOrKeyword = null)
@@ -129,7 +144,7 @@ namespace QuanLyVanTai.UI.Forms
 
             SwitchView(historyView);
             SetStatus("Màn hình: Lịch sử đặt vé & In vé điện tử", false);
-            UpdateNavigationButtonState(isBooking: false);
+            UpdateNavigationButtonState(isBooking: false, isRouteMap: false);
         }
 
         private void RefreshCurrentView()
@@ -138,16 +153,21 @@ namespace QuanLyVanTai.UI.Forms
             {
                 _ = bookingView.LoadRoutesAsync();
             }
+            else if (_currentView is UcCustomerRouteMap mapView)
+            {
+                _ = mapView.LoadRoutesAsync();
+            }
             else if (_currentView is UcCustomerTicketHistory historyView)
             {
                 _ = historyView.RefreshDataAsync();
             }
         }
 
-        private void UpdateNavigationButtonState(bool isBooking)
+        private void UpdateNavigationButtonState(bool isBooking, bool isRouteMap = false)
         {
             tsBtnBooking.Checked = isBooking;
-            tsBtnHistory.Checked = !isBooking;
+            tsBtnRouteMap.Checked = isRouteMap;
+            tsBtnHistory.Checked = !isBooking && !isRouteMap;
         }
 
         public void SetStatus(string text, bool isLoading)
@@ -176,6 +196,11 @@ namespace QuanLyVanTai.UI.Forms
             {
                 e.Handled = true;
                 ShowBookingView();
+            }
+            else if (e.Control && e.KeyCode == Keys.M)
+            {
+                e.Handled = true;
+                ShowRouteMapView();
             }
             else if (e.Control && e.KeyCode == Keys.H)
             {

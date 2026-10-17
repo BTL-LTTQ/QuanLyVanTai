@@ -54,7 +54,9 @@ namespace QuanLyVanTai.UI.UserControls
             dtpNgayDi = new DateTimePicker();
             lblChuyenXe = new Label();
             cboChuyenXe = new ComboBox();
+            flpTimChuyenActions = new FlowLayoutPanel();
             btnTaiSoDo = new FontAwesome.Sharp.IconButton();
+            btnXemBanDo = new FontAwesome.Sharp.IconButton();
             pnlRight = new Panel();
             seatMapControl = new QuanLyVanTai.UI.Components.SeatMapControl();
             pnlLegend = new Panel();
@@ -533,7 +535,7 @@ namespace QuanLyVanTai.UI.UserControls
             tlpTimChuyen.Controls.Add(dtpNgayDi, 1, 1);
             tlpTimChuyen.Controls.Add(lblChuyenXe, 0, 2);
             tlpTimChuyen.Controls.Add(cboChuyenXe, 1, 2);
-            tlpTimChuyen.Controls.Add(btnTaiSoDo, 1, 3);
+            tlpTimChuyen.Controls.Add(flpTimChuyenActions, 1, 3);
             tlpTimChuyen.Dock = DockStyle.Fill;
             tlpTimChuyen.Location = new Point(12, 34);
             tlpTimChuyen.Name = "tlpTimChuyen";
@@ -618,6 +620,17 @@ namespace QuanLyVanTai.UI.UserControls
             cboChuyenXe.Size = new Size(292, 28);
             cboChuyenXe.TabIndex = 5;
             // 
+            // flpTimChuyenActions
+            // 
+            flpTimChuyenActions.Controls.Add(btnTaiSoDo);
+            flpTimChuyenActions.Controls.Add(btnXemBanDo);
+            flpTimChuyenActions.Dock = DockStyle.Fill;
+            flpTimChuyenActions.Location = new Point(133, 129);
+            flpTimChuyenActions.Margin = new Padding(3, 3, 3, 3);
+            flpTimChuyenActions.Name = "flpTimChuyenActions";
+            flpTimChuyenActions.Size = new Size(292, 42);
+            flpTimChuyenActions.TabIndex = 6;
+            // 
             // btnTaiSoDo
             // 
             btnTaiSoDo.BackColor = Color.FromArgb(241, 245, 249);
@@ -631,16 +644,40 @@ namespace QuanLyVanTai.UI.UserControls
             btnTaiSoDo.IconFont = FontAwesome.Sharp.IconFont.Auto;
             btnTaiSoDo.IconSize = 16;
             btnTaiSoDo.ImageAlign = ContentAlignment.MiddleLeft;
-            btnTaiSoDo.Location = new Point(133, 131);
-            btnTaiSoDo.Margin = new Padding(3, 5, 3, 3);
+            btnTaiSoDo.Location = new Point(0, 2);
+            btnTaiSoDo.Margin = new Padding(0, 2, 6, 2);
             btnTaiSoDo.Name = "btnTaiSoDo";
-            btnTaiSoDo.Padding = new Padding(8, 0, 10, 0);
-            btnTaiSoDo.Size = new Size(160, 34);
-            btnTaiSoDo.TabIndex = 6;
+            btnTaiSoDo.Padding = new Padding(6, 0, 8, 0);
+            btnTaiSoDo.Size = new Size(125, 34);
+            btnTaiSoDo.TabIndex = 0;
             btnTaiSoDo.Text = "  Tải lại sơ đồ";
             btnTaiSoDo.TextAlign = ContentAlignment.MiddleRight;
             btnTaiSoDo.TextImageRelation = TextImageRelation.ImageBeforeText;
             btnTaiSoDo.UseVisualStyleBackColor = false;
+            // 
+            // btnXemBanDo
+            // 
+            btnXemBanDo.BackColor = Color.FromArgb(238, 242, 255);
+            btnXemBanDo.Cursor = Cursors.Hand;
+            btnXemBanDo.FlatAppearance.BorderColor = Color.FromArgb(199, 210, 254);
+            btnXemBanDo.FlatStyle = FlatStyle.Flat;
+            btnXemBanDo.Font = new Font("Segoe UI", 8.5F);
+            btnXemBanDo.ForeColor = Color.FromArgb(67, 56, 202);
+            btnXemBanDo.IconChar = FontAwesome.Sharp.IconChar.MapLocationDot;
+            btnXemBanDo.IconColor = Color.FromArgb(67, 56, 202);
+            btnXemBanDo.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            btnXemBanDo.IconSize = 16;
+            btnXemBanDo.ImageAlign = ContentAlignment.MiddleLeft;
+            btnXemBanDo.Location = new Point(134, 2);
+            btnXemBanDo.Margin = new Padding(3, 2, 3, 2);
+            btnXemBanDo.Name = "btnXemBanDo";
+            btnXemBanDo.Padding = new Padding(6, 0, 8, 0);
+            btnXemBanDo.Size = new Size(130, 34);
+            btnXemBanDo.TabIndex = 1;
+            btnXemBanDo.Text = "  Xem Bản đồ";
+            btnXemBanDo.TextAlign = ContentAlignment.MiddleRight;
+            btnXemBanDo.TextImageRelation = TextImageRelation.ImageBeforeText;
+            btnXemBanDo.UseVisualStyleBackColor = false;
             // 
             // pnlRight
             // 
@@ -820,7 +857,9 @@ namespace QuanLyVanTai.UI.UserControls
         private DateTimePicker dtpNgayDi;
         private Label lblChuyenXe;
         private ComboBox cboChuyenXe;
+        private FlowLayoutPanel flpTimChuyenActions;
         private FontAwesome.Sharp.IconButton btnTaiSoDo;
+        private FontAwesome.Sharp.IconButton btnXemBanDo;
         private GroupBox grpThongTinKhach;
         private TableLayoutPanel tlpKhachHang;
         private Label lblTenKhachHang;

@@ -278,12 +278,107 @@ namespace QuanLyVanTai.DAL
 
                 if (vehicleChanged)
                     db.SaveChanges();
+
+                // 8. Cập nhật tọa độ GPS trạm dừng & liên kết trạm dừng vào tuyến xe (phục vụ Bản đồ Map API)
+                SeedOrUpdateStationCoordinatesAndRoutes(db);
             }
             catch (Exception ex)
             {
                 // Không nuốt lỗi âm thầm: ghi log để phát hiện sớm trường hợp Database
                 // chưa được Migration tạo bảng (lỗi "Invalid object name 'Stations'").
                 LoggerService.Error(ex, "Lỗi khi nạp dữ liệu mẫu (seed data).");
+            }
+        }
+
+        private static void SeedOrUpdateStationCoordinatesAndRoutes(AppDbContext db)
+        {
+            var stationData = new[]
+            {
+                new { Code = "BX-MYDINH", Name = "Bến xe Mỹ Đình", Addr = "Số 20 Phạm Hùng, Nam Từ Liêm", City = "Hà Nội", Lat = 21.028511, Lng = 105.778330 },
+                new { Code = "BX-GIAPBAT", Name = "Bến xe Giáp Bát", Addr = "Km6 Giải Phóng, Hoàng Mai", City = "Hà Nội", Lat = 20.979882, Lng = 105.843702 },
+                new { Code = "BX-HAIHAI", Name = "Trạm dừng Hải Dương (Cao tốc 5B)", Addr = "Gia Lộc, Hải Dương", City = "Hải Dương", Lat = 20.884500, Lng = 106.321400 },
+                new { Code = "BX-NIEMNGHIA", Name = "Bến xe Niệm Nghĩa", Addr = "Trần Nguyên Hãn, Lê Chân", City = "Hải Phòng", Lat = 20.849310, Lng = 106.671510 },
+                new { Code = "BX-VINH", Name = "Bến xe Trung tâm TP. Vinh", Addr = "Số 77 Lê Lợi, TP. Vinh", City = "Nghệ An", Lat = 18.679585, Lng = 105.681335 },
+                new { Code = "BX-HUE", Name = "Bến xe Phía Nam Huế", Addr = "97 An Dương Vương, TP. Huế", City = "Thừa Thiên Huế", Lat = 16.443512, Lng = 107.599182 },
+                new { Code = "BX-DANANG", Name = "Bến xe Trung tâm Đà Nẵng", Addr = "Tôn Đức Thắng, Liên Chiểu", City = "Đà Nẵng", Lat = 16.059424, Lng = 108.172459 },
+                new { Code = "BX-NHATRANG", Name = "Bến xe Phía Nam Nha Trang", Addr = "Km 6 đường 23/10, Vĩnh Trung", City = "Khánh Hòa", Lat = 12.241520, Lng = 109.155820 },
+                new { Code = "BX-DALAT", Name = "Bến xe Liên tỉnh Đà Lạt", Addr = "Số 1 Tô Hiến Thành, P.3", City = "Lâm Đồng", Lat = 11.925528, Lng = 108.444747 },
+                new { Code = "BX-DAUGIAY", Name = "Trạm dừng nghỉ Dầu Giây", Addr = "Ngã 3 Dầu Giây, Thống Nhất", City = "Đồng Nai", Lat = 10.931215, Lng = 107.126430 },
+                new { Code = "BX-MIENDONG", Name = "Bến xe Miền Đông mới", Addr = "501 Hoàng Hữu Nam, TP. Thủ Đức", City = "TP. Hồ Chí Minh", Lat = 10.875630, Lng = 106.815520 },
+                new { Code = "BX-VUNGTAU", Name = "Bến xe TP. Vũng Tàu", Addr = "192 Nam Kỳ Khởi Nghĩa, Thắng Tam", City = "Bà Rịa - Vũng Tàu", Lat = 10.355600, Lng = 107.084300 }
+            };
+
+            var existingStations = db.Stations.ToDictionary(s => s.StationCode);
+            bool hasChanges = false;
+
+            foreach (var item in stationData)
+            {
+                if (existingStations.TryGetValue(item.Code, out var station))
+                {
+                    if (station.Latitude == null || station.Longitude == null)
+                    {
+                        station.Latitude = item.Lat;
+                        station.Longitude = item.Lng;
+                        hasChanges = true;
+                    }
+                }
+                else
+                {
+                    var newStation = new Station
+                    {
+                        StationCode = item.Code,
+                        StationName = item.Name,
+                        Address = item.Addr,
+                        City = item.City,
+                        Status = "Active",
+                        Latitude = item.Lat,
+                        Longitude = item.Lng,
+                        CreatedBy = "System"
+                    };
+                    db.Stations.Add(newStation);
+                    existingStations[item.Code] = newStation;
+                    hasChanges = true;
+                }
+            }
+
+            if (hasChanges)
+            {
+                db.SaveChanges();
+            }
+
+            // Gán trạm dừng cho các tuyến xe nếu tuyến xe chưa có trạm
+            var routes = db.Routes.Include(r => r.Stations).ToList();
+            var routeStationMap = new Dictionary<string, string[]>
+            {
+                ["HN-DN-01"] = new[] { "BX-MYDINH", "BX-GIAPBAT", "BX-VINH", "BX-HUE", "BX-DANANG" },
+                ["HN-SG-01"] = new[] { "BX-MYDINH", "BX-GIAPBAT", "BX-VINH", "BX-DANANG", "BX-NHATRANG", "BX-MIENDONG" },
+                ["SG-DL-01"] = new[] { "BX-MIENDONG", "BX-DAUGIAY", "BX-DALAT" },
+                ["HN-HP-01"] = new[] { "BX-MYDINH", "BX-GIAPBAT", "BX-HAIHAI", "BX-NIEMNGHIA" },
+                ["SG-VT-01"] = new[] { "BX-MIENDONG", "BX-DAUGIAY", "BX-VUNGTAU" }
+            };
+
+            bool routeChanged = false;
+            foreach (var route in routes)
+            {
+                if (routeStationMap.TryGetValue(route.RouteCode, out var stationCodes))
+                {
+                    if (route.Stations.Count == 0)
+                    {
+                        foreach (var code in stationCodes)
+                        {
+                            if (existingStations.TryGetValue(code, out var st))
+                            {
+                                route.Stations.Add(st);
+                                routeChanged = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (routeChanged)
+            {
+                db.SaveChanges();
             }
         }
     }

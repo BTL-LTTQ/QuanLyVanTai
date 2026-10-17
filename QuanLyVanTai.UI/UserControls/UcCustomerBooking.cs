@@ -19,13 +19,20 @@ namespace QuanLyVanTai.UI.UserControls
         private List<Route> _routes = new();
         private VehicleSeatMapDto? _currentSeatMap;
         private PromotionVerifyResultDto? _currentPromotion;
+        private int? _initialRouteId;
 
         public event Action<string, bool>? OnStatusChanged;
         public event Action? OnNavigateToHistory;
+        public event Action<int>? OnNavigateToMap;
 
-        public UcCustomerBooking()
+        public UcCustomerBooking() : this(null)
+        {
+        }
+
+        public UcCustomerBooking(int? initialRouteId)
         {
             InitializeComponent();
+            _initialRouteId = initialRouteId;
 
             // Chống crash Visual Studio Designer
             if (LicenseManager.UsageMode == LicenseUsageMode.Designtime || this.DesignMode)
@@ -46,6 +53,7 @@ namespace QuanLyVanTai.UI.UserControls
             ThemeConfig.StyleSuccessButton(btnDatVe, IconChar.Ticket);
             ThemeConfig.StyleSecondaryButton(btnHuyChon, IconChar.RotateLeft);
             ThemeConfig.StyleSecondaryButton(btnTaiSoDo, IconChar.RotateLeft);
+            ThemeConfig.StyleSecondaryButton(btnXemBanDo, IconChar.MapLocationDot);
 
             // Điền thông tin người dùng từ phiên đăng nhập nếu có
             if (SessionManager.IsLoggedIn && SessionManager.CurrentUser != null)
@@ -71,6 +79,11 @@ namespace QuanLyVanTai.UI.UserControls
             dtpNgayDi.ValueChanged += async (s, e) => await OnRouteChangedAsync();
             cboChuyenXe.SelectedIndexChanged += async (s, e) => await LoadSeatMapForSelectedTripAsync();
             btnTaiSoDo.Click += async (s, e) => await LoadSeatMapForSelectedTripAsync();
+            btnXemBanDo.Click += (s, e) =>
+            {
+                int rId = cboTuyenXe.SelectedValue is int id ? id : 0;
+                OnNavigateToMap?.Invoke(rId);
+            };
 
             // Sơ đồ ghế tương tác
             seatMapControl.SelectionChanged += (s, selectedSeats) => OnSeatSelectionChanged(selectedSeats);
@@ -116,7 +129,14 @@ namespace QuanLyVanTai.UI.UserControls
 
                 if (_routes.Any())
                 {
-                    cboTuyenXe.SelectedIndex = 0;
+                    if (_initialRouteId.HasValue && _routes.Any(r => r.Id == _initialRouteId.Value))
+                    {
+                        cboTuyenXe.SelectedValue = _initialRouteId.Value;
+                    }
+                    else
+                    {
+                        cboTuyenXe.SelectedIndex = 0;
+                    }
                     await OnRouteChangedAsync();
                 }
             }
