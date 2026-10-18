@@ -990,6 +990,12 @@ namespace QuanLyVanTai.DAL.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("float");
+
                     b.Property<string>("StationCode")
                         .IsRequired()
                         .HasMaxLength(20)

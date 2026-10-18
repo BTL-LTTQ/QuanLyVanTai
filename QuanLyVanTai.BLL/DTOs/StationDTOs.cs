@@ -15,6 +15,8 @@ namespace QuanLyVanTai.BLL.DTOs
         public string Address { get; set; } = string.Empty;
         public string City { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
 
         /// <summary>Số tuyến xe đi qua trạm này.</summary>
         public int RouteCount { get; set; }
@@ -37,5 +39,7 @@ namespace QuanLyVanTai.BLL.DTOs
         public string Address { get; set; } = string.Empty;
         public string City { get; set; } = string.Empty;
         public string Status { get; set; } = "Active";
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
     }
 }
