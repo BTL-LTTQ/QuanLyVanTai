@@ -26,6 +26,7 @@ namespace QuanLyVanTai.UI.Forms
             mnuThoat = new ToolStripMenuItem();
             mnuChucNang = new ToolStripMenuItem();
             mnuDatVe = new ToolStripMenuItem();
+            mnuBanDoLoTrinh = new ToolStripMenuItem();
             mnuLichSuDatVe = new ToolStripMenuItem();
             mnuCheckInQr = new ToolStripMenuItem();
             toolStripSeparator2 = new ToolStripSeparator();
@@ -35,6 +36,7 @@ namespace QuanLyVanTai.UI.Forms
             mnuThongTin = new ToolStripMenuItem();
             tsMain = new ToolStrip();
             tsBtnBooking = new ToolStripButton();
+            tsBtnRouteMap = new ToolStripButton();
             tsBtnHistory = new ToolStripButton();
             tsBtnCheckInQr = new ToolStripButton();
             toolStripSeparator3 = new ToolStripSeparator();
@@ -102,7 +104,7 @@ namespace QuanLyVanTai.UI.Forms
             // 
             // mnuChucNang
             // 
-            mnuChucNang.DropDownItems.AddRange(new ToolStripItem[] { mnuDatVe, mnuLichSuDatVe, mnuCheckInQr, toolStripSeparator2, mnuLamMoi });
+            mnuChucNang.DropDownItems.AddRange(new ToolStripItem[] { mnuDatVe, mnuBanDoLoTrinh, mnuLichSuDatVe, mnuCheckInQr, toolStripSeparator2, mnuLamMoi });
             mnuChucNang.Name = "mnuChucNang";
             mnuChucNang.Size = new Size(95, 25);
             mnuChucNang.Text = "&Chức năng";
@@ -113,6 +115,13 @@ namespace QuanLyVanTai.UI.Forms
             mnuDatVe.ShortcutKeys = Keys.Control | Keys.B;
             mnuDatVe.Size = new Size(260, 26);
             mnuDatVe.Text = "&Đặt vé trực tuyến";
+            // 
+            // mnuBanDoLoTrinh
+            // 
+            mnuBanDoLoTrinh.Name = "mnuBanDoLoTrinh";
+            mnuBanDoLoTrinh.ShortcutKeys = Keys.Control | Keys.M;
+            mnuBanDoLoTrinh.Size = new Size(260, 26);
+            mnuBanDoLoTrinh.Text = "🗺️ &Bản đồ lộ trình...";
             // 
             // mnuLichSuDatVe
             // 
@@ -166,7 +175,7 @@ namespace QuanLyVanTai.UI.Forms
             tsMain.Font = new Font("Segoe UI", 9.5F);
             tsMain.GripStyle = ToolStripGripStyle.Hidden;
             tsMain.ImageScalingSize = new Size(22, 22);
-            tsMain.Items.AddRange(new ToolStripItem[] { tsBtnBooking, tsBtnHistory, tsBtnCheckInQr, toolStripSeparator3, tsBtnRefresh, toolStripSeparator4, tsBtnGuide, toolStripSeparator5, tsBtnLogout });
+            tsMain.Items.AddRange(new ToolStripItem[] { tsBtnBooking, tsBtnRouteMap, tsBtnHistory, tsBtnCheckInQr, toolStripSeparator3, tsBtnRefresh, toolStripSeparator4, tsBtnGuide, toolStripSeparator5, tsBtnLogout });
             tsMain.Location = new Point(0, 35);
             tsMain.Name = "tsMain";
             tsMain.Padding = new Padding(12, 4, 12, 4);
@@ -184,6 +193,17 @@ namespace QuanLyVanTai.UI.Forms
             tsBtnBooking.Size = new Size(137, 31);
             tsBtnBooking.Text = "🎫 Đặt Vé Xe";
             tsBtnBooking.ToolTipText = "Đặt vé xe trực quan qua sơ đồ ghế (Ctrl+B)";
+            // 
+            // tsBtnRouteMap
+            // 
+            tsBtnRouteMap.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
+            tsBtnRouteMap.ForeColor = Color.FromArgb(14, 165, 233);
+            tsBtnRouteMap.ImageTransparentColor = Color.Magenta;
+            tsBtnRouteMap.Margin = new Padding(0, 1, 8, 2);
+            tsBtnRouteMap.Name = "tsBtnRouteMap";
+            tsBtnRouteMap.Size = new Size(165, 31);
+            tsBtnRouteMap.Text = "🗺️ Bản Đồ Lộ Trình";
+            tsBtnRouteMap.ToolTipText = "Hiển thị trực quan bản đồ lộ trình chuyến xe và vị trí trạm dừng (Ctrl+M)";
             // 
             // tsBtnHistory
             // 
@@ -346,6 +366,7 @@ namespace QuanLyVanTai.UI.Forms
         private ToolStripMenuItem mnuThoat;
         private ToolStripMenuItem mnuChucNang;
         private ToolStripMenuItem mnuDatVe;
+        private ToolStripMenuItem mnuBanDoLoTrinh;
         private ToolStripMenuItem mnuLichSuDatVe;
         private ToolStripMenuItem mnuCheckInQr;
         private ToolStripSeparator toolStripSeparator2;
@@ -355,6 +376,7 @@ namespace QuanLyVanTai.UI.Forms
         private ToolStripMenuItem mnuThongTin;
         private ToolStrip tsMain;
         private ToolStripButton tsBtnBooking;
+        private ToolStripButton tsBtnRouteMap;
         private ToolStripButton tsBtnHistory;
         private ToolStripButton tsBtnCheckInQr;
         private ToolStripSeparator toolStripSeparator3;

@@ -95,8 +95,11 @@ namespace QuanLyVanTai.BLL.Services
                         Id          = s.Id,
                         StationCode = s.StationCode,
                         StationName = s.StationName,
+                        Address     = s.Address,
                         City        = s.City,
-                        Status      = s.Status
+                        Status      = s.Status,
+                        Latitude    = s.Latitude,
+                        Longitude   = s.Longitude
                     }).ToList(),
                     Vehicles = route.Vehicles.Select(v => new VehicleSummaryDto
                     {

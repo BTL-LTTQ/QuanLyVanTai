@@ -35,6 +35,8 @@ namespace QuanLyVanTai.BLL.Services
                     Address     = s.Address,
                     City        = s.City,
                     Status      = s.Status,
+                    Latitude    = s.Latitude,
+                    Longitude   = s.Longitude,
                     RouteCount  = s.Routes.Count,
                     RouteCodes  = string.Join(", ", s.Routes.Select(r => r.RouteCode)),
                     CreatedAt   = s.CreatedAt,
@@ -91,7 +93,9 @@ namespace QuanLyVanTai.BLL.Services
                     StationName = dto.StationName.Trim(),
                     Address     = dto.Address.Trim(),
                     City        = dto.City.Trim(),
-                    Status      = dto.Status
+                    Status      = dto.Status,
+                    Latitude    = dto.Latitude,
+                    Longitude   = dto.Longitude
                 };
 
                 await repo.AddAsync(station);
@@ -106,6 +110,8 @@ namespace QuanLyVanTai.BLL.Services
                     Address     = station.Address,
                     City        = station.City,
                     Status      = station.Status,
+                    Latitude    = station.Latitude,
+                    Longitude   = station.Longitude,
                     RouteCount  = 0,
                     RouteCodes  = string.Empty,
                     CreatedAt   = station.CreatedAt,
@@ -154,6 +160,8 @@ namespace QuanLyVanTai.BLL.Services
                 station.Address     = dto.Address.Trim();
                 station.City        = dto.City.Trim();
                 station.Status      = dto.Status;
+                station.Latitude    = dto.Latitude;
+                station.Longitude   = dto.Longitude;
 
                 await repo.UpdateAsync(station);
                 await repo.SaveChangesAsync();

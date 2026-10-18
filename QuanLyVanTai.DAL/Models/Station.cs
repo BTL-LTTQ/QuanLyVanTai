@@ -31,6 +31,10 @@ namespace QuanLyVanTai.DAL.Models
         [MaxLength(30)]
         public string Status { get; set; } = "Active"; // Active, Inactive
 
+        // Tọa độ địa lý GPS (phục vụ hiển thị bản đồ số Map API)
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+
         // Tracking / Auditing
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         [MaxLength(50)]

@@ -59,6 +59,7 @@ namespace QuanLyVanTai.UI.UserControls
             flpTripButtons = new FlowLayoutPanel();
             btnTaiSoDo = new FontAwesome.Sharp.IconButton();
             btnTimChuyen = new FontAwesome.Sharp.IconButton();
+            btnXemBanDo = new FontAwesome.Sharp.IconButton();
             pnlRight = new Panel();
             seatMapControl = new QuanLyVanTai.UI.Components.SeatMapControl();
             pnlLegend = new Panel();
@@ -521,7 +522,7 @@ namespace QuanLyVanTai.UI.UserControls
             grpTimChuyen.Margin = new Padding(3, 4, 3, 10);
             grpTimChuyen.Name = "grpTimChuyen";
             grpTimChuyen.Padding = new Padding(12);
-            grpTimChuyen.Size = new Size(452, 265);
+            grpTimChuyen.Size = new Size(452, 300);
             grpTimChuyen.TabIndex = 0;
             grpTimChuyen.TabStop = false;
             grpTimChuyen.Text = " 1. Chọn Tuyến & Chuyến Xe ";
@@ -548,8 +549,8 @@ namespace QuanLyVanTai.UI.UserControls
             tlpTimChuyen.RowStyles.Add(new RowStyle(SizeType.Absolute, 42F));
             tlpTimChuyen.RowStyles.Add(new RowStyle(SizeType.Absolute, 42F));
             tlpTimChuyen.RowStyles.Add(new RowStyle(SizeType.Absolute, 42F));
-            tlpTimChuyen.RowStyles.Add(new RowStyle(SizeType.Absolute, 44F));
-            tlpTimChuyen.Size = new Size(428, 219);
+            tlpTimChuyen.RowStyles.Add(new RowStyle(SizeType.Absolute, 80F));
+            tlpTimChuyen.Size = new Size(428, 254);
             tlpTimChuyen.TabIndex = 0;
             // 
             // lblTimChuyen
@@ -652,10 +653,11 @@ namespace QuanLyVanTai.UI.UserControls
             // 
             flpTripButtons.Controls.Add(btnTaiSoDo);
             flpTripButtons.Controls.Add(btnTimChuyen);
+            flpTripButtons.Controls.Add(btnXemBanDo);
             flpTripButtons.Dock = DockStyle.Fill;
             flpTripButtons.Location = new Point(133, 171);
             flpTripButtons.Name = "flpTripButtons";
-            flpTripButtons.Size = new Size(292, 45);
+            flpTripButtons.Size = new Size(292, 80);
             flpTripButtons.TabIndex = 8;
             // 
             // btnTaiSoDo
@@ -671,12 +673,13 @@ namespace QuanLyVanTai.UI.UserControls
             btnTaiSoDo.IconFont = FontAwesome.Sharp.IconFont.Auto;
             btnTaiSoDo.IconSize = 15;
             btnTaiSoDo.ImageAlign = ContentAlignment.MiddleLeft;
-            btnTaiSoDo.Location = new Point(3, 3);
+            btnTaiSoDo.Location = new Point(0, 2);
+            btnTaiSoDo.Margin = new Padding(0, 2, 6, 2);
             btnTaiSoDo.Name = "btnTaiSoDo";
             btnTaiSoDo.Padding = new Padding(6, 0, 8, 0);
-            btnTaiSoDo.Size = new Size(130, 36);
+            btnTaiSoDo.Size = new Size(125, 34);
             btnTaiSoDo.TabIndex = 0;
-            btnTaiSoDo.Text = " Tải sơ đồ";
+            btnTaiSoDo.Text = "  Tải lại sơ đồ";
             btnTaiSoDo.TextAlign = ContentAlignment.MiddleRight;
             btnTaiSoDo.TextImageRelation = TextImageRelation.ImageBeforeText;
             btnTaiSoDo.UseVisualStyleBackColor = false;
@@ -694,15 +697,40 @@ namespace QuanLyVanTai.UI.UserControls
             btnTimChuyen.IconFont = FontAwesome.Sharp.IconFont.Auto;
             btnTimChuyen.IconSize = 14;
             btnTimChuyen.ImageAlign = ContentAlignment.MiddleLeft;
-            btnTimChuyen.Location = new Point(139, 3);
+            btnTimChuyen.Location = new Point(131, 2);
+            btnTimChuyen.Margin = new Padding(0, 2, 6, 2);
             btnTimChuyen.Name = "btnTimChuyen";
             btnTimChuyen.Padding = new Padding(6, 0, 8, 0);
-            btnTimChuyen.Size = new Size(145, 36);
+            btnTimChuyen.Size = new Size(145, 34);
             btnTimChuyen.TabIndex = 1;
             btnTimChuyen.Text = " Bảng chuyến";
             btnTimChuyen.TextAlign = ContentAlignment.MiddleRight;
             btnTimChuyen.TextImageRelation = TextImageRelation.ImageBeforeText;
             btnTimChuyen.UseVisualStyleBackColor = false;
+            // 
+            // btnXemBanDo
+            // 
+            btnXemBanDo.BackColor = Color.FromArgb(238, 242, 255);
+            btnXemBanDo.Cursor = Cursors.Hand;
+            btnXemBanDo.FlatAppearance.BorderColor = Color.FromArgb(199, 210, 254);
+            btnXemBanDo.FlatStyle = FlatStyle.Flat;
+            btnXemBanDo.Font = new Font("Segoe UI", 8.5F);
+            btnXemBanDo.ForeColor = Color.FromArgb(67, 56, 202);
+            btnXemBanDo.IconChar = FontAwesome.Sharp.IconChar.MapLocationDot;
+            btnXemBanDo.IconColor = Color.FromArgb(67, 56, 202);
+            btnXemBanDo.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            btnXemBanDo.IconSize = 16;
+            btnXemBanDo.ImageAlign = ContentAlignment.MiddleLeft;
+            btnXemBanDo.Location = new Point(0, 38);
+            btnXemBanDo.Margin = new Padding(0, 2, 6, 2);
+            btnXemBanDo.Name = "btnXemBanDo";
+            btnXemBanDo.Padding = new Padding(6, 0, 8, 0);
+            btnXemBanDo.Size = new Size(130, 34);
+            btnXemBanDo.TabIndex = 2;
+            btnXemBanDo.Text = "  Xem Bản đồ";
+            btnXemBanDo.TextAlign = ContentAlignment.MiddleRight;
+            btnXemBanDo.TextImageRelation = TextImageRelation.ImageBeforeText;
+            btnXemBanDo.UseVisualStyleBackColor = false;
             // 
             // pnlRight
             // 
@@ -887,6 +915,7 @@ namespace QuanLyVanTai.UI.UserControls
         private FlowLayoutPanel flpTripButtons;
         private FontAwesome.Sharp.IconButton btnTaiSoDo;
         private FontAwesome.Sharp.IconButton btnTimChuyen;
+        private FontAwesome.Sharp.IconButton btnXemBanDo;
         private GroupBox grpThongTinKhach;
         private TableLayoutPanel tlpKhachHang;
         private Label lblTenKhachHang;
