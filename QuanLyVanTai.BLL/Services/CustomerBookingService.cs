@@ -210,7 +210,7 @@ namespace QuanLyVanTai.BLL.Services
                             SeatNumber = seat,
                             Price = seatFinalPrice,
                             DepartureTime = request.DepartureTime,
-                            PaymentStatus = "Paid",
+                            PaymentStatus = string.IsNullOrWhiteSpace(request.PaymentStatus) ? "Paid" : request.PaymentStatus,
                             TicketStatus = "Booked",
                             RouteId = route.Id,
                             VehicleId = vehicle.Id,
@@ -281,6 +281,15 @@ namespace QuanLyVanTai.BLL.Services
                     await db.DisposeAsync();
                 }
             }
+        }
+
+        /// <summary>
+        /// Hủy vé đang ở trạng thái Pending khi khách hàng hủy giao dịch thanh toán
+        /// </summary>
+        public async Task<bool> CancelPendingTicketsAsync(List<int> ticketIds, string reason = "Hủy thanh toán")
+        {
+            var paymentService = new PaymentService(CreateContext());
+            return await paymentService.CancelPendingPaymentTicketsAsync(ticketIds, reason);
         }
 
         /// <summary>

@@ -15,6 +15,8 @@ namespace QuanLyVanTai.UI.Models
         public string PriceDisplay { get; set; } = string.Empty;
         public string TicketStatus { get; set; } = string.Empty;
         public string TicketStatusDisplay { get; set; } = string.Empty;
+        public string PaymentStatus { get; set; } = string.Empty;
+        public string PaymentStatusDisplay { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public string CreatedAtDisplay { get; set; } = string.Empty;
     }

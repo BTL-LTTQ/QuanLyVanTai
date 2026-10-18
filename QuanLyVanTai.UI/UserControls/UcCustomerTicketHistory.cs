@@ -150,6 +150,15 @@ namespace QuanLyVanTai.UI.UserControls
                         "Completed" => "Đã hoàn thành",
                         _ => t.TicketStatus
                     },
+                    PaymentStatus = t.PaymentStatus,
+                    PaymentStatusDisplay = t.PaymentStatus switch
+                    {
+                        "Paid" or "Đã thanh toán" => "Đã thanh toán",
+                        "Pending" or "Chờ thanh toán" => "Chờ thanh toán",
+                        "Failed" or "Thất bại" => "Thất bại",
+                        "Refunded" or "Đã hoàn tiền" => "Đã hoàn tiền",
+                        _ => t.PaymentStatus
+                    },
                     CreatedAt = t.CreatedAt.ToLocalTime(),
                     CreatedAtDisplay = t.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
                 }).ToList();

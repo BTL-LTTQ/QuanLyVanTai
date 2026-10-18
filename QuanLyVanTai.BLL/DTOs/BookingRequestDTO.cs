@@ -15,7 +15,8 @@ namespace QuanLyVanTai.BLL.DTOs
         public List<string> SelectedSeats { get; set; } = new();
         public string? PromotionCode { get; set; }
         public int? AccountId { get; set; }
-        public string PaymentMethod { get; set; } = "Tiền mặt"; // Tiền mặt, Chuyển khoản QR
+        public string PaymentMethod { get; set; } = "Tiền mặt"; // Tiền mặt, VNPay Sandbox, MoMo Sandbox
+        public string PaymentStatus { get; set; } = "Paid"; // Paid, Pending
     }
 
     /// <summary>
