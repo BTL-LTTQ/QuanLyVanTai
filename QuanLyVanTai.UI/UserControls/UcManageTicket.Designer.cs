@@ -15,6 +15,7 @@ namespace QuanLyVanTai.UI.UserControls
         private System.Windows.Forms.ComboBox cboRoute;
         private System.Windows.Forms.ComboBox cboPayStatus;
         private System.Windows.Forms.ComboBox cboTicketStatus;
+        private System.Windows.Forms.ComboBox cboPriceRange;
         private System.Windows.Forms.CheckBox chkUseDateFilter;
         private System.Windows.Forms.DateTimePicker dtpFrom;
         private System.Windows.Forms.Label lblTo;
@@ -22,6 +23,7 @@ namespace QuanLyVanTai.UI.UserControls
         private FontAwesome.Sharp.IconButton btnRefresh;
         private FontAwesome.Sharp.IconButton btnAdd;
         private FontAwesome.Sharp.IconButton btnExport;
+        private FontAwesome.Sharp.IconButton btnCheckInQr;
         private System.Windows.Forms.SplitContainer splitMain;
         private System.Windows.Forms.DataGridView dgvTickets;
         private System.Windows.Forms.Panel pnlDetail;
@@ -62,6 +64,7 @@ namespace QuanLyVanTai.UI.UserControls
             cboRoute = new System.Windows.Forms.ComboBox();
             cboPayStatus = new System.Windows.Forms.ComboBox();
             cboTicketStatus = new System.Windows.Forms.ComboBox();
+            cboPriceRange = new System.Windows.Forms.ComboBox();
             chkUseDateFilter = new System.Windows.Forms.CheckBox();
             dtpFrom = new System.Windows.Forms.DateTimePicker();
             lblTo = new System.Windows.Forms.Label();
@@ -69,6 +72,7 @@ namespace QuanLyVanTai.UI.UserControls
             btnRefresh = new FontAwesome.Sharp.IconButton();
             btnAdd = new FontAwesome.Sharp.IconButton();
             btnExport = new FontAwesome.Sharp.IconButton();
+            btnCheckInQr = new FontAwesome.Sharp.IconButton();
             splitMain = new System.Windows.Forms.SplitContainer();
             dgvTickets = new System.Windows.Forms.DataGridView();
             pnlDetail = new System.Windows.Forms.Panel();
@@ -134,6 +138,7 @@ namespace QuanLyVanTai.UI.UserControls
             // pnlToolbar
             // 
             pnlToolbar.BackColor = System.Drawing.Color.White;
+            pnlToolbar.Controls.Add(btnCheckInQr);
             pnlToolbar.Controls.Add(btnExport);
             pnlToolbar.Controls.Add(btnAdd);
             pnlToolbar.Controls.Add(btnRefresh);
@@ -141,6 +146,7 @@ namespace QuanLyVanTai.UI.UserControls
             pnlToolbar.Controls.Add(lblTo);
             pnlToolbar.Controls.Add(dtpFrom);
             pnlToolbar.Controls.Add(chkUseDateFilter);
+            pnlToolbar.Controls.Add(cboPriceRange);
             pnlToolbar.Controls.Add(cboTicketStatus);
             pnlToolbar.Controls.Add(cboPayStatus);
             pnlToolbar.Controls.Add(cboRoute);
@@ -186,6 +192,15 @@ namespace QuanLyVanTai.UI.UserControls
             cboTicketStatus.Name = "cboTicketStatus";
             cboTicketStatus.Size = new System.Drawing.Size(120, 28);
             cboTicketStatus.TabIndex = 3;
+            // 
+            // cboPriceRange
+            // 
+            cboPriceRange.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            cboPriceRange.FormattingEnabled = true;
+            cboPriceRange.Location = new System.Drawing.Point(655, 8);
+            cboPriceRange.Name = "cboPriceRange";
+            cboPriceRange.Size = new System.Drawing.Size(170, 28);
+            cboPriceRange.TabIndex = 4;
             // 
             // chkUseDateFilter
             // 
@@ -282,6 +297,26 @@ namespace QuanLyVanTai.UI.UserControls
             btnExport.Text = " Xuất file";
             btnExport.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             btnExport.UseVisualStyleBackColor = false;
+            // 
+            // btnCheckInQr
+            // 
+            btnCheckInQr.BackColor = System.Drawing.Color.FromArgb(14, 165, 233);
+            btnCheckInQr.Cursor = System.Windows.Forms.Cursors.Hand;
+            btnCheckInQr.FlatAppearance.BorderSize = 0;
+            btnCheckInQr.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            btnCheckInQr.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            btnCheckInQr.ForeColor = System.Drawing.Color.White;
+            btnCheckInQr.IconChar = FontAwesome.Sharp.IconChar.Qrcode;
+            btnCheckInQr.IconColor = System.Drawing.Color.White;
+            btnCheckInQr.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            btnCheckInQr.IconSize = 16;
+            btnCheckInQr.Location = new System.Drawing.Point(835, 42);
+            btnCheckInQr.Name = "btnCheckInQr";
+            btnCheckInQr.Size = new System.Drawing.Size(155, 32);
+            btnCheckInQr.TabIndex = 11;
+            btnCheckInQr.Text = " Quét QR Check-in";
+            btnCheckInQr.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            btnCheckInQr.UseVisualStyleBackColor = false;
             // 
             // splitMain
             // 

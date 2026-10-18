@@ -1,427 +1,561 @@
 using Core.Configs;
 using FontAwesome.Sharp;
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
+using LiveChartsCore.SkiaSharpView.WinForms;
+using QuanLyVanTai.BLL.DTOs;
+using QuanLyVanTai.BLL.Services;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace QuanLyVanTai.UI.UserControls
 {
     public partial class UcDashboard : UserControl
     {
-        // ─── Chart data ───────────────────────────────────────────────
-        private readonly List<DayData> _chartData = new()
-        {
-            new DayData("19/09", 95,  80,  70),
-            new DayData("20/09", 105, 90,  85),
-            new DayData("21/09", 85,  75,  80),
-            new DayData("22/09", 120, 110, 95),
-            new DayData("23/09", 130, 120, 100),
-            new DayData("24/09", 110, 95,  90),
-            new DayData("25/09", 145, 130, 110),
-            new DayData("26/09", 160, 145, 120),
-            new DayData("27/09", 150, 135, 115),
-            new DayData("28/09", 175, 160, 130),
-        };
-
-        // ─── Bus GPS data ─────────────────────────────────────────────
-        private readonly List<BusInfo> _buses = new()
-        {
-            new BusInfo("51B-184.26", "T-02", "Bến Thành → Củ Chi",       62, 10.762, 106.660, BusState.Running),
-            new BusInfo("50F-023.17", "T-05", "Sài Gòn → Bình Dương",     58, 10.852, 106.621, BusState.Running),
-            new BusInfo("51B-330.68", "T-01", "Miền Đông → Vũng Tàu",     45, 10.774, 106.700, BusState.Running),
-            new BusInfo("51B-D3",     "T-04", "Miền Tây → Cần Thơ",       72, 10.035, 105.769, BusState.Warning),
-            new BusInfo("52A-108.45", "T-03", "Chợ Lớn → Long An",        55, 10.685, 106.434, BusState.Stopped),
-        };
+        private readonly IDashboardService _dashboardService = new DashboardService();
+        private bool _isGdiMode = false;
+        private List<RevenueByDateDto> _dateRevenueData = new();
+        private List<RevenueByRouteDto> _routeRevenueData = new();
+        private System.Windows.Forms.Timer? _clockTimer;
 
         public UcDashboard()
         {
             InitializeComponent();
 
+            // 🛡️ BẢO VỆ: Chặn Visual Studio Designer thực thi kết nối CSDL hoặc gọi Service
             if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime || this.DesignMode)
             {
                 return;
             }
 
-            SetupDashboardRuntime();
+            SetupRuntimeUi();
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        //  RUNTIME SETUP
-        // ═══════════════════════════════════════════════════════════════
-        private void SetupDashboardRuntime()
+        private void SetupRuntimeUi()
         {
-            this.BackColor = Color.FromArgb(245, 247, 250);
             this.Font = ThemeConfig.MainFont;
+            this.BackColor = Color.FromArgb(248, 250, 252);
 
-            // Stat Cards
-            flpStatCards.Controls.Clear();
-            var cards = new (string title, string value, string sub, IconChar icon, Color color)[]
-            {
-                ("Today's Revenue",  "₫128.6M", "+12.4% vs yesterday",   IconChar.MoneyBillWave, Color.FromArgb(59,130,246)),
-                ("Tickets Sold",     "1,248",    "88 online · 162 counter", IconChar.Ticket,        Color.FromArgb(16,185,129)),
-                ("Buses Active",     "42 / 48",  "3 delayed · 3 service",  IconChar.Bus,           Color.FromArgb(99,102,241)),
-                ("Passengers",       "3,876",    "Current occupancy 79%",  IconChar.Users,         Color.FromArgb(239,68,68)),
-            };
+            // Bật DoubleBuffered chống nhấp nháy cho các canvas GDI+
+            EnableDoubleBuffering(pnlTimeChartGdi);
+            EnableDoubleBuffering(pnlRouteChartGdi);
 
-            foreach (var (title, value, sub, icon, color) in cards)
-            {
-                var card = MakeStatCard(title, value, sub, icon, color);
-                flpStatCards.Controls.Add(card);
-            }
+            // Đăng ký sự kiện vẽ GDI+
+            pnlTimeChartGdi.Paint += PnlTimeChartGdi_Paint;
+            pnlTimeChartGdi.Resize += (_, _) => pnlTimeChartGdi.Invalidate();
 
-            // Legend on Chart Panel
-            int lx = 320;
-            foreach (var (txt, col) in new (string, Color)[] { ("Revenue", Color.FromArgb(16,185,129)), ("Ticket sales", Color.FromArgb(59,130,246)), ("Operating cost", Color.FromArgb(239,68,68)) })
-            {
-                pnlChartWrap.Controls.Add(new Panel { Size = new Size(10, 3), Location = new Point(lx, 22), BackColor = col });
-                pnlChartWrap.Controls.Add(new Label { Text = txt, Font = new Font("Segoe UI", 8F), ForeColor = Color.FromArgb(100,116,139), Location = new Point(lx + 14, 16), AutoSize = true });
-                lx += 110;
-            }
+            pnlRouteChartGdi.Paint += PnlRouteChartGdi_Paint;
+            pnlRouteChartGdi.Resize += (_, _) => pnlRouteChartGdi.Invalidate();
 
-            pnlChartCanvas.Paint += Canvas_Paint;
-            pnlChartCanvas.Resize += (_, _) => pnlChartCanvas.Invalidate();
+            // Cấu hình sự kiện bộ lọc
+            cboDateFilter.SelectedIndex = 0; // "7 ngày gần nhất"
+            cboDateFilter.SelectedIndexChanged += CboDateFilter_SelectedIndexChanged;
+            btnApplyFilter.Click += async (_, _) => await LoadDashboardDataAsync();
+            btnRefresh.Click += async (_, _) => await LoadDashboardDataAsync();
+            btnToggleMode.Click += BtnToggleMode_Click;
 
-            // Map Setup
-            pnlMapCanvas.Paint += (s, e) => PaintMap(e.Graphics, pnlMapCanvas.Width, pnlMapCanvas.Height);
-            pnlMapCanvas.Resize += (_, _) => pnlMapCanvas.Invalidate();
+            // Timer đồng hồ thời gian thực ở footer
+            _clockTimer = new System.Windows.Forms.Timer { Interval = 1000 };
+            _clockTimer.Tick += (_, _) => lblFooterTime.Text = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
+            _clockTimer.Start();
 
-            // Bus List
-            pnlBusScroll.Controls.Clear();
-            int by = 0;
-            foreach (var bus in _buses)
-            {
-                var card = MakeBusCard(bus);
-                card.Top = by;
-                pnlBusScroll.Controls.Add(card);
-                by += card.Height + 4;
-            }
-
-            pnlMapWrap.Resize += (_, _) =>
-            {
-                int mapH = (int)(pnlMapWrap.Height * 0.45);
-                pnlMapCanvas.Size = new Size(pnlMapWrap.Width - 20, mapH);
-                pnlBusScroll.Location = new Point(10, 55 + mapH + 8);
-                pnlBusScroll.Size = new Size(pnlMapWrap.Width - 20, pnlMapWrap.Height - 55 - mapH - 20);
-                foreach (Control c in pnlBusScroll.Controls) c.Width = pnlBusScroll.Width - 4;
-            };
-
-            // Footer
-            lblDashboardDate.Text = $"{DateTime.Now:dddd, dd MMMM yyyy}  –  TP. Hồ Chí Minh";
-            lblFooterTime.Text = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
-            var timer = new System.Windows.Forms.Timer { Interval = 1000 };
-            timer.Tick += (_, _) => lblFooterTime.Text = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
-            timer.Start();
+            // Nạp dữ liệu lần đầu
+            ApplySelectedDatePreset();
+            _ = LoadDashboardDataAsync();
         }
 
-        private static Panel MakeStatCard(string title, string value, string sub, IconChar icon, Color color)
+        private static void EnableDoubleBuffering(Control control)
         {
-            var card = new Panel { Size = new Size(275, 95), BackColor = Color.White };
-
-            // left accent bar
-            card.Controls.Add(new Panel { Size = new Size(4, 95), Location = new Point(0, 0), BackColor = color });
-
-            // icon box
-            card.Controls.Add(new IconPictureBox
-            {
-                IconChar = icon, IconColor = color, IconSize = 28,
-                Size = new Size(44, 44), Location = new Point(14, 26),
-                BackColor = Color.FromArgb(color.R, 240, 253, 244)
-            });
-
-            card.Controls.Add(new Label { Text = title, Font = new Font("Segoe UI", 8.5F), ForeColor = Color.FromArgb(100,116,139), Location = new Point(68, 16), AutoSize = true });
-            card.Controls.Add(new Label { Text = value, Font = new Font("Segoe UI", 17F, FontStyle.Bold), ForeColor = color, Location = new Point(66, 34), AutoSize = true });
-            card.Controls.Add(new Label { Text = sub,   Font = new Font("Segoe UI", 7.5F), ForeColor = Color.FromArgb(148,163,184), Location = new Point(68, 72), AutoSize = true });
-
-            card.Paint += (s, e) =>
-            {
-                using var pen = new Pen(Color.FromArgb(226, 232, 240), 1);
-                e.Graphics.DrawRectangle(pen, 0, 0, card.Width - 1, card.Height - 1);
-            };
-            return card;
+            var prop = typeof(Control).GetProperty("DoubleBuffered",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            prop?.SetValue(control, true, null);
         }
 
-        private void Canvas_Paint(object? sender, PaintEventArgs e)
+        private void CboDateFilter_SelectedIndexChanged(object? sender, EventArgs e)
         {
-            if (sender is not Panel canvas || _chartData.Count == 0) return;
+            ApplySelectedDatePreset();
+        }
+
+        private void ApplySelectedDatePreset()
+        {
+            var today = DateTime.Today;
+            switch (cboDateFilter.SelectedIndex)
+            {
+                case 0: // 7 ngày gần nhất
+                    dtpFromDate.Value = today.AddDays(-6);
+                    dtpToDate.Value = today;
+                    dtpFromDate.Enabled = false;
+                    dtpToDate.Enabled = false;
+                    break;
+                case 1: // 30 ngày gần nhất
+                    dtpFromDate.Value = today.AddDays(-29);
+                    dtpToDate.Value = today;
+                    dtpFromDate.Enabled = false;
+                    dtpToDate.Enabled = false;
+                    break;
+                case 2: // Tháng này
+                    dtpFromDate.Value = new DateTime(today.Year, today.Month, 1);
+                    dtpToDate.Value = today;
+                    dtpFromDate.Enabled = false;
+                    dtpToDate.Enabled = false;
+                    break;
+                case 3: // Tùy chọn ngày
+                    dtpFromDate.Enabled = true;
+                    dtpToDate.Enabled = true;
+                    break;
+            }
+        }
+
+        private void BtnToggleMode_Click(object? sender, EventArgs e)
+        {
+            _isGdiMode = !_isGdiMode;
+            if (_isGdiMode)
+            {
+                cartesianChartTime.Visible = false;
+                pnlTimeChartGdi.Visible = true;
+
+                pieChartRoutes.Visible = false;
+                pnlRouteChartGdi.Visible = true;
+
+                btnToggleMode.Text = " Chế độ: GDI+ Canvas (Trực tiếp)";
+                btnToggleMode.IconChar = IconChar.PaintBrush;
+                btnToggleMode.IconColor = Color.FromArgb(59, 130, 246);
+
+                pnlTimeChartGdi.Invalidate();
+                pnlRouteChartGdi.Invalidate();
+            }
+            else
+            {
+                pnlTimeChartGdi.Visible = false;
+                cartesianChartTime.Visible = true;
+
+                pnlRouteChartGdi.Visible = false;
+                pieChartRoutes.Visible = true;
+
+                btnToggleMode.Text = " Chế độ: LiveCharts2 (Hiện đại)";
+                btnToggleMode.IconChar = IconChar.ChartLine;
+                btnToggleMode.IconColor = Color.FromArgb(16, 185, 129);
+
+                RenderLiveChartsTime(_dateRevenueData);
+                RenderLiveChartsRoutes(_routeRevenueData);
+            }
+        }
+
+        // =========================================================================
+        //  DATA LOADING & BINDING (ASYNC - PHẢN ÁNH DỮ LIỆU THẬT CSDL)
+        // =========================================================================
+        public async Task LoadDashboardDataAsync()
+        {
+            try
+            {
+                lblFooterStatus.Text = "⏳ Đang truy vấn và tính toán thống kê giao dịch vé...";
+                lblFooterStatus.ForeColor = Color.FromArgb(59, 130, 246);
+                btnRefresh.Enabled = false;
+                btnApplyFilter.Enabled = false;
+
+                DateTime fromDate = dtpFromDate.Value.Date;
+                DateTime toDate = dtpToDate.Value.Date;
+
+                // Tác vụ nền truy vấn đồng thời qua DashboardService (BLL)
+                var summaryTask = _dashboardService.GetSummaryAsync(fromDate, toDate);
+                var dateRevenueTask = _dashboardService.GetRevenueByDateAsync(fromDate, toDate);
+                var routeRevenueTask = _dashboardService.GetRevenueByRouteAsync(fromDate, toDate);
+                var recentTask = _dashboardService.GetRecentTransactionsAsync(15);
+
+                await Task.WhenAll(summaryTask, dateRevenueTask, routeRevenueTask, recentTask);
+
+                var summary = await summaryTask;
+                _dateRevenueData = await dateRevenueTask;
+                _routeRevenueData = await routeRevenueTask;
+                var recentTransactions = await recentTask;
+
+                // 1. Cập nhật Stat Cards
+                lblStatRevenue.Text = $"{summary.TotalRevenue:N0} VNĐ";
+                lblStatTickets.Text = $"{summary.TotalTickets:N0} vé";
+                lblStatRoutes.Text = $"{summary.ActiveRoutes} tuyến";
+                lblStatVehicles.Text = $"{summary.ActiveVehicles} xe";
+
+                lblCardRevenueSub.Text = $"Hôm nay: {summary.TodayRevenue:N0} VNĐ ({summary.TodayTickets} vé)";
+
+                // 2. Cập nhật Biểu đồ (LiveCharts2 hoặc GDI+)
+                if (!_isGdiMode)
+                {
+                    RenderLiveChartsTime(_dateRevenueData);
+                    RenderLiveChartsRoutes(_routeRevenueData);
+                }
+                else
+                {
+                    pnlTimeChartGdi.Invalidate();
+                    pnlRouteChartGdi.Invalidate();
+                }
+
+                // 3. Cập nhật Bảng giao dịch vé gần đây
+                dgvRecentTransactions.DataSource = recentTransactions;
+
+                // 4. Cập nhật Footer
+                lblFooterStatus.Text = "● Đã đồng bộ dữ liệu giao dịch vé thực tế từ CSDL";
+                lblFooterStatus.ForeColor = Color.FromArgb(16, 185, 129);
+                lblFooterRecords.Text = $"Tổng ghi nhận: {summary.TotalTickets:N0} vé bán thành công | Giá vé TB: {summary.AverageTicketPrice:N0} VNĐ";
+                lblFooterTime.Text = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
+            }
+            catch (Exception ex)
+            {
+                lblFooterStatus.Text = $"⚠️ Lỗi nạp số liệu: {ex.Message}";
+                lblFooterStatus.ForeColor = Color.FromArgb(239, 68, 68);
+            }
+            finally
+            {
+                btnRefresh.Enabled = true;
+                btnApplyFilter.Enabled = true;
+            }
+        }
+
+        // =========================================================================
+        //  LIVECHARTS2 RENDERING (BIỂU ĐỒ HIỆN ĐẠI ANIMATION & HOVER TOOLTIP)
+        // =========================================================================
+        private void RenderLiveChartsTime(List<RevenueByDateDto> data)
+        {
+            if (data == null || data.Count == 0)
+            {
+                cartesianChartTime.Series = Array.Empty<ISeries>();
+                return;
+            }
+
+            var revenues = data.Select(d => (double)d.Revenue).ToArray();
+            var ticketCounts = data.Select(d => (double)d.TicketCount).ToArray();
+            var labels = data.Select(d => d.DateLabel).ToArray();
+
+            cartesianChartTime.Series = new ISeries[]
+            {
+                new ColumnSeries<double>
+                {
+                    Name = "Doanh thu (VNĐ)",
+                    Values = revenues,
+                    Fill = new SolidColorPaint(new SKColor(16, 185, 129)), // Emerald
+                    Stroke = new SolidColorPaint(new SKColor(5, 150, 105), 1.5f),
+                    MaxBarWidth = 36,
+                    Rx = 4,
+                    Ry = 4,
+                    DataLabelsPaint = new SolidColorPaint(new SKColor(30, 41, 59)),
+                    DataLabelsSize = 11,
+                    DataLabelsFormatter = p => p.Model >= 1_000_000
+                        ? $"{p.Model / 1_000_000:0.##} tr"
+                        : (p.Model > 0 ? $"{p.Model / 1_000:0} k" : "0"),
+                    ScalesYAt = 0
+                },
+                new LineSeries<double>
+                {
+                    Name = "Số lượng vé",
+                    Values = ticketCounts,
+                    Stroke = new SolidColorPaint(new SKColor(59, 130, 246), 2.5f), // Blue
+                    GeometryStroke = new SolidColorPaint(new SKColor(59, 130, 246), 2f),
+                    GeometryFill = new SolidColorPaint(SKColors.White),
+                    GeometrySize = 7,
+                    Fill = null,
+                    DataLabelsPaint = new SolidColorPaint(new SKColor(59, 130, 246)),
+                    DataLabelsSize = 11,
+                    DataLabelsFormatter = p => p.Model > 0 ? $"{p.Model} vé" : "",
+                    ScalesYAt = 1
+                }
+            };
+
+            cartesianChartTime.XAxes = new Axis[]
+            {
+                new Axis
+                {
+                    Labels = labels,
+                    LabelsRotation = 15,
+                    TextSize = 11,
+                    LabelsPaint = new SolidColorPaint(new SKColor(100, 116, 139))
+                }
+            };
+
+            cartesianChartTime.YAxes = new Axis[]
+            {
+                new Axis
+                {
+                    Name = "Doanh thu (VNĐ)",
+                    NamePaint = new SolidColorPaint(new SKColor(16, 185, 129)),
+                    NameTextSize = 11,
+                    Labeler = value => value >= 1_000_000 ? $"{value / 1_000_000:0.#} tr" : $"{value:N0}",
+                    LabelsPaint = new SolidColorPaint(new SKColor(100, 116, 139)),
+                    TextSize = 11,
+                    MinLimit = 0
+                },
+                new Axis
+                {
+                    Name = "Số vé",
+                    NamePaint = new SolidColorPaint(new SKColor(59, 130, 246)),
+                    NameTextSize = 11,
+                    Labeler = value => $"{value:N0}",
+                    LabelsPaint = new SolidColorPaint(new SKColor(59, 130, 246)),
+                    TextSize = 11,
+                    Position = LiveChartsCore.Measure.AxisPosition.End,
+                    ShowSeparatorLines = false,
+                    MinLimit = 0
+                }
+            };
+
+            cartesianChartTime.LegendPosition = LiveChartsCore.Measure.LegendPosition.Top;
+            cartesianChartTime.TooltipPosition = LiveChartsCore.Measure.TooltipPosition.Top;
+        }
+
+        private void RenderLiveChartsRoutes(List<RevenueByRouteDto> data)
+        {
+            if (data == null || data.Count == 0)
+            {
+                pieChartRoutes.Series = Array.Empty<ISeries>();
+                return;
+            }
+
+            var palette = new SKColor[]
+            {
+                new(59, 130, 246),   // Blue
+                new(16, 185, 129),   // Emerald
+                new(245, 158, 11),   // Amber
+                new(139, 92, 246),   // Purple
+                new(239, 68, 68),    // Red
+                new(14, 165, 233),   // Sky
+                new(236, 72, 153),   // Pink
+            };
+
+            var seriesList = new List<ISeries>();
+            for (int i = 0; i < data.Count; i++)
+            {
+                var item = data[i];
+                var color = palette[i % palette.Length];
+                seriesList.Add(new PieSeries<double>
+                {
+                    Name = item.RouteName,
+                    Values = new double[] { (double)item.Revenue },
+                    Fill = new SolidColorPaint(color),
+                    Stroke = new SolidColorPaint(SKColors.White, 2),
+                    DataLabelsPaint = new SolidColorPaint(SKColors.White),
+                    DataLabelsSize = 11,
+                    DataLabelsFormatter = p => item.Percentage > 5 ? $"{item.Percentage}%" : "",
+                    ToolTipLabelFormatter = point => $"{item.RouteCode} ({item.RouteName}): {point.Model:N0} VNĐ ({item.Percentage}%)"
+                });
+            }
+
+            pieChartRoutes.Series = seriesList.ToArray();
+            pieChartRoutes.InitialRotation = 45;
+            pieChartRoutes.LegendPosition = LiveChartsCore.Measure.LegendPosition.Bottom;
+            pieChartRoutes.TooltipPosition = LiveChartsCore.Measure.TooltipPosition.Top;
+        }
+
+        // =========================================================================
+        //  GDI+ RENDERING (DOUBLE BUFFERED CANVAS TỰ VẼ - CHỐNG RUNG GIẬT FLICKER)
+        // =========================================================================
+        private void PnlTimeChartGdi_Paint(object? sender, PaintEventArgs e)
+        {
+            if (sender is not Panel canvas || _dateRevenueData == null || _dateRevenueData.Count == 0) return;
 
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            int W = canvas.Width, H = canvas.Height;
-            const int PL = 48, PR = 20, PT = 10, PB = 30;
-            int cw = W - PL - PR, ch = H - PT - PB;
+            int W = canvas.Width;
+            int H = canvas.Height;
+            const int PL = 55, PR = 40, PT = 24, PB = 35;
+            int cw = W - PL - PR;
+            int ch = H - PT - PB;
 
-            float maxVal = _chartData.Max(d => Math.Max(d.Revenue, Math.Max(d.Tickets, d.Cost)));
-            float step = cw / (float)(_chartData.Count - 1);
+            if (cw <= 10 || ch <= 10) return;
 
-            // grid
-            using var gridPen = new Pen(Color.FromArgb(235, 237, 241), 1);
-            for (int i = 0; i <= 4; i++)
+            decimal maxRev = _dateRevenueData.Max(d => d.Revenue);
+            if (maxRev <= 0) maxRev = 1_000_000m;
+
+            int count = _dateRevenueData.Count;
+            float step = cw / (float)Math.Max(1, count);
+            float barWidth = Math.Min(34f, step * 0.6f);
+
+            // 1. Grid ngang & nhãn Y
+            using (var gridPen = new Pen(Color.FromArgb(241, 245, 249), 1))
+            using (var axisFont = new Font("Segoe UI", 7.8F))
+            using (var labelBrush = new SolidBrush(Color.FromArgb(148, 163, 184)))
             {
-                int gy = PT + ch * i / 4;
-                g.DrawLine(gridPen, PL, gy, W - PR, gy);
-                string label = ((int)(maxVal * (4 - i) / 4)).ToString();
-                using var lbr = new SolidBrush(Color.FromArgb(150, 163, 175));
-                g.DrawString(label, new Font("Segoe UI", 7.5F), lbr, 2, gy - 8);
+                for (int i = 0; i <= 4; i++)
+                {
+                    int gy = PT + ch * i / 4;
+                    g.DrawLine(gridPen, PL, gy, W - PR, gy);
+
+                    decimal val = maxRev * (4 - i) / 4m;
+                    string yLabel = val >= 1_000_000m ? $"{val / 1_000_000m:0.#}tr" : $"{val:N0}";
+                    g.DrawString(yLabel, axisFont, labelBrush, 6, gy - 7);
+                }
             }
 
-            // x-axis labels
-            for (int i = 0; i < _chartData.Count; i++)
+            // 2. Cột Doanh Thu (Bars)
+            for (int i = 0; i < count; i++)
             {
-                float gx = PL + step * i;
-                using var lbr = new SolidBrush(Color.FromArgb(150, 163, 175));
-                g.DrawString(_chartData[i].Day, new Font("Segoe UI", 7.5F), lbr, gx - 14, H - PB + 4);
+                var d = _dateRevenueData[i];
+                float cx = PL + step * i + step / 2f;
+                float barHeight = (float)(d.Revenue / maxRev) * ch;
+                float bx = cx - barWidth / 2f;
+                float by = PT + ch - barHeight;
+
+                if (barHeight > 0)
+                {
+                    var rect = new RectangleF(bx, by, barWidth, barHeight);
+                    using var br = new LinearGradientBrush(rect, Color.FromArgb(16, 185, 129), Color.FromArgb(5, 150, 105), LinearGradientMode.Vertical);
+                    g.FillRectangle(br, rect);
+
+                    // Nhãn giá trị trên đầu cột
+                    using var valFont = new Font("Segoe UI", 7.2F, FontStyle.Bold);
+                    using var valBrush = new SolidBrush(Color.FromArgb(30, 41, 59));
+                    string topLabel = d.Revenue >= 1_000_000m ? $"{d.Revenue / 1_000_000m:0.#}tr" : (d.Revenue > 0 ? $"{d.Revenue / 1_000m:0}k" : "0");
+                    var sz = g.MeasureString(topLabel, valFont);
+                    g.DrawString(topLabel, valFont, valBrush, cx - sz.Width / 2f, by - sz.Height - 1);
+                }
+
+                // Nhãn X (Ngày)
+                using var xFont = new Font("Segoe UI", 7.8F);
+                using var xBrush = new SolidBrush(Color.FromArgb(100, 116, 139));
+                var xsz = g.MeasureString(d.DateLabel, xFont);
+                g.DrawString(d.DateLabel, xFont, xBrush, cx - xsz.Width / 2f, H - PB + 6);
             }
 
-            // lines
-            DrawLine(g, _chartData.Select(d => d.Revenue).ToList(), Color.FromArgb(16, 185, 129), PL, PT, step, ch, maxVal);
-            DrawLine(g, _chartData.Select(d => d.Tickets).ToList(), Color.FromArgb(59, 130, 246), PL, PT, step, ch, maxVal);
-            DrawLine(g, _chartData.Select(d => d.Cost).ToList(),    Color.FromArgb(239, 68, 68),  PL, PT, step, ch, maxVal);
-        }
+            // 3. Đường Xu Hướng Số Lượng Vé (Line overlay)
+            int maxTickets = _dateRevenueData.Max(d => d.TicketCount);
+            if (maxTickets <= 0) maxTickets = 1;
 
-        private static void DrawLine(Graphics g, List<float> vals, Color col, int PL, int PT, float step, int ch, float maxVal)
-        {
-            var pts = vals.Select((v, i) => new PointF(PL + step * i, PT + ch - ch * v / maxVal)).ToArray();
-            using var pen = new Pen(col, 2.5f);
-            g.DrawLines(pen, pts);
-            using var br = new SolidBrush(col);
-            foreach (var pt in pts) g.FillEllipse(br, pt.X - 3.5f, pt.Y - 3.5f, 7, 7);
-        }
-
-        // ── Map Panel ─────────────────────────────────────────────────
-        private Panel BuildMapPanel()
-        {
-            var wrap = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, Margin = new Padding(8, 0, 0, 0) };
-
-            // title row
-            wrap.Controls.Add(new Label
+            var points = new List<PointF>();
+            for (int i = 0; i < count; i++)
             {
-                Text = "Real-time GPS — 42 buses online",
-                Font = new Font("Segoe UI", 10.5F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(30, 41, 59),
-                Location = new Point(16, 14), AutoSize = true
-            });
-            wrap.Controls.Add(new Label
-            {
-                Text = "● LIVE",
-                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(16, 185, 129),
-                Location = new Point(16, 36), AutoSize = true
-            });
-
-            // ── Map canvas (top half) ─────────────────────────────
-            var mapCanvas = new Panel
-            {
-                Left = 10, Top = 55,
-                BackColor = Color.FromArgb(235, 242, 248),
-                BorderStyle = BorderStyle.FixedSingle,
-                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
-            };
-            mapCanvas.Paint += (s, e) => PaintMap(e.Graphics, mapCanvas.Width, mapCanvas.Height);
-            wrap.Controls.Add(mapCanvas);
-
-            // ── Bus list (bottom half) ────────────────────────────
-            var scroll = new Panel
-            {
-                Left = 10,
-                BackColor = Color.Transparent,
-                AutoScroll = true,
-                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
-            };
-            int by = 0;
-            foreach (var bus in _buses)
-            {
-                var card = MakeBusCard(bus);
-                card.Top = by;
-                scroll.Controls.Add(card);
-                by += card.Height + 4;
+                var d = _dateRevenueData[i];
+                float cx = PL + step * i + step / 2f;
+                float py = PT + ch - ((float)d.TicketCount / maxTickets) * ch * 0.85f;
+                points.Add(new PointF(cx, py));
             }
-            wrap.Controls.Add(scroll);
 
-            // size both on resize
-            wrap.Resize += (_, _) =>
+            if (points.Count > 1)
             {
-                int mapH = (int)(wrap.Height * 0.45);
-                mapCanvas.Size = new Size(wrap.Width - 20, mapH);
-                scroll.Location = new Point(10, 55 + mapH + 8);
-                scroll.Size = new Size(wrap.Width - 20, wrap.Height - 55 - mapH - 20);
-                // fix bus card widths
-                foreach (Control c in scroll.Controls) c.Width = scroll.Width - 4;
-            };
+                using var linePen = new Pen(Color.FromArgb(59, 130, 246), 2.5f);
+                g.DrawLines(linePen, points.ToArray());
 
-            return wrap;
+                using var nodeFill = new SolidBrush(Color.White);
+                using var nodeBorder = new Pen(Color.FromArgb(59, 130, 246), 2f);
+                foreach (var pt in points)
+                {
+                    g.FillEllipse(nodeFill, pt.X - 3.5f, pt.Y - 3.5f, 7, 7);
+                    g.DrawEllipse(nodeBorder, pt.X - 3.5f, pt.Y - 3.5f, 7, 7);
+                }
+            }
         }
 
-        // ── GDI map drawing ──────────────────────────────────────────
-        private void PaintMap(Graphics g, int W, int H)
+        private void PnlRouteChartGdi_Paint(object? sender, PaintEventArgs e)
         {
+            if (sender is not Panel canvas || _routeRevenueData == null || _routeRevenueData.Count == 0) return;
+
+            var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            // background
-            using (var bg = new LinearGradientBrush(new Rectangle(0, 0, W, H),
-                Color.FromArgb(220, 233, 245), Color.FromArgb(200, 218, 235), LinearGradientMode.Vertical))
-                g.FillRectangle(bg, 0, 0, W, H);
+            int W = canvas.Width;
+            int H = canvas.Height;
 
-            // grid
-            using (var gp = new Pen(Color.FromArgb(170, 185, 200), 1) { DashStyle = DashStyle.Dot })
+            var colors = new Color[]
             {
-                for (int i = 1; i < 5; i++) g.DrawLine(gp, W * i / 5, 0, W * i / 5, H);
-                for (int i = 1; i < 4; i++) g.DrawLine(gp, 0, H * i / 4, W, H * i / 4);
-            }
-
-            // Vietnam outline (simplified, normalized 0-1)
-            PointF[] shape =
-            {
-                new(0.47f, 0.12f), new(0.55f, 0.25f), new(0.60f, 0.42f),
-                new(0.58f, 0.65f), new(0.52f, 0.78f), new(0.44f, 0.80f),
-                new(0.36f, 0.72f), new(0.32f, 0.55f), new(0.34f, 0.32f),
-                new(0.40f, 0.17f)
-            };
-            var shapeAbs = shape.Select(p => new PointF(p.X * W, p.Y * H)).ToArray();
-            using (var sb = new SolidBrush(Color.FromArgb(90, 170, 200, 220))) g.FillPolygon(sb, shapeAbs);
-            using (var op = new Pen(Color.FromArgb(130, 150, 170), 2)) g.DrawPolygon(op, shapeAbs);
-
-            // Cities
-            var cities = new (string name, float lat, float lon, bool big)[]
-            {
-                ("TP.HCM",       10.776f, 106.700f, true),
-                ("Bình Dương",   11.000f, 106.620f, false),
-                ("Long An",      10.690f, 106.240f, false),
-                ("Vũng Tàu",     10.350f, 107.085f, false),
-                ("Cần Thơ",      10.035f, 105.788f, false),
+                Color.FromArgb(59, 130, 246),   // Blue
+                Color.FromArgb(16, 185, 129),   // Emerald
+                Color.FromArgb(245, 158, 11),   // Amber
+                Color.FromArgb(139, 92, 246),   // Purple
+                Color.FromArgb(239, 68, 68),    // Red
+                Color.FromArgb(14, 165, 233),   // Sky
             };
 
-            const float LAT0 = 9.8f, LAT1 = 11.2f, LON0 = 105.4f, LON1 = 107.3f;
-            PointF Proj(float lat, float lon) => new PointF(
-                (lon - LON0) / (LON1 - LON0) * W,
-                (1f - (lat - LAT0) / (LAT1 - LAT0)) * H);
+            int diameter = Math.Min((int)(W * 0.48), (int)(H * 0.78));
+            if (diameter <= 30) return;
 
-            // route lines
-            using (var rp = new Pen(Color.FromArgb(120, 100, 140, 200), 2) { DashStyle = DashStyle.Dash })
+            int pieX = 20;
+            int pieY = (H - diameter) / 2;
+            var pieRect = new Rectangle(pieX, pieY, diameter, diameter);
+
+            decimal total = _routeRevenueData.Sum(r => r.Revenue);
+            float startAngle = 0;
+
+            for (int i = 0; i < _routeRevenueData.Count; i++)
             {
-                var hcm = Proj(10.776f, 106.700f);
-                foreach (var c in cities.Where(c => !c.big))
-                    g.DrawLine(rp, hcm, Proj(c.lat, c.lon));
+                var r = _routeRevenueData[i];
+                float sweepAngle = total > 0 ? (float)(r.Revenue / total) * 360f : 360f / _routeRevenueData.Count;
+                var col = colors[i % colors.Length];
+
+                using (var br = new SolidBrush(col))
+                {
+                    g.FillPie(br, pieRect, startAngle, sweepAngle);
+                }
+                using (var pen = new Pen(Color.White, 2))
+                {
+                    g.DrawPie(pen, pieRect, startAngle, sweepAngle);
+                }
+
+                startAngle += sweepAngle;
             }
 
-            foreach (var (name, lat, lon, big) in cities)
+            // Khoét lỗ tâm tạo hiệu ứng Donut Chart
+            int holeDiameter = (int)(diameter * 0.52);
+            int holeX = pieX + (diameter - holeDiameter) / 2;
+            int holeY = pieY + (diameter - holeDiameter) / 2;
+            using (var bgBr = new SolidBrush(Color.White))
             {
-                var pt = Proj(lat, lon);
-                int r = big ? 8 : 5;
-                var col = big ? Color.FromArgb(59, 130, 246) : Color.FromArgb(100, 116, 139);
-                using (var sb = new SolidBrush(col)) g.FillEllipse(sb, pt.X - r, pt.Y - r, r * 2, r * 2);
-                using (var wp = new Pen(Color.White, 2)) g.DrawEllipse(wp, pt.X - r, pt.Y - r, r * 2, r * 2);
-                using (var tf = new Font("Segoe UI", big ? 8f : 7.5f, big ? FontStyle.Bold : FontStyle.Regular))
-                using (var tb = new SolidBrush(Color.FromArgb(30, 41, 59)))
-                {
-                    var sz = g.MeasureString(name, tf);
-                    using (var bgb = new SolidBrush(Color.FromArgb(200, 255, 255, 255)))
-                        g.FillRectangle(bgb, pt.X - sz.Width / 2 - 2, pt.Y + r + 2, sz.Width + 4, sz.Height);
-                    g.DrawString(name, tf, tb, pt.X - sz.Width / 2, pt.Y + r + 2);
-                }
+                g.FillEllipse(bgBr, holeX, holeY, holeDiameter, holeDiameter);
             }
 
-            // Bus markers
-            foreach (var bus in _buses)
+            // Text tổng doanh thu ở tâm Donut
+            using (var tf1 = new Font("Segoe UI", 7.5F, FontStyle.Bold))
+            using (var tf2 = new Font("Segoe UI", 8.8F, FontStyle.Bold))
+            using (var tb1 = new SolidBrush(Color.FromArgb(100, 116, 139)))
+            using (var tb2 = new SolidBrush(Color.FromArgb(15, 23, 42)))
             {
-                var pt = Proj((float)bus.Lat, (float)bus.Lon);
-                Color bc = bus.State switch
-                {
-                    BusState.Running => Color.FromArgb(16, 185, 129),
-                    BusState.Stopped => Color.FromArgb(245, 158, 11),
-                    BusState.Warning => Color.FromArgb(239, 68, 68),
-                    _ => Color.FromArgb(148, 163, 184)
-                };
+                var s1 = "TỔNG CỘNG";
+                string s2 = total >= 1_000_000m ? $"{total / 1_000_000m:0.#} tr" : $"{total:N0}";
+                var sz1 = g.MeasureString(s1, tf1);
+                var sz2 = g.MeasureString(s2, tf2);
 
-                // pulse ring
-                using (var pp = new Pen(Color.FromArgb(80, bc), 2)) g.DrawEllipse(pp, pt.X - 14, pt.Y - 14, 28, 28);
-                // fill
-                using (var sb = new SolidBrush(bc)) g.FillEllipse(sb, pt.X - 10, pt.Y - 10, 20, 20);
-                // border
-                using (var wp = new Pen(Color.White, 2)) g.DrawEllipse(wp, pt.X - 10, pt.Y - 10, 20, 20);
-                // label
-                using (var tf = new Font("Segoe UI", 7f, FontStyle.Bold))
-                using (var tb = new SolidBrush(Color.White))
-                {
-                    var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    g.DrawString(bus.Plate[^2..], tf, tb, pt.X, pt.Y, sf);
-                }
-                // plate below marker
-                using (var tf = new Font("Segoe UI", 6.5f))
-                {
-                    var sz = g.MeasureString(bus.Plate, tf);
-                    using (var bgb = new SolidBrush(Color.FromArgb(200, 30, 41, 59)))
-                        g.FillRectangle(bgb, pt.X - sz.Width / 2 - 2, pt.Y + 12, sz.Width + 4, sz.Height);
-                    using (var tb = new SolidBrush(Color.White))
-                        g.DrawString(bus.Plate, tf, tb, pt.X - sz.Width / 2, pt.Y + 12);
-                }
+                g.DrawString(s1, tf1, tb1, holeX + (holeDiameter - sz1.Width) / 2f, holeY + holeDiameter / 2f - sz1.Height);
+                g.DrawString(s2, tf2, tb2, holeX + (holeDiameter - sz2.Width) / 2f, holeY + holeDiameter / 2f + 1);
             }
 
-            // coordinates label
-            using (var tf = new Font("Segoe UI", 7f))
-            using (var tb = new SolidBrush(Color.FromArgb(100, 116, 139)))
+            // Legend bên phải
+            int legX = pieX + diameter + 20;
+            int legY = 16;
+            using var nameFont = new Font("Segoe UI", 8.2F, FontStyle.Bold);
+            using var subFont = new Font("Segoe UI", 7.8F);
+            using var nameBrush = new SolidBrush(Color.FromArgb(30, 41, 59));
+            using var subBrush = new SolidBrush(Color.FromArgb(100, 116, 139));
+
+            for (int i = 0; i < Math.Min(6, _routeRevenueData.Count); i++)
             {
-                g.DrawString($"{LON0}°E", tf, tb, 2, H - 14);
-                g.DrawString($"{LON1}°E", tf, tb, W - 40, H - 14);
-                g.DrawString($"{LAT1}°N", tf, tb, 2, 2);
-                g.DrawString($"{LAT0}°N", tf, tb, 2, H - 24);
+                var r = _routeRevenueData[i];
+                var col = colors[i % colors.Length];
+
+                using (var sb = new SolidBrush(col))
+                {
+                    g.FillEllipse(sb, legX, legY + 3, 10, 10);
+                }
+
+                string line1 = $"{r.RouteCode} ({r.Percentage:0.#}%)";
+                string line2 = $"{r.Revenue:N0} VNĐ ({r.TicketCount} vé)";
+
+                g.DrawString(line1, nameFont, nameBrush, legX + 16, legY);
+                g.DrawString(line2, subFont, subBrush, legX + 16, legY + 16);
+
+                legY += 36;
             }
         }
 
-        // ── Bus card ─────────────────────────────────────────────────
-        private static Panel MakeBusCard(BusInfo bus)
+        protected override void OnHandleDestroyed(EventArgs e)
         {
-            Color col = bus.State switch
-            {
-                BusState.Running => Color.FromArgb(16, 185, 129),
-                BusState.Stopped => Color.FromArgb(245, 158, 11),
-                BusState.Warning => Color.FromArgb(239, 68, 68),
-                _ => Color.FromArgb(148, 163, 184)
-            };
-
-            var card = new Panel { Height = 62, BackColor = Color.White };
-            card.Paint += (_, e) =>
-            {
-                using var p = new Pen(Color.FromArgb(226, 232, 240));
-                e.Graphics.DrawRectangle(p, 0, 0, card.Width - 1, card.Height - 1);
-            };
-
-            // status dot
-            card.Controls.Add(new Panel { Size = new Size(8, 8), Location = new Point(10, 12), BackColor = col });
-
-            card.Controls.Add(new Label { Text = bus.Plate,  Font = new Font("Segoe UI", 9.5f, FontStyle.Bold), ForeColor = Color.FromArgb(30,41,59), Location = new Point(26, 8),  AutoSize = true });
-            card.Controls.Add(new Label { Text = $"{bus.Route} · {bus.Name}", Font = new Font("Segoe UI", 8f), ForeColor = Color.FromArgb(100,116,139), Location = new Point(26, 28), AutoSize = true });
-            card.Controls.Add(new Label
-            {
-                Text = $"📍 {bus.Lat:F3}°, {bus.Lon:F3}°",
-                Font = new Font("Segoe UI", 7.5f), ForeColor = Color.FromArgb(148,163,184),
-                Location = new Point(26, 45), AutoSize = true
-            });
-            card.Controls.Add(new Label
-            {
-                Text = $"{bus.Speed} km/h",
-                Font = new Font("Segoe UI", 9f, FontStyle.Bold), ForeColor = col,
-                BackColor = Color.FromArgb(245, 247, 250),
-                TextAlign = ContentAlignment.MiddleCenter,
-                Location = new Point(210, 20), Size = new Size(70, 24)
-            });
-
-            return card;
+            _clockTimer?.Stop();
+            _clockTimer?.Dispose();
+            base.OnHandleDestroyed(e);
         }
-
-
-
-        // ═══════════════════════════════════════════════════════════════
-        //  DATA MODELS
-        // ═══════════════════════════════════════════════════════════════
-        private record DayData(string Day, float Revenue, float Tickets, float Cost);
-
-        private record BusInfo(string Plate, string Route, string Name, int Speed, double Lat, double Lon, BusState State);
-
-        private enum BusState { Running, Stopped, Warning, Offline }
     }
 }

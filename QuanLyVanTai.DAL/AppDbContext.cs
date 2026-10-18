@@ -426,12 +426,19 @@ namespace QuanLyVanTai.DAL
                     if (entry.State == EntityState.Added)
                     {
                         auditable.CreatedAt = now;
-                        auditable.CreatedBy = currentUser;
+                        if (string.IsNullOrWhiteSpace(auditable.CreatedBy))
+                        {
+                            auditable.CreatedBy = currentUser;
+                        }
                     }
                     else if (entry.State == EntityState.Modified)
                     {
                         auditable.UpdatedAt = now;
-                        auditable.UpdatedBy = currentUser;
+                        var updatedByProp = entry.Property(nameof(IAuditable.UpdatedBy));
+                        if (!updatedByProp.IsModified || string.IsNullOrWhiteSpace(auditable.UpdatedBy))
+                        {
+                            auditable.UpdatedBy = currentUser;
+                        }
                     }
                 }
 
