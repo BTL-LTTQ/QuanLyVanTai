@@ -86,7 +86,7 @@ namespace QuanLyVanTai.UI.Forms
             lblHeaderSub.ForeColor = Color.FromArgb(219, 234, 254);
             lblHeaderSub.Location = new Point(20, 42);
             lblHeaderSub.Name = "lblHeaderSub";
-            lblHeaderSub.Size = new Size(462, 20);
+            lblHeaderSub.Size = new Size(477, 20);
             lblHeaderSub.TabIndex = 1;
             lblHeaderSub.Text = "Hỗ trợ quét mã QR hoặc chuyển hướng sang cổng thanh toán Sandbox";
             // 
@@ -97,7 +97,7 @@ namespace QuanLyVanTai.UI.Forms
             lblHeaderTitle.ForeColor = Color.White;
             lblHeaderTitle.Location = new Point(18, 11);
             lblHeaderTitle.Name = "lblHeaderTitle";
-            lblHeaderTitle.Size = new Size(480, 31);
+            lblHeaderTitle.Size = new Size(499, 31);
             lblHeaderTitle.TabIndex = 0;
             lblHeaderTitle.Text = "CỔNG THANH TOÁN TRỰC TUYẾN SANDBOX";
             // 
@@ -122,7 +122,7 @@ namespace QuanLyVanTai.UI.Forms
             splitBody.Panel2.Padding = new Padding(16);
             splitBody.Panel2MinSize = 360;
             splitBody.Size = new Size(884, 535);
-            splitBody.SplitterDistance = 490;
+            splitBody.SplitterDistance = 472;
             splitBody.SplitterWidth = 6;
             splitBody.TabIndex = 1;
             // 
@@ -134,7 +134,7 @@ namespace QuanLyVanTai.UI.Forms
             pnlLeftContent.Dock = DockStyle.Fill;
             pnlLeftContent.Location = new Point(16, 16);
             pnlLeftContent.Name = "pnlLeftContent";
-            pnlLeftContent.Size = new Size(458, 503);
+            pnlLeftContent.Size = new Size(440, 503);
             pnlLeftContent.TabIndex = 0;
             // 
             // flpActions
@@ -148,7 +148,7 @@ namespace QuanLyVanTai.UI.Forms
             flpActions.Location = new Point(0, 282);
             flpActions.Name = "flpActions";
             flpActions.Padding = new Padding(0, 10, 0, 0);
-            flpActions.Size = new Size(458, 210);
+            flpActions.Size = new Size(440, 210);
             flpActions.TabIndex = 1;
             // 
             // btnMoTrinhDuyet
@@ -168,7 +168,7 @@ namespace QuanLyVanTai.UI.Forms
             btnMoTrinhDuyet.Margin = new Padding(3, 4, 3, 8);
             btnMoTrinhDuyet.Name = "btnMoTrinhDuyet";
             btnMoTrinhDuyet.Padding = new Padding(12, 0, 0, 0);
-            btnMoTrinhDuyet.Size = new Size(440, 42);
+            btnMoTrinhDuyet.Size = new Size(436, 42);
             btnMoTrinhDuyet.TabIndex = 0;
             btnMoTrinhDuyet.Text = "  Mở Cổng Thanh Toán Trong Trình Duyệt";
             btnMoTrinhDuyet.TextAlign = ContentAlignment.MiddleLeft;
@@ -192,7 +192,7 @@ namespace QuanLyVanTai.UI.Forms
             btnGiaLapThanhCong.Margin = new Padding(3, 4, 3, 6);
             btnGiaLapThanhCong.Name = "btnGiaLapThanhCong";
             btnGiaLapThanhCong.Padding = new Padding(12, 0, 0, 0);
-            btnGiaLapThanhCong.Size = new Size(440, 38);
+            btnGiaLapThanhCong.Size = new Size(436, 38);
             btnGiaLapThanhCong.TabIndex = 1;
             btnGiaLapThanhCong.Text = "  ⚡ Giả Lập Quét Mã / Thanh Toán Thành Công (Mã 00)";
             btnGiaLapThanhCong.TextAlign = ContentAlignment.MiddleLeft;
@@ -207,7 +207,7 @@ namespace QuanLyVanTai.UI.Forms
             btnGiaLapThatBai.FlatStyle = FlatStyle.Flat;
             btnGiaLapThatBai.Font = new Font("Segoe UI", 9F);
             btnGiaLapThatBai.ForeColor = Color.White;
-            btnGiaLapThatBai.IconChar = FontAwesome.Sharp.IconChar.TriangleExclamation;
+            btnGiaLapThatBai.IconChar = FontAwesome.Sharp.IconChar.Warning;
             btnGiaLapThatBai.IconColor = Color.White;
             btnGiaLapThatBai.IconFont = FontAwesome.Sharp.IconFont.Auto;
             btnGiaLapThatBai.IconSize = 18;
@@ -216,7 +216,7 @@ namespace QuanLyVanTai.UI.Forms
             btnGiaLapThatBai.Margin = new Padding(3, 4, 3, 6);
             btnGiaLapThatBai.Name = "btnGiaLapThatBai";
             btnGiaLapThatBai.Padding = new Padding(12, 0, 0, 0);
-            btnGiaLapThatBai.Size = new Size(440, 36);
+            btnGiaLapThatBai.Size = new Size(436, 36);
             btnGiaLapThatBai.TabIndex = 2;
             btnGiaLapThatBai.Text = "  ⚠️ Giả Lập Khách Hủy / Thanh Toán Thất Bại";
             btnGiaLapThatBai.TextAlign = ContentAlignment.MiddleLeft;
@@ -231,7 +231,7 @@ namespace QuanLyVanTai.UI.Forms
             btnHuyGiaoDich.FlatStyle = FlatStyle.Flat;
             btnHuyGiaoDich.Font = new Font("Segoe UI", 9F);
             btnHuyGiaoDich.ForeColor = Color.FromArgb(71, 85, 105);
-            btnHuyGiaoDich.IconChar = FontAwesome.Sharp.IconChar.Xmark;
+            btnHuyGiaoDich.IconChar = FontAwesome.Sharp.IconChar.Close;
             btnHuyGiaoDich.IconColor = Color.FromArgb(71, 85, 105);
             btnHuyGiaoDich.IconFont = FontAwesome.Sharp.IconFont.Auto;
             btnHuyGiaoDich.IconSize = 16;
@@ -257,7 +257,7 @@ namespace QuanLyVanTai.UI.Forms
             grpDonHang.Location = new Point(0, 0);
             grpDonHang.Name = "grpDonHang";
             grpDonHang.Padding = new Padding(12);
-            grpDonHang.Size = new Size(458, 282);
+            grpDonHang.Size = new Size(440, 282);
             grpDonHang.TabIndex = 0;
             grpDonHang.TabStop = false;
             grpDonHang.Text = " Thông Tin Đơn Đặt Vé ";
@@ -292,7 +292,7 @@ namespace QuanLyVanTai.UI.Forms
             tlpDonHang.RowStyles.Add(new RowStyle(SizeType.Absolute, 36F));
             tlpDonHang.RowStyles.Add(new RowStyle(SizeType.Absolute, 38F));
             tlpDonHang.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
-            tlpDonHang.Size = new Size(434, 236);
+            tlpDonHang.Size = new Size(416, 236);
             tlpDonHang.TabIndex = 0;
             // 
             // lblMaDonTitle
@@ -303,7 +303,7 @@ namespace QuanLyVanTai.UI.Forms
             lblMaDonTitle.ForeColor = Color.FromArgb(71, 85, 105);
             lblMaDonTitle.Location = new Point(3, 6);
             lblMaDonTitle.Name = "lblMaDonTitle";
-            lblMaDonTitle.Size = new Size(65, 20);
+            lblMaDonTitle.Size = new Size(63, 20);
             lblMaDonTitle.TabIndex = 0;
             lblMaDonTitle.Text = "Mã đơn:";
             // 
@@ -315,7 +315,7 @@ namespace QuanLyVanTai.UI.Forms
             lblMaDon.ForeColor = Color.FromArgb(15, 23, 42);
             lblMaDon.Location = new Point(133, 5);
             lblMaDon.Name = "lblMaDon";
-            lblMaDon.Size = new Size(111, 21);
+            lblMaDon.Size = new Size(119, 21);
             lblMaDon.TabIndex = 1;
             lblMaDon.Text = "TK20261017001";
             // 
@@ -339,7 +339,7 @@ namespace QuanLyVanTai.UI.Forms
             lblHanhKhach.ForeColor = Color.FromArgb(30, 41, 59);
             lblHanhKhach.Location = new Point(133, 37);
             lblHanhKhach.Name = "lblHanhKhach";
-            lblHanhKhach.Size = new Size(207, 21);
+            lblHanhKhach.Size = new Size(222, 21);
             lblHanhKhach.TabIndex = 3;
             lblHanhKhach.Text = "Nguyễn Văn An - 0912345678";
             // 
@@ -363,7 +363,7 @@ namespace QuanLyVanTai.UI.Forms
             lblTuyen.ForeColor = Color.FromArgb(30, 41, 59);
             lblTuyen.Location = new Point(133, 69);
             lblTuyen.Name = "lblTuyen";
-            lblTuyen.Size = new Size(130, 21);
+            lblTuyen.Size = new Size(133, 21);
             lblTuyen.TabIndex = 5;
             lblTuyen.Text = "Hà Nội - Đà Nẵng";
             // 
@@ -387,7 +387,7 @@ namespace QuanLyVanTai.UI.Forms
             lblGhe.ForeColor = Color.FromArgb(37, 99, 235);
             lblGhe.Location = new Point(133, 101);
             lblGhe.Name = "lblGhe";
-            lblGhe.Size = new Size(77, 21);
+            lblGhe.Size = new Size(73, 21);
             lblGhe.TabIndex = 7;
             lblGhe.Text = "A01, A02";
             // 
@@ -399,7 +399,7 @@ namespace QuanLyVanTai.UI.Forms
             lblCongTitle.ForeColor = Color.FromArgb(71, 85, 105);
             lblCongTitle.Location = new Point(3, 136);
             lblCongTitle.Name = "lblCongTitle";
-            lblCongTitle.Size = new Size(89, 20);
+            lblCongTitle.Size = new Size(72, 20);
             lblCongTitle.TabIndex = 8;
             lblCongTitle.Text = "Cổng GD:";
             // 
@@ -411,7 +411,7 @@ namespace QuanLyVanTai.UI.Forms
             cboChonCong.FormattingEnabled = true;
             cboChonCong.Location = new Point(133, 131);
             cboChonCong.Name = "cboChonCong";
-            cboChonCong.Size = new Size(298, 28);
+            cboChonCong.Size = new Size(280, 28);
             cboChonCong.TabIndex = 9;
             // 
             // lblTongTienTitle
@@ -420,9 +420,9 @@ namespace QuanLyVanTai.UI.Forms
             lblTongTienTitle.AutoSize = true;
             lblTongTienTitle.Font = new Font("Segoe UI Semibold", 10.5F, FontStyle.Bold);
             lblTongTienTitle.ForeColor = Color.FromArgb(15, 23, 42);
-            lblTongTienTitle.Location = new Point(3, 172);
+            lblTongTienTitle.Location = new Point(3, 170);
             lblTongTienTitle.Name = "lblTongTienTitle";
-            lblTongTienTitle.Size = new Size(111, 25);
+            lblTongTienTitle.Size = new Size(109, 25);
             lblTongTienTitle.TabIndex = 10;
             lblTongTienTitle.Text = "Thanh toán:";
             // 
@@ -432,9 +432,9 @@ namespace QuanLyVanTai.UI.Forms
             lblTongTien.AutoSize = true;
             lblTongTien.Font = new Font("Segoe UI", 13.5F, FontStyle.Bold);
             lblTongTien.ForeColor = Color.FromArgb(16, 185, 129);
-            lblTongTien.Location = new Point(133, 169);
+            lblTongTien.Location = new Point(133, 167);
             lblTongTien.Name = "lblTongTien";
-            lblTongTien.Size = new Size(150, 31);
+            lblTongTien.Size = new Size(154, 31);
             lblTongTien.TabIndex = 11;
             lblTongTien.Text = "500,000 VNĐ";
             // 
@@ -444,7 +444,7 @@ namespace QuanLyVanTai.UI.Forms
             lblDemNguocTitle.AutoSize = true;
             lblDemNguocTitle.Font = new Font("Segoe UI", 9F);
             lblDemNguocTitle.ForeColor = Color.FromArgb(71, 85, 105);
-            lblDemNguocTitle.Location = new Point(3, 208);
+            lblDemNguocTitle.Location = new Point(3, 209);
             lblDemNguocTitle.Name = "lblDemNguocTitle";
             lblDemNguocTitle.Size = new Size(119, 20);
             lblDemNguocTitle.TabIndex = 12;
@@ -456,9 +456,9 @@ namespace QuanLyVanTai.UI.Forms
             lblDemNguoc.AutoSize = true;
             lblDemNguoc.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
             lblDemNguoc.ForeColor = Color.FromArgb(220, 38, 38);
-            lblDemNguoc.Location = new Point(133, 206);
+            lblDemNguoc.Location = new Point(133, 207);
             lblDemNguoc.Name = "lblDemNguoc";
-            lblDemNguoc.Size = new Size(49, 23);
+            lblDemNguoc.Size = new Size(48, 23);
             lblDemNguoc.TabIndex = 13;
             lblDemNguoc.Text = "15:00";
             // 
@@ -468,7 +468,7 @@ namespace QuanLyVanTai.UI.Forms
             pnlRightContent.Dock = DockStyle.Fill;
             pnlRightContent.Location = new Point(16, 16);
             pnlRightContent.Name = "pnlRightContent";
-            pnlRightContent.Size = new Size(356, 503);
+            pnlRightContent.Size = new Size(374, 503);
             pnlRightContent.TabIndex = 0;
             // 
             // grpQrCode
@@ -484,7 +484,7 @@ namespace QuanLyVanTai.UI.Forms
             grpQrCode.Location = new Point(0, 0);
             grpQrCode.Name = "grpQrCode";
             grpQrCode.Padding = new Padding(14);
-            grpQrCode.Size = new Size(356, 503);
+            grpQrCode.Size = new Size(374, 503);
             grpQrCode.TabIndex = 0;
             grpQrCode.TabStop = false;
             grpQrCode.Text = " Mã QR Thanh Toán Trực Tuyến ";
@@ -495,7 +495,7 @@ namespace QuanLyVanTai.UI.Forms
             pnlQrWrapper.BackColor = Color.FromArgb(248, 250, 252);
             pnlQrWrapper.BorderStyle = BorderStyle.FixedSingle;
             pnlQrWrapper.Controls.Add(picQrCode);
-            pnlQrWrapper.Location = new Point(63, 34);
+            pnlQrWrapper.Location = new Point(72, 34);
             pnlQrWrapper.Name = "pnlQrWrapper";
             pnlQrWrapper.Padding = new Padding(8);
             pnlQrWrapper.Size = new Size(230, 230);
@@ -519,7 +519,7 @@ namespace QuanLyVanTai.UI.Forms
             lblHuongDanQuet.ForeColor = Color.FromArgb(71, 85, 105);
             lblHuongDanQuet.Location = new Point(14, 275);
             lblHuongDanQuet.Name = "lblHuongDanQuet";
-            lblHuongDanQuet.Size = new Size(328, 92);
+            lblHuongDanQuet.Size = new Size(346, 92);
             lblHuongDanQuet.TabIndex = 1;
             lblHuongDanQuet.Text = "Quét mã QR bằng App Ngân hàng (VNPAY-QR) hoặc Ví MoMo để tiến hành thanh toán.\r\n\r\nSau khi thanh toán thành công, hệ thống sẽ tự động cập nhật ngay lập tức.";
             lblHuongDanQuet.TextAlign = ContentAlignment.MiddleCenter;
@@ -531,7 +531,7 @@ namespace QuanLyVanTai.UI.Forms
             lblTrangThai.ForeColor = Color.FromArgb(37, 99, 235);
             lblTrangThai.Location = new Point(14, 367);
             lblTrangThai.Name = "lblTrangThai";
-            lblTrangThai.Size = new Size(328, 96);
+            lblTrangThai.Size = new Size(346, 96);
             lblTrangThai.TabIndex = 2;
             lblTrangThai.Text = "⏳ Đang kết nối cổng và chờ giao dịch...";
             lblTrangThai.TextAlign = ContentAlignment.MiddleCenter;
@@ -542,7 +542,7 @@ namespace QuanLyVanTai.UI.Forms
             prgTienTrinh.Location = new Point(14, 463);
             prgTienTrinh.MarqueeAnimationSpeed = 30;
             prgTienTrinh.Name = "prgTienTrinh";
-            prgTienTrinh.Size = new Size(328, 26);
+            prgTienTrinh.Size = new Size(346, 26);
             prgTienTrinh.Style = ProgressBarStyle.Marquee;
             prgTienTrinh.TabIndex = 3;
             // 

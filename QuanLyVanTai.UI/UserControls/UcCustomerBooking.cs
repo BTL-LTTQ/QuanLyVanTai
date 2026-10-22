@@ -16,6 +16,7 @@ namespace QuanLyVanTai.UI.UserControls
         private readonly SeatMapService _seatMapService = new();
         private readonly CustomerBookingService _bookingService = new();
         private readonly ScheduleService _scheduleService = new();
+        private readonly EmailService _emailService = new();
 
         private List<Route> _routes = new();
         private VehicleSeatMapDto? _currentSeatMap;
@@ -78,6 +79,10 @@ namespace QuanLyVanTai.UI.UserControls
                 {
                     txtSoDienThoai.Text = user.PhoneNumber;
                 }
+                if (!string.IsNullOrWhiteSpace(user.Email) && string.IsNullOrWhiteSpace(txtEmail.Text))
+                {
+                    txtEmail.Text = user.Email;
+                }
             }
         }
 
@@ -118,9 +123,11 @@ namespace QuanLyVanTai.UI.UserControls
             // Validation qua ErrorProvider (Chương 4)
             txtTenKhachHang.Validating += TxtTenKhachHang_Validating;
             txtSoDienThoai.Validating += TxtSoDienThoai_Validating;
+            txtEmail.Validating += TxtEmail_Validating;
 
             txtTenKhachHang.KeyDown += OnInputEnterNextControl;
             txtSoDienThoai.KeyDown += OnInputEnterNextControl;
+            txtEmail.KeyDown += OnInputEnterNextControl;
             txtGhiChu.KeyDown += OnInputEnterNextControl;
         }
 
@@ -373,13 +380,35 @@ namespace QuanLyVanTai.UI.UserControls
             }
         }
 
+        private void TxtEmail_Validating(object? sender, CancelEventArgs e)
+        {
+            string email = txtEmail.Text.Trim();
+            if (!string.IsNullOrEmpty(email))
+            {
+                if (!Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+                {
+                    errorProviderMain.SetError(txtEmail, "Địa chỉ email không đúng định dạng (Ví dụ: khachhang@gmail.com)!");
+                }
+                else
+                {
+                    errorProviderMain.SetError(txtEmail, string.Empty);
+                }
+            }
+            else
+            {
+                errorProviderMain.SetError(txtEmail, string.Empty);
+            }
+        }
+
         private bool ValidateAllInputs()
         {
             TxtTenKhachHang_Validating(txtTenKhachHang, new CancelEventArgs());
             TxtSoDienThoai_Validating(txtSoDienThoai, new CancelEventArgs());
+            TxtEmail_Validating(txtEmail, new CancelEventArgs());
 
             if (!string.IsNullOrEmpty(errorProviderMain.GetError(txtTenKhachHang)) ||
-                !string.IsNullOrEmpty(errorProviderMain.GetError(txtSoDienThoai)))
+                !string.IsNullOrEmpty(errorProviderMain.GetError(txtSoDienThoai)) ||
+                !string.IsNullOrEmpty(errorProviderMain.GetError(txtEmail)))
             {
                 return false;
             }
@@ -456,6 +485,7 @@ namespace QuanLyVanTai.UI.UserControls
                     DepartureTime = trip.DepartureTime,
                     CustomerName = txtTenKhachHang.Text.Trim(),
                     CustomerPhone = txtSoDienThoai.Text.Trim(),
+                    CustomerEmail = string.IsNullOrWhiteSpace(txtEmail.Text) ? null : txtEmail.Text.Trim(),
                     CustomerNotes = txtGhiChu.Text.Trim(),
                     SelectedSeats = seatCodes,
                     PromotionCode = txtMaKhuyenMai.Text.Trim(),
@@ -479,8 +509,27 @@ namespace QuanLyVanTai.UI.UserControls
                     SetStatus(result.Message, false);
                     await LoadSeatMapForSelectedTripAsync();
 
+                    string emailNotice = string.Empty;
+                    string customerEmail = txtEmail.Text.Trim();
+                    if (!string.IsNullOrWhiteSpace(customerEmail) && _emailService.Settings.EnableAutoSendOnPayment)
+                    {
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                var receipts = await _bookingService.GetTicketReceiptsAsync(result.CreatedTicketIds);
+                                await _emailService.SendTicketEmailAsync(customerEmail, txtTenKhachHang.Text.Trim(), receipts);
+                            }
+                            catch (Exception ex)
+                            {
+                                Serilog.Log.Error(ex, "[UcCustomerBooking] Lỗi tự động gửi email vé tiền mặt");
+                            }
+                        });
+                        emailNotice = $"\n\n📧 Hệ thống đã tự động gửi vé điện tử (kèm tệp PDF) tới email:\n{customerEmail}";
+                    }
+
                     var ask = MessageBox.Show(
-                        $"{result.Message}\n\nVé của quý khách đã được lưu vào hệ thống thành công!\nQuý khách có muốn chuyển ngay sang màn hình 'Vé của tôi' để xem và In vé không?",
+                        $"{result.Message}\n\nVé của quý khách đã được lưu vào hệ thống thành công!{emailNotice}\n\nQuý khách có muốn chuyển ngay sang màn hình 'Vé của tôi' để xem và In vé không?",
                         "Đặt Vé Thành Công",
                         MessageBoxButtons.YesNo,
                         MessageBoxIcon.Information);
@@ -504,7 +553,8 @@ namespace QuanLyVanTai.UI.UserControls
                     customerName: txtTenKhachHang.Text.Trim(),
                     customerPhone: txtSoDienThoai.Text.Trim(),
                     routeName: $"{cboTuyenXe.Text} ({trip.DepartureTime:dd/MM/yyyy HH:mm})",
-                    seatNumbers: string.Join(", ", seatCodes)
+                    seatNumbers: string.Join(", ", seatCodes),
+                    customerEmail: string.IsNullOrWhiteSpace(txtEmail.Text) ? null : txtEmail.Text.Trim()
                 );
 
                 var payDialogResult = paymentForm.ShowDialog(this.FindForm());

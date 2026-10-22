@@ -28,7 +28,7 @@ namespace Core.Configs
             button.ForeColor = Color.White;
             button.IconChar = icon;
             button.IconColor = iconColor;
-            button.IconSize = 18;
+            //button.IconSize = 18;
             button.Font = ButtonFont;
             button.FlatStyle = FlatStyle.Flat;
             button.FlatAppearance.BorderSize = 0;
@@ -37,7 +37,7 @@ namespace Core.Configs
             button.ImageAlign = ContentAlignment.MiddleCenter;
             button.TextAlign = ContentAlignment.MiddleCenter;
             button.Padding = new Padding(4, 0, 4, 0);
-            button.Size = new Size(110, 36);
+            //button.Size = new Size(110, 36);
         }
         
         public static void StylePrimaryButton(IconButton button, IconChar icon)

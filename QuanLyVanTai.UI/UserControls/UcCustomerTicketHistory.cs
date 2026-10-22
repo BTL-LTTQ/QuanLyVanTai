@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Core.Configs;
+using Core.Helpers;
 using FontAwesome.Sharp;
 using QuanLyVanTai.BLL.DTOs;
 using QuanLyVanTai.BLL.Services;
@@ -13,6 +14,7 @@ namespace QuanLyVanTai.UI.UserControls
     {
         private readonly TicketService _ticketService = new();
         private readonly CustomerBookingService _bookingService = new();
+        private readonly EmailService _emailService = new();
         private List<TicketDisplayModel> _displayedTickets = new();
 
         public event Action<string, bool>? OnStatusChanged;
@@ -60,6 +62,7 @@ namespace QuanLyVanTai.UI.UserControls
             ThemeConfig.StylePrimaryButton(btnTimKiem, IconChar.Search);
             ThemeConfig.StyleSecondaryButton(btnLamMoi, IconChar.RotateLeft);
             ThemeConfig.StyleSuccessButton(btnInVe, IconChar.Print);
+            ThemeConfig.StylePrimaryButton(btnGuiEmail, IconChar.Envelope);
             ThemeConfig.StyleDangerButton(btnHuyVe, IconChar.Trash);
             ThemeConfig.StyleSecondaryButton(btnQuayLai, IconChar.ArrowLeft);
 
@@ -92,6 +95,7 @@ namespace QuanLyVanTai.UI.UserControls
 
             btnChiTiet.Click += (s, e) => ViewSelectedTicketDetail();
             btnInVe.Click += async (s, e) => await PrintSelectedTicketAsync();
+            btnGuiEmail.Click += async (s, e) => await EmailSelectedTicketAsync();
             btnHuyVe.Click += async (s, e) => await CancelSelectedTicketAsync();
 
             dgvTickets.CellDoubleClick += (s, e) =>
@@ -217,6 +221,144 @@ namespace QuanLyVanTai.UI.UserControls
             {
                 SetStatus("Sẵn sàng", false);
             }
+        }
+
+        private async Task EmailSelectedTicketAsync()
+        {
+            var selected = GetSelectedTicket();
+            if (selected == null)
+            {
+                MessageBox.Show("Vui lòng chọn 1 chiếc vé trên bảng để gửi email!", "Chưa chọn vé", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (selected.TicketStatus == "Cancelled")
+            {
+                MessageBox.Show(
+                    $"Vé [{selected.TicketCode}] đã bị HỦY trước đó!\nKhông thể gửi vé điện tử cho vé không còn hiệu lực.",
+                    "Vé Đã Bị Hủy",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                var receipts = await _bookingService.GetTicketReceiptsAsync(new List<int> { selected.Id });
+                if (receipts.Count == 0)
+                {
+                    MessageBox.Show("Không tìm thấy thông tin chi tiết của vé này!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                string defaultEmail = !string.IsNullOrWhiteSpace(receipts[0].CustomerEmail)
+                    ? receipts[0].CustomerEmail!
+                    : (SessionManager.CurrentUser?.Email ?? string.Empty);
+
+                string? targetEmail = PromptForEmail(defaultEmail);
+                if (string.IsNullOrWhiteSpace(targetEmail))
+                {
+                    return; // Người dùng bấm Hủy
+                }
+
+                if (!System.Text.RegularExpressions.Regex.IsMatch(targetEmail, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+                {
+                    MessageBox.Show("Địa chỉ email không đúng định dạng hợp lệ!", "Email không hợp lệ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                SetStatus($"Đang tạo tệp PDF và gửi vé [{selected.TicketCode}] tới {targetEmail}...", true);
+
+                var sendResult = await Task.Run(async () =>
+                {
+                    return await _emailService.SendTicketEmailAsync(targetEmail, selected.CustomerName, receipts);
+                });
+
+                if (sendResult.Success)
+                {
+                    string extraInfo = !string.IsNullOrWhiteSpace(sendResult.SavedCopyPath)
+                        ? $"\n\n(Bản sao vé PDF lưu tại: {sendResult.SavedCopyPath})"
+                        : string.Empty;
+
+                    MessageBox.Show(
+                        $"🎉 GỬI VÉ ĐIỆN TỬ THÀNH CÔNG!\n\n" +
+                        $"• Mã vé: {selected.TicketCode}\n" +
+                        $"• Người nhận: {selected.CustomerName}\n" +
+                        $"• Địa chỉ email: {targetEmail}\n" +
+                        $"• Tệp đính kèm: VeDienTu_{selected.TicketCode}.pdf{extraInfo}",
+                        "Gửi Email Thành Công",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show(
+                        $"Gửi email thất bại: {sendResult.ErrorMessage}\n\n{sendResult.Message}",
+                        "Không Thể Gửi Email",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi gửi vé qua email: " + ex.Message, "Lỗi Hệ Thống", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                SetStatus("Sẵn sàng", false);
+            }
+        }
+
+        private string? PromptForEmail(string defaultEmail)
+        {
+            using var promptForm = new Form
+            {
+                Width = 440,
+                Height = 180,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                Text = "Gửi Vé Điện Tử Qua Email",
+                StartPosition = FormStartPosition.CenterParent,
+                MaximizeBox = false,
+                MinimizeBox = false,
+                ShowInTaskbar = false
+            };
+
+            var lblPrompt = new Label
+            {
+                Left = 20,
+                Top = 16,
+                Width = 380,
+                Text = "Nhập địa chỉ email nhận vé điện tử (kèm tệp PDF):"
+            };
+            var txtInput = new TextBox
+            {
+                Left = 20,
+                Top = 42,
+                Width = 380,
+                Text = defaultEmail
+            };
+            var btnConfirm = new Button
+            {
+                Text = "Gửi Ngay",
+                Left = 210,
+                Width = 90,
+                Top = 82,
+                DialogResult = DialogResult.OK
+            };
+            var btnCancel = new Button
+            {
+                Text = "Hủy",
+                Left = 310,
+                Width = 90,
+                Top = 82,
+                DialogResult = DialogResult.Cancel
+            };
+
+            promptForm.Controls.AddRange(new Control[] { lblPrompt, txtInput, btnConfirm, btnCancel });
+            promptForm.AcceptButton = btnConfirm;
+            promptForm.CancelButton = btnCancel;
+
+            return promptForm.ShowDialog(this.FindForm()) == DialogResult.OK ? txtInput.Text.Trim() : null;
         }
 
         private async Task CancelSelectedTicketAsync()

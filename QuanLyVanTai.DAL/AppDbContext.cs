@@ -232,6 +232,7 @@ namespace QuanLyVanTai.DAL
                 entity.HasIndex(e => e.TicketCode).IsUnique();
                 entity.HasIndex(e => e.CustomerPhone);
                 entity.HasIndex(e => e.DepartureTime);
+                entity.Property(e => e.CustomerEmail).HasMaxLength(100);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
                 entity.HasQueryFilter(e => !e.IsDeleted);
 

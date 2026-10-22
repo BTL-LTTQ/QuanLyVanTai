@@ -11,6 +11,8 @@ namespace QuanLyVanTai.UI.Forms
     public partial class FrmPaymentCheckout : Form
     {
         private readonly PaymentService _paymentService = new();
+        private readonly EmailService _emailService = new();
+        private readonly CustomerBookingService _bookingService = new();
         private PaymentCallbackServer? _callbackServer;
 
         private string _gateway = "VNPay";
@@ -20,6 +22,7 @@ namespace QuanLyVanTai.UI.Forms
         private List<string> _ticketCodes = new();
         private string _customerName = string.Empty;
         private string _customerPhone = string.Empty;
+        private string? _customerEmail;
         private string _routeName = string.Empty;
         private string _seatNumbers = string.Empty;
 
@@ -30,7 +33,7 @@ namespace QuanLyVanTai.UI.Forms
         public bool IsPaymentSuccessful { get; private set; }
         public PaymentCallbackResultDto? FinalCallbackResult { get; private set; }
 
-        public FrmPaymentCheckout() : this("VNPay", "ORDER-DEMO", 250000m, new List<int>(), new List<string>(), "Khách Hàng Mẫu", "0912345678", "Hà Nội - Đà Nẵng", "A01")
+        public FrmPaymentCheckout() : this("VNPay", "ORDER-DEMO", 250000m, new List<int>(), new List<string>(), "Khách Hàng Mẫu", "0912345678", "Hà Nội - Đà Nẵng", "A01", null)
         {
         }
 
@@ -43,7 +46,8 @@ namespace QuanLyVanTai.UI.Forms
             string customerName,
             string customerPhone,
             string routeName,
-            string seatNumbers)
+            string seatNumbers,
+            string? customerEmail = null)
         {
             InitializeComponent();
 
@@ -56,8 +60,9 @@ namespace QuanLyVanTai.UI.Forms
             _customerPhone = customerPhone;
             _routeName = routeName;
             _seatNumbers = seatNumbers;
+            _customerEmail = customerEmail;
 
-            // 🛡️ BẢO VỆ DESIGNER (SKILL Mục 2.2)
+            // BẢO VỆ DESIGNER (SKILL Mục 2.2)
             if (LicenseManager.UsageMode == LicenseUsageMode.Designtime || this.DesignMode)
             {
                 return;
@@ -154,7 +159,7 @@ namespace QuanLyVanTai.UI.Forms
                 {
                     timerCountdown.Stop();
                     lblDemNguoc.Text = "Hết hạn";
-                    lblTrangThai.Text = "❌ ĐÃ HẾT HẠN GIỮ VÉ! Giao dịch tự động hủy.";
+                    lblTrangThai.Text = "ĐÃ HẾT HẠN GIỮ VÉ! Giao dịch tự động hủy.";
                     lblTrangThai.ForeColor = Color.FromArgb(239, 68, 68);
                     await CancelPaymentAsync("Hết thời gian giữ chỗ thanh toán trực tuyến (15 phút)");
                 }
@@ -216,7 +221,7 @@ namespace QuanLyVanTai.UI.Forms
         {
             prgTienTrinh.Visible = true;
             lblTrangThai.ForeColor = Color.FromArgb(37, 99, 235);
-            lblTrangThai.Text = $"⏳ Đang gọi API khởi tạo phiên thanh toán {_gateway} Sandbox qua HttpClient...";
+            lblTrangThai.Text = $"Đang gọi API khởi tạo phiên thanh toán {_gateway} Sandbox qua HttpClient...";
 
             try
             {
@@ -245,18 +250,18 @@ namespace QuanLyVanTai.UI.Forms
                     picQrCode.Image?.Dispose();
                     picQrCode.Image = qrBitmap;
 
-                    lblTrangThai.Text = $"⏳ Đang chờ khách hàng thanh toán qua {_gateway} Sandbox...\n(Quét mã QR hoặc nhấn 'Mở Cổng Thanh Toán' bên trái)";
+                    lblTrangThai.Text = $" Đang chờ khách hàng thanh toán qua {_gateway} Sandbox...\n(Quét mã QR hoặc nhấn 'Mở Cổng Thanh Toán' bên trái)";
                 }
                 else
                 {
                     lblTrangThai.ForeColor = Color.FromArgb(239, 68, 68);
-                    lblTrangThai.Text = $"❌ Lỗi khởi tạo cổng: {_currentPaymentResponse.Message}";
+                    lblTrangThai.Text = $" Lỗi khởi tạo cổng: {_currentPaymentResponse.Message}";
                 }
             }
             catch (Exception ex)
             {
                 lblTrangThai.ForeColor = Color.FromArgb(239, 68, 68);
-                lblTrangThai.Text = $"❌ Lỗi kết nối cổng thanh toán: {ex.Message}";
+                lblTrangThai.Text = $" Lỗi kết nối cổng thanh toán: {ex.Message}";
             }
         }
 
@@ -284,7 +289,7 @@ namespace QuanLyVanTai.UI.Forms
         }
 
         /// <summary>
-        /// Giả lập callback thành công hoặc thất bại từ cổng thanh toán (dành cho chấm điểm & bảo vệ đồ án)
+        /// Giả lập callback thành công hoặc thất bại từ cổng thanh toán
         /// </summary>
         private async Task SimulatePaymentCallbackAsync(bool isSuccess)
         {
@@ -325,7 +330,7 @@ namespace QuanLyVanTai.UI.Forms
             btnGiaLapThatBai.Enabled = false;
             cboChonCong.Enabled = false;
 
-            lblTrangThai.Text = "⏳ Đang cập nhật trạng thái giao dịch vào CSDL...";
+            lblTrangThai.Text = "Đang cập nhật trạng thái giao dịch vào CSDL...";
 
             // 1. Ghi nhận giao dịch và cập nhật trạng thái vé vào CSDL qua BLL
             bool dbSuccess = await _paymentService.UpdatePaymentTransactionResultAsync(
@@ -340,12 +345,40 @@ namespace QuanLyVanTai.UI.Forms
                 IsPaymentSuccessful = true;
                 SystemSounds.Asterisk.Play();
 
-                lblTrangThai.ForeColor = Color.FromArgb(16, 185, 129);
-                lblTrangThai.Text = $"✅ THANH TOÁN THÀNH CÔNG!\n" +
-                                   $"Cổng: {callbackResult.Gateway} Sandbox | Mã GD: {callbackResult.TransactionCode}\n" +
-                                   $"Trạng thái 'Đã thanh toán' đã được lưu vào CSDL.";
+                string emailNotice = string.Empty;
+                string? targetEmail = !string.IsNullOrWhiteSpace(_customerEmail)
+                    ? _customerEmail.Trim()
+                    : SessionManager.CurrentUser?.Email;
 
-                await Task.Delay(1500);
+                // Tự động hóa gửi vé điện tử qua Email (SMTP/SendGrid)
+                if (!string.IsNullOrWhiteSpace(targetEmail) && _emailService.Settings.EnableAutoSendOnPayment)
+                {
+                    lblTrangThai.Text = "Đang tạo PDF và tự động gửi vé qua Email...";
+                    try
+                    {
+                        var receipts = await _bookingService.GetTicketReceiptsAsync(_ticketIds);
+                        var emailResult = await _emailService.SendTicketEmailAsync(targetEmail, _customerName, receipts);
+                        if (emailResult.Success)
+                        {
+                            emailNotice = $"\nĐã tự động gửi vé điện tử (PDF) tới: {targetEmail}";
+                        }
+                        else if (!string.IsNullOrWhiteSpace(emailResult.SavedCopyPath))
+                        {
+                            emailNotice = $"\nĐã lưu bản sao vé PDF tại thư mục SentEmails.";
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Serilog.Log.Error(ex, "[FrmPaymentCheckout] Lỗi khi gửi vé qua email");
+                    }
+                }
+
+                lblTrangThai.ForeColor = Color.FromArgb(16, 185, 129);
+                lblTrangThai.Text = $" THANH TOÁN THÀNH CÔNG!\n" +
+                                   $"Cổng: {callbackResult.Gateway} Sandbox | Mã GD: {callbackResult.TransactionCode}" +
+                                   emailNotice;
+
+                await Task.Delay(2000);
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }
@@ -355,7 +388,7 @@ namespace QuanLyVanTai.UI.Forms
                 SystemSounds.Hand.Play();
 
                 lblTrangThai.ForeColor = Color.FromArgb(239, 68, 68);
-                lblTrangThai.Text = $"❌ GIAO DỊCH THẤT BẠI HOẶC BỊ HỦY!\n" +
+                lblTrangThai.Text = $" GIAO DỊCH THẤT BẠI HOẶC BỊ HỦY!\n" +
                                    $"{callbackResult.Message}\n" +
                                    $"Trạng thái 'Thất bại' đã được cập nhật vào CSDL. Ghế đã được giải phóng.";
 
