@@ -207,10 +207,11 @@ namespace QuanLyVanTai.BLL.Services
                             TicketCode = ticketCode,
                             CustomerName = request.CustomerName.Trim(),
                             CustomerPhone = request.CustomerPhone.Trim(),
+                            CustomerEmail = string.IsNullOrWhiteSpace(request.CustomerEmail) ? null : request.CustomerEmail.Trim(),
                             SeatNumber = seat,
                             Price = seatFinalPrice,
                             DepartureTime = request.DepartureTime,
-                            PaymentStatus = "Paid",
+                            PaymentStatus = string.IsNullOrWhiteSpace(request.PaymentStatus) ? "Paid" : request.PaymentStatus,
                             TicketStatus = "Booked",
                             RouteId = route.Id,
                             VehicleId = vehicle.Id,
@@ -284,6 +285,15 @@ namespace QuanLyVanTai.BLL.Services
         }
 
         /// <summary>
+        /// Hủy vé đang ở trạng thái Pending khi khách hàng hủy giao dịch thanh toán
+        /// </summary>
+        public async Task<bool> CancelPendingTicketsAsync(List<int> ticketIds, string reason = "Hủy thanh toán")
+        {
+            var paymentService = new PaymentService(CreateContext());
+            return await paymentService.CancelPendingPaymentTicketsAsync(ticketIds, reason);
+        }
+
+        /// <summary>
         /// Lấy chi tiết vé phục vụ in ấn và xuất PDF nhúng mã QR
         /// </summary>
         public async Task<List<TicketReceiptDto>> GetTicketReceiptsAsync(List<int> ticketIds)
@@ -340,6 +350,7 @@ namespace QuanLyVanTai.BLL.Services
                         TicketCode = t.TicketCode,
                         CustomerName = t.CustomerName,
                         CustomerPhone = t.CustomerPhone,
+                        CustomerEmail = t.CustomerEmail ?? t.Account?.Email,
                         RouteName = routeName,
                         RouteCode = routeCode,
                         LicensePlate = plate,

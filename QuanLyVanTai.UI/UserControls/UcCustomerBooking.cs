@@ -6,6 +6,7 @@ using FontAwesome.Sharp;
 using QuanLyVanTai.BLL.DTOs;
 using QuanLyVanTai.BLL.Services;
 using QuanLyVanTai.DAL.Models;
+using QuanLyVanTai.UI.Forms;
 
 namespace QuanLyVanTai.UI.UserControls
 {
@@ -15,6 +16,7 @@ namespace QuanLyVanTai.UI.UserControls
         private readonly SeatMapService _seatMapService = new();
         private readonly CustomerBookingService _bookingService = new();
         private readonly ScheduleService _scheduleService = new();
+        private readonly EmailService _emailService = new();
 
         private List<Route> _routes = new();
         private VehicleSeatMapDto? _currentSeatMap;
@@ -56,6 +58,16 @@ namespace QuanLyVanTai.UI.UserControls
             ThemeConfig.StylePrimaryButton(btnTimChuyen, IconChar.MagnifyingGlass);
             ThemeConfig.StyleSecondaryButton(btnXemBanDo, IconChar.MapLocationDot);
 
+            // Cấu hình danh sách phương thức thanh toán
+            cboPhuongThucThanhToan.Items.Clear();
+            cboPhuongThucThanhToan.Items.AddRange(new object[]
+            {
+                "VNPay Sandbox (QR / Thẻ ATM)",
+                "MoMo Sandbox (Ví MoMo QR / App)",
+                "Tiền mặt tại quầy vé"
+            });
+            cboPhuongThucThanhToan.SelectedIndex = 0;
+
             // Điền thông tin người dùng từ phiên đăng nhập nếu có
             if (SessionManager.IsLoggedIn && SessionManager.CurrentUser != null)
             {
@@ -67,6 +79,10 @@ namespace QuanLyVanTai.UI.UserControls
                 if (!string.IsNullOrWhiteSpace(user.PhoneNumber) && string.IsNullOrWhiteSpace(txtSoDienThoai.Text))
                 {
                     txtSoDienThoai.Text = user.PhoneNumber;
+                }
+                if (!string.IsNullOrWhiteSpace(user.Email) && string.IsNullOrWhiteSpace(txtEmail.Text))
+                {
+                    txtEmail.Text = user.Email;
                 }
             }
         }
@@ -112,9 +128,11 @@ namespace QuanLyVanTai.UI.UserControls
             // Validation qua ErrorProvider (Chương 4)
             txtTenKhachHang.Validating += TxtTenKhachHang_Validating;
             txtSoDienThoai.Validating += TxtSoDienThoai_Validating;
+            txtEmail.Validating += TxtEmail_Validating;
 
             txtTenKhachHang.KeyDown += OnInputEnterNextControl;
             txtSoDienThoai.KeyDown += OnInputEnterNextControl;
+            txtEmail.KeyDown += OnInputEnterNextControl;
             txtGhiChu.KeyDown += OnInputEnterNextControl;
         }
 
@@ -460,13 +478,35 @@ namespace QuanLyVanTai.UI.UserControls
             }
         }
 
+        private void TxtEmail_Validating(object? sender, CancelEventArgs e)
+        {
+            string email = txtEmail.Text.Trim();
+            if (!string.IsNullOrEmpty(email))
+            {
+                if (!Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+                {
+                    errorProviderMain.SetError(txtEmail, "Địa chỉ email không đúng định dạng (Ví dụ: khachhang@gmail.com)!");
+                }
+                else
+                {
+                    errorProviderMain.SetError(txtEmail, string.Empty);
+                }
+            }
+            else
+            {
+                errorProviderMain.SetError(txtEmail, string.Empty);
+            }
+        }
+
         private bool ValidateAllInputs()
         {
             TxtTenKhachHang_Validating(txtTenKhachHang, new CancelEventArgs());
             TxtSoDienThoai_Validating(txtSoDienThoai, new CancelEventArgs());
+            TxtEmail_Validating(txtEmail, new CancelEventArgs());
 
             if (!string.IsNullOrEmpty(errorProviderMain.GetError(txtTenKhachHang)) ||
-                !string.IsNullOrEmpty(errorProviderMain.GetError(txtSoDienThoai)))
+                !string.IsNullOrEmpty(errorProviderMain.GetError(txtSoDienThoai)) ||
+                !string.IsNullOrEmpty(errorProviderMain.GetError(txtEmail)))
             {
                 return false;
             }
@@ -509,11 +549,17 @@ namespace QuanLyVanTai.UI.UserControls
             var selectedSeats = seatMapControl.GetSelectedSeats();
             var seatCodes = selectedSeats.Select(s => s.SeatCode).ToList();
 
+            int selectedMethodIndex = cboPhuongThucThanhToan.SelectedIndex;
+            bool isCash = selectedMethodIndex == 2;
+            string chosenGateway = selectedMethodIndex == 1 ? "MoMo" : "VNPay";
+            string paymentMethodName = isCash ? "Tiền mặt" : $"{chosenGateway} Sandbox";
+
             string confirmMsg = $"XÁC NHẬN ĐẶT VÉ:\n\n" +
                                 $"• Hành khách: {txtTenKhachHang.Text.Trim()}\n" +
                                 $"• Điện thoại: {txtSoDienThoai.Text.Trim()}\n" +
                                 $"• Chuyến: {trip.LicensePlate} ({trip.DepartureTime:dd/MM/yyyy HH:mm})\n" +
                                 $"• Vị trí ghế: {string.Join(", ", seatCodes)}\n" +
+                                $"• Phương thức: {paymentMethodName}\n" +
                                 $"• Tổng thanh toán: {lblTongTien.Text}\n\n" +
                                 $"Quý khách có chắc chắn muốn tiến hành đặt vé không?";
 
@@ -537,25 +583,93 @@ namespace QuanLyVanTai.UI.UserControls
                     DepartureTime = trip.DepartureTime,
                     CustomerName = txtTenKhachHang.Text.Trim(),
                     CustomerPhone = txtSoDienThoai.Text.Trim(),
+                    CustomerEmail = string.IsNullOrWhiteSpace(txtEmail.Text) ? null : txtEmail.Text.Trim(),
                     CustomerNotes = txtGhiChu.Text.Trim(),
                     SelectedSeats = seatCodes,
                     PromotionCode = txtMaKhuyenMai.Text.Trim(),
                     AccountId = accountId,
-                    PaymentMethod = "Tiền mặt"
+                    PaymentMethod = paymentMethodName,
+                    PaymentStatus = isCash ? "Paid" : "Pending"
                 };
 
                 var result = await _bookingService.BookTicketsAsync(bookingRequest);
 
-                if (result.Success)
+                if (!result.Success)
+                {
+                    MessageBox.Show(result.Message, "Không thể đặt vé", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // 1. Trường hợp Khách chọn Tiền mặt: Hoàn tất ngay
+                if (isCash)
                 {
                     System.Media.SystemSounds.Asterisk.Play();
                     SetStatus(result.Message, false);
-
                     await LoadSeatMapForSelectedTripAsync();
 
+                    string emailNotice = string.Empty;
+                    string customerEmail = txtEmail.Text.Trim();
+                    if (!string.IsNullOrWhiteSpace(customerEmail) && _emailService.Settings.EnableAutoSendOnPayment)
+                    {
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                var receipts = await _bookingService.GetTicketReceiptsAsync(result.CreatedTicketIds);
+                                await _emailService.SendTicketEmailAsync(customerEmail, txtTenKhachHang.Text.Trim(), receipts);
+                            }
+                            catch (Exception ex)
+                            {
+                                Serilog.Log.Error(ex, "[UcCustomerBooking] Lỗi tự động gửi email vé tiền mặt");
+                            }
+                        });
+                        emailNotice = $"\n\n📧 Hệ thống đã tự động gửi vé điện tử (kèm tệp PDF) tới email:\n{customerEmail}";
+                    }
+
                     var ask = MessageBox.Show(
-                        $"{result.Message}\n\nVé của quý khách đã được lưu vào hệ thống thành công!\nQuý khách có muốn chuyển ngay sang màn hình 'Vé của tôi' để xem và In vé không?",
+                        $"{result.Message}\n\nVé của quý khách đã được lưu vào hệ thống thành công!{emailNotice}\n\nQuý khách có muốn chuyển ngay sang màn hình 'Vé của tôi' để xem và In vé không?",
                         "Đặt Vé Thành Công",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Information);
+
+                    if (ask == DialogResult.Yes)
+                    {
+                        OnNavigateToHistory?.Invoke();
+                    }
+                    return;
+                }
+
+                // 2. Trường hợp Khách chọn Thanh toán trực tuyến (VNPay / MoMo Sandbox):
+                // Mở giao diện FrmPaymentCheckout với HttpClient / QR Code
+                string orderCode = $"ORDER-{result.CreatedTicketCodes.First()}";
+                using var paymentForm = new FrmPaymentCheckout(
+                    gateway: chosenGateway,
+                    orderCode: orderCode,
+                    amount: result.FinalAmount,
+                    ticketIds: result.CreatedTicketIds,
+                    ticketCodes: result.CreatedTicketCodes,
+                    customerName: txtTenKhachHang.Text.Trim(),
+                    customerPhone: txtSoDienThoai.Text.Trim(),
+                    routeName: $"{cboTuyenXe.Text} ({trip.DepartureTime:dd/MM/yyyy HH:mm})",
+                    seatNumbers: string.Join(", ", seatCodes),
+                    customerEmail: string.IsNullOrWhiteSpace(txtEmail.Text) ? null : txtEmail.Text.Trim()
+                );
+
+                var payDialogResult = paymentForm.ShowDialog(this.FindForm());
+
+                await LoadSeatMapForSelectedTripAsync();
+
+                if (payDialogResult == DialogResult.OK && paymentForm.IsPaymentSuccessful)
+                {
+                    SetStatus($"Thanh toán thành công qua {chosenGateway} Sandbox!", false);
+
+                    var ask = MessageBox.Show(
+                        $"🎉 THANH TOÁN TRỰC TUYẾN THÀNH CÔNG!\n\n" +
+                        $"• Cổng thanh toán: {chosenGateway} Sandbox\n" +
+                        $"• Mã vé: {string.Join(", ", result.CreatedTicketCodes)}\n" +
+                        $"• Số tiền: {result.FinalAmount:N0} VNĐ\n\n" +
+                        $"Vé của quý khách đã được kích hoạt thành công. Quý khách có muốn chuyển sang mục 'Vé của tôi' để in thẻ lên xe ngay không?",
+                        "Thanh Toán Hoàn Tất",
                         MessageBoxButtons.YesNo,
                         MessageBoxIcon.Information);
 
@@ -566,7 +680,12 @@ namespace QuanLyVanTai.UI.UserControls
                 }
                 else
                 {
-                    MessageBox.Show(result.Message, "Không thể đặt vé", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    SetStatus("Giao dịch thanh toán chưa hoàn tất hoặc đã bị hủy.", false);
+                    MessageBox.Show(
+                        "Giao dịch thanh toán trực tuyến chưa hoàn tất hoặc đã bị hủy.\nGhế đã chọn đã được giải phóng trên sơ đồ.",
+                        "Giao Dịch Chưa Hoàn Tất",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
                 }
             }
             catch (Exception ex)

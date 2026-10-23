@@ -33,6 +33,7 @@ namespace QuanLyVanTai.UI.UserControls
             flpButtons = new FlowLayoutPanel();
             btnChiTiet = new FontAwesome.Sharp.IconButton();
             btnInVe = new FontAwesome.Sharp.IconButton();
+            btnGuiEmail = new FontAwesome.Sharp.IconButton();
             btnHuyVe = new FontAwesome.Sharp.IconButton();
             btnQuayLai = new FontAwesome.Sharp.IconButton();
             lblLuuYQuyDinh = new Label();
@@ -200,12 +201,13 @@ namespace QuanLyVanTai.UI.UserControls
             flpButtons.AutoSize = true;
             flpButtons.Controls.Add(btnChiTiet);
             flpButtons.Controls.Add(btnInVe);
+            flpButtons.Controls.Add(btnGuiEmail);
             flpButtons.Controls.Add(btnHuyVe);
             flpButtons.Controls.Add(btnQuayLai);
             flpButtons.Dock = DockStyle.Right;
-            flpButtons.Location = new Point(510, 10);
+            flpButtons.Location = new Point(340, 10);
             flpButtons.Name = "flpButtons";
-            flpButtons.Size = new Size(660, 50);
+            flpButtons.Size = new Size(830, 50);
             flpButtons.TabIndex = 1;
             flpButtons.WrapContents = false;
             // 
@@ -252,6 +254,28 @@ namespace QuanLyVanTai.UI.UserControls
             btnInVe.Text = " In Thẻ Lên Xe";
             btnInVe.TextAlign = ContentAlignment.MiddleRight;
             btnInVe.UseVisualStyleBackColor = false;
+            // 
+            // btnGuiEmail
+            // 
+            btnGuiEmail.BackColor = Color.FromArgb(14, 165, 233);
+            btnGuiEmail.Cursor = Cursors.Hand;
+            btnGuiEmail.FlatAppearance.BorderSize = 0;
+            btnGuiEmail.FlatStyle = FlatStyle.Flat;
+            btnGuiEmail.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
+            btnGuiEmail.ForeColor = Color.White;
+            btnGuiEmail.IconChar = FontAwesome.Sharp.IconChar.Envelope;
+            btnGuiEmail.IconColor = Color.White;
+            btnGuiEmail.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            btnGuiEmail.IconSize = 20;
+            btnGuiEmail.ImageAlign = ContentAlignment.MiddleLeft;
+            btnGuiEmail.Location = new Point(315, 4);
+            btnGuiEmail.Margin = new Padding(3, 4, 8, 4);
+            btnGuiEmail.Name = "btnGuiEmail";
+            btnGuiEmail.Size = new Size(165, 42);
+            btnGuiEmail.TabIndex = 2;
+            btnGuiEmail.Text = " Gửi Vé Qua Email";
+            btnGuiEmail.TextAlign = ContentAlignment.MiddleRight;
+            btnGuiEmail.UseVisualStyleBackColor = false;
             // 
             // btnHuyVe
             // 
@@ -471,6 +495,7 @@ namespace QuanLyVanTai.UI.UserControls
         private FlowLayoutPanel flpButtons;
         private FontAwesome.Sharp.IconButton btnChiTiet;
         private FontAwesome.Sharp.IconButton btnInVe;
+        private FontAwesome.Sharp.IconButton btnGuiEmail;
         private FontAwesome.Sharp.IconButton btnHuyVe;
         private FontAwesome.Sharp.IconButton btnQuayLai;
         private Label lblLuuYQuyDinh;

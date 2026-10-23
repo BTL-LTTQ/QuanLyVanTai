@@ -23,6 +23,10 @@ namespace QuanLyVanTai.DAL.Models
         [MaxLength(15)]
         public string CustomerPhone { get; set; } = string.Empty; // SĐT hành khách
 
+        [MaxLength(100)]
+        [EmailAddress]
+        public string? CustomerEmail { get; set; } // Email nhận vé điện tử của hành khách
+
         [Required]
         [MaxLength(10)]
         public string SeatNumber { get; set; } = string.Empty; // Vị trí ghế/giường (VD: A01, B02)

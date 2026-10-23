@@ -62,6 +62,7 @@ namespace QuanLyVanTai.DAL
         public virtual DbSet<Ticket> Tickets { get; set; } = null!;
         public virtual DbSet<AuditLog> AuditLogs { get; set; } = null!;
         public virtual DbSet<RolePermission> RolePermissions { get; set; } = null!;
+        public virtual DbSet<PaymentTransaction> PaymentTransactions { get; set; } = null!;
 
         // ── Scheduling & Driver Assignment ────────────────────────────────────
         public virtual DbSet<Driver> Drivers { get; set; } = null!;
@@ -231,6 +232,7 @@ namespace QuanLyVanTai.DAL
                 entity.HasIndex(e => e.TicketCode).IsUnique();
                 entity.HasIndex(e => e.CustomerPhone);
                 entity.HasIndex(e => e.DepartureTime);
+                entity.Property(e => e.CustomerEmail).HasMaxLength(100);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
                 entity.HasQueryFilter(e => !e.IsDeleted);
 
@@ -247,6 +249,22 @@ namespace QuanLyVanTai.DAL
                 entity.HasOne(t => t.Account)
                       .WithMany(a => a.Tickets)
                       .HasForeignKey(t => t.AccountId)
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // ==========================================
+            // 5b. Cấu hình bảng PaymentTransaction
+            // ==========================================
+            modelBuilder.Entity<PaymentTransaction>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TransactionCode);
+                entity.HasIndex(e => e.OrderCode);
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
+
+                entity.HasOne(p => p.Ticket)
+                      .WithMany()
+                      .HasForeignKey(p => p.TicketId)
                       .OnDelete(DeleteBehavior.SetNull);
             });
 

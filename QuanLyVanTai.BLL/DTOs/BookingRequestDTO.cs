@@ -11,11 +11,13 @@ namespace QuanLyVanTai.BLL.DTOs
         public DateTime DepartureTime { get; set; }
         public string CustomerName { get; set; } = string.Empty;
         public string CustomerPhone { get; set; } = string.Empty;
+        public string? CustomerEmail { get; set; }
         public string? CustomerNotes { get; set; }
         public List<string> SelectedSeats { get; set; } = new();
         public string? PromotionCode { get; set; }
         public int? AccountId { get; set; }
-        public string PaymentMethod { get; set; } = "Tiền mặt"; // Tiền mặt, Chuyển khoản QR
+        public string PaymentMethod { get; set; } = "Tiền mặt"; // Tiền mặt, VNPay Sandbox, MoMo Sandbox
+        public string PaymentStatus { get; set; } = "Paid"; // Paid, Pending
     }
 
     /// <summary>
