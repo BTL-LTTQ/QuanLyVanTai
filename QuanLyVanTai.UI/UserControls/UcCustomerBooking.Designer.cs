@@ -38,12 +38,16 @@ namespace QuanLyVanTai.UI.UserControls
             lblTienGiam = new Label();
             lblTongTienTitle = new Label();
             lblTongTien = new Label();
+            lblPhuongThucTitle = new Label();
+            cboPhuongThucThanhToan = new ComboBox();
             grpThongTinKhach = new GroupBox();
             tlpKhachHang = new TableLayoutPanel();
             lblTenKhachHang = new Label();
             txtTenKhachHang = new TextBox();
             lblSoDienThoai = new Label();
             txtSoDienThoai = new TextBox();
+            lblEmail = new Label();
+            txtEmail = new TextBox();
             lblGhiChu = new Label();
             txtGhiChu = new TextBox();
             grpTimChuyen = new GroupBox();
@@ -136,11 +140,11 @@ namespace QuanLyVanTai.UI.UserControls
             flpButtons.Controls.Add(btnHuyChon);
             flpButtons.Controls.Add(btnXemLichSu);
             flpButtons.Dock = DockStyle.Top;
-            flpButtons.Location = new Point(14, 690);
+            flpButtons.Location = new Point(14, 788);
             flpButtons.Margin = new Padding(3, 4, 3, 4);
             flpButtons.Name = "flpButtons";
             flpButtons.Padding = new Padding(0, 10, 0, 0);
-            flpButtons.Size = new Size(452, 120);
+            flpButtons.Size = new Size(431, 120);
             flpButtons.TabIndex = 3;
             // 
             // btnDatVe
@@ -160,9 +164,9 @@ namespace QuanLyVanTai.UI.UserControls
             btnDatVe.Margin = new Padding(3, 4, 8, 4);
             btnDatVe.Name = "btnDatVe";
             btnDatVe.Padding = new Padding(12, 0, 16, 0);
-            btnDatVe.Size = new Size(190, 42);
+            btnDatVe.Size = new Size(239, 42);
             btnDatVe.TabIndex = 0;
-            btnDatVe.Text = "  Xác Nhận Đặt Vé";
+            btnDatVe.Text = "  Xác Nhận & Thanh Toán";
             btnDatVe.TextAlign = ContentAlignment.MiddleRight;
             btnDatVe.TextImageRelation = TextImageRelation.ImageBeforeText;
             btnDatVe.UseVisualStyleBackColor = false;
@@ -180,11 +184,11 @@ namespace QuanLyVanTai.UI.UserControls
             btnHuyChon.IconFont = FontAwesome.Sharp.IconFont.Auto;
             btnHuyChon.IconSize = 18;
             btnHuyChon.ImageAlign = ContentAlignment.MiddleLeft;
-            btnHuyChon.Location = new Point(204, 14);
+            btnHuyChon.Location = new Point(253, 14);
             btnHuyChon.Margin = new Padding(3, 4, 8, 4);
             btnHuyChon.Name = "btnHuyChon";
             btnHuyChon.Padding = new Padding(8, 0, 10, 0);
-            btnHuyChon.Size = new Size(110, 42);
+            btnHuyChon.Size = new Size(134, 42);
             btnHuyChon.TabIndex = 1;
             btnHuyChon.Text = " Bỏ chọn";
             btnHuyChon.TextAlign = ContentAlignment.MiddleRight;
@@ -222,11 +226,11 @@ namespace QuanLyVanTai.UI.UserControls
             grpThanhToan.Dock = DockStyle.Top;
             grpThanhToan.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
             grpThanhToan.ForeColor = Color.FromArgb(15, 23, 42);
-            grpThanhToan.Location = new Point(14, 440);
+            grpThanhToan.Location = new Point(14, 490);
             grpThanhToan.Margin = new Padding(3, 4, 3, 10);
             grpThanhToan.Name = "grpThanhToan";
             grpThanhToan.Padding = new Padding(12);
-            grpThanhToan.Size = new Size(452, 250);
+            grpThanhToan.Size = new Size(431, 298);
             grpThanhToan.TabIndex = 2;
             grpThanhToan.TabStop = false;
             grpThanhToan.Text = " 3. Chi Tiết Thanh Toán ";
@@ -246,16 +250,19 @@ namespace QuanLyVanTai.UI.UserControls
             tlpThanhToan.Controls.Add(lblTienGiam, 1, 3);
             tlpThanhToan.Controls.Add(lblTongTienTitle, 0, 4);
             tlpThanhToan.Controls.Add(lblTongTien, 1, 4);
+            tlpThanhToan.Controls.Add(lblPhuongThucTitle, 0, 5);
+            tlpThanhToan.Controls.Add(cboPhuongThucThanhToan, 1, 5);
             tlpThanhToan.Dock = DockStyle.Fill;
             tlpThanhToan.Location = new Point(12, 34);
             tlpThanhToan.Name = "tlpThanhToan";
-            tlpThanhToan.RowCount = 5;
+            tlpThanhToan.RowCount = 6;
             tlpThanhToan.RowStyles.Add(new RowStyle(SizeType.Absolute, 36F));
             tlpThanhToan.RowStyles.Add(new RowStyle(SizeType.Absolute, 36F));
             tlpThanhToan.RowStyles.Add(new RowStyle(SizeType.Absolute, 42F));
             tlpThanhToan.RowStyles.Add(new RowStyle(SizeType.Absolute, 36F));
             tlpThanhToan.RowStyles.Add(new RowStyle(SizeType.Absolute, 44F));
-            tlpThanhToan.Size = new Size(428, 204);
+            tlpThanhToan.RowStyles.Add(new RowStyle(SizeType.Absolute, 42F));
+            tlpThanhToan.Size = new Size(407, 252);
             tlpThanhToan.TabIndex = 0;
             // 
             // lblDanhSachGheTitle
@@ -325,7 +332,7 @@ namespace QuanLyVanTai.UI.UserControls
             pnlKhuyenMaiBox.Dock = DockStyle.Fill;
             pnlKhuyenMaiBox.Location = new Point(133, 75);
             pnlKhuyenMaiBox.Name = "pnlKhuyenMaiBox";
-            pnlKhuyenMaiBox.Size = new Size(292, 36);
+            pnlKhuyenMaiBox.Size = new Size(271, 36);
             pnlKhuyenMaiBox.TabIndex = 5;
             // 
             // txtMaKhuyenMai
@@ -336,7 +343,7 @@ namespace QuanLyVanTai.UI.UserControls
             txtMaKhuyenMai.Location = new Point(0, 0);
             txtMaKhuyenMai.Name = "txtMaKhuyenMai";
             txtMaKhuyenMai.PlaceholderText = "Nhập mã KM...";
-            txtMaKhuyenMai.Size = new Size(207, 27);
+            txtMaKhuyenMai.Size = new Size(186, 27);
             txtMaKhuyenMai.TabIndex = 0;
             // 
             // btnApDungKhuyenMai
@@ -348,7 +355,7 @@ namespace QuanLyVanTai.UI.UserControls
             btnApDungKhuyenMai.FlatStyle = FlatStyle.Flat;
             btnApDungKhuyenMai.Font = new Font("Segoe UI", 8.5F);
             btnApDungKhuyenMai.ForeColor = Color.White;
-            btnApDungKhuyenMai.Location = new Point(207, 0);
+            btnApDungKhuyenMai.Location = new Point(186, 0);
             btnApDungKhuyenMai.Name = "btnApDungKhuyenMai";
             btnApDungKhuyenMai.Size = new Size(85, 36);
             btnApDungKhuyenMai.TabIndex = 1;
@@ -385,7 +392,7 @@ namespace QuanLyVanTai.UI.UserControls
             lblTongTienTitle.AutoSize = true;
             lblTongTienTitle.Font = new Font("Segoe UI Semibold", 10.5F, FontStyle.Bold);
             lblTongTienTitle.ForeColor = Color.FromArgb(15, 23, 42);
-            lblTongTienTitle.Location = new Point(3, 164);
+            lblTongTienTitle.Location = new Point(3, 159);
             lblTongTienTitle.Name = "lblTongTienTitle";
             lblTongTienTitle.Size = new Size(97, 25);
             lblTongTienTitle.TabIndex = 8;
@@ -397,11 +404,34 @@ namespace QuanLyVanTai.UI.UserControls
             lblTongTien.AutoSize = true;
             lblTongTien.Font = new Font("Segoe UI", 13F, FontStyle.Bold);
             lblTongTien.ForeColor = Color.FromArgb(16, 185, 129);
-            lblTongTien.Location = new Point(133, 162);
+            lblTongTien.Location = new Point(133, 157);
             lblTongTien.Name = "lblTongTien";
             lblTongTien.Size = new Size(80, 30);
             lblTongTien.TabIndex = 9;
             lblTongTien.Text = "0 VNĐ";
+            // 
+            // lblPhuongThucTitle
+            // 
+            lblPhuongThucTitle.Anchor = AnchorStyles.Left;
+            lblPhuongThucTitle.AutoSize = true;
+            lblPhuongThucTitle.Font = new Font("Segoe UI", 9F);
+            lblPhuongThucTitle.ForeColor = Color.FromArgb(71, 85, 105);
+            lblPhuongThucTitle.Location = new Point(3, 213);
+            lblPhuongThucTitle.Name = "lblPhuongThucTitle";
+            lblPhuongThucTitle.Size = new Size(96, 20);
+            lblPhuongThucTitle.TabIndex = 10;
+            lblPhuongThucTitle.Text = "Phương thức:";
+            // 
+            // cboPhuongThucThanhToan
+            // 
+            cboPhuongThucThanhToan.Dock = DockStyle.Fill;
+            cboPhuongThucThanhToan.DropDownStyle = ComboBoxStyle.DropDownList;
+            cboPhuongThucThanhToan.Font = new Font("Segoe UI", 9F);
+            cboPhuongThucThanhToan.FormattingEnabled = true;
+            cboPhuongThucThanhToan.Location = new Point(133, 197);
+            cboPhuongThucThanhToan.Name = "cboPhuongThucThanhToan";
+            cboPhuongThucThanhToan.Size = new Size(271, 28);
+            cboPhuongThucThanhToan.TabIndex = 11;
             // 
             // grpThongTinKhach
             // 
@@ -414,7 +444,7 @@ namespace QuanLyVanTai.UI.UserControls
             grpThongTinKhach.Margin = new Padding(3, 4, 3, 10);
             grpThongTinKhach.Name = "grpThongTinKhach";
             grpThongTinKhach.Padding = new Padding(12);
-            grpThongTinKhach.Size = new Size(452, 204);
+            grpThongTinKhach.Size = new Size(431, 254);
             grpThongTinKhach.TabIndex = 1;
             grpThongTinKhach.TabStop = false;
             grpThongTinKhach.Text = " 2. Thông Tin Khách Hàng ";
@@ -428,16 +458,19 @@ namespace QuanLyVanTai.UI.UserControls
             tlpKhachHang.Controls.Add(txtTenKhachHang, 1, 0);
             tlpKhachHang.Controls.Add(lblSoDienThoai, 0, 1);
             tlpKhachHang.Controls.Add(txtSoDienThoai, 1, 1);
-            tlpKhachHang.Controls.Add(lblGhiChu, 0, 2);
-            tlpKhachHang.Controls.Add(txtGhiChu, 1, 2);
+            tlpKhachHang.Controls.Add(lblEmail, 0, 2);
+            tlpKhachHang.Controls.Add(txtEmail, 1, 2);
+            tlpKhachHang.Controls.Add(lblGhiChu, 0, 3);
+            tlpKhachHang.Controls.Add(txtGhiChu, 1, 3);
             tlpKhachHang.Dock = DockStyle.Fill;
             tlpKhachHang.Location = new Point(12, 34);
             tlpKhachHang.Name = "tlpKhachHang";
-            tlpKhachHang.RowCount = 3;
+            tlpKhachHang.RowCount = 4;
+            tlpKhachHang.RowStyles.Add(new RowStyle(SizeType.Absolute, 46F));
             tlpKhachHang.RowStyles.Add(new RowStyle(SizeType.Absolute, 46F));
             tlpKhachHang.RowStyles.Add(new RowStyle(SizeType.Absolute, 46F));
             tlpKhachHang.RowStyles.Add(new RowStyle(SizeType.Absolute, 66F));
-            tlpKhachHang.Size = new Size(428, 158);
+            tlpKhachHang.Size = new Size(407, 208);
             tlpKhachHang.TabIndex = 0;
             // 
             // lblTenKhachHang
@@ -460,7 +493,7 @@ namespace QuanLyVanTai.UI.UserControls
             txtTenKhachHang.Margin = new Padding(3, 8, 3, 3);
             txtTenKhachHang.Name = "txtTenKhachHang";
             txtTenKhachHang.PlaceholderText = "Nhập họ tên hành khách...";
-            txtTenKhachHang.Size = new Size(292, 27);
+            txtTenKhachHang.Size = new Size(271, 27);
             txtTenKhachHang.TabIndex = 1;
             // 
             // lblSoDienThoai
@@ -484,8 +517,31 @@ namespace QuanLyVanTai.UI.UserControls
             txtSoDienThoai.MaxLength = 10;
             txtSoDienThoai.Name = "txtSoDienThoai";
             txtSoDienThoai.PlaceholderText = "09xxxxxxxx (10 chữ số)";
-            txtSoDienThoai.Size = new Size(292, 27);
+            txtSoDienThoai.Size = new Size(271, 27);
             txtSoDienThoai.TabIndex = 3;
+            // 
+            // lblEmail
+            // 
+            lblEmail.Anchor = AnchorStyles.Left;
+            lblEmail.AutoSize = true;
+            lblEmail.Font = new Font("Segoe UI", 9F);
+            lblEmail.ForeColor = Color.FromArgb(71, 85, 105);
+            lblEmail.Location = new Point(3, 105);
+            lblEmail.Name = "lblEmail";
+            lblEmail.Size = new Size(104, 20);
+            lblEmail.TabIndex = 4;
+            lblEmail.Text = "Email nhận vé:";
+            // 
+            // txtEmail
+            // 
+            txtEmail.Dock = DockStyle.Fill;
+            txtEmail.Font = new Font("Segoe UI", 9F);
+            txtEmail.Location = new Point(133, 100);
+            txtEmail.Margin = new Padding(3, 8, 3, 3);
+            txtEmail.Name = "txtEmail";
+            txtEmail.PlaceholderText = "khachhang@gmail.com...";
+            txtEmail.Size = new Size(271, 27);
+            txtEmail.TabIndex = 4;
             // 
             // lblGhiChu
             // 
@@ -493,23 +549,23 @@ namespace QuanLyVanTai.UI.UserControls
             lblGhiChu.AutoSize = true;
             lblGhiChu.Font = new Font("Segoe UI", 9F);
             lblGhiChu.ForeColor = Color.FromArgb(71, 85, 105);
-            lblGhiChu.Location = new Point(3, 115);
+            lblGhiChu.Location = new Point(3, 163);
             lblGhiChu.Name = "lblGhiChu";
             lblGhiChu.Size = new Size(61, 20);
-            lblGhiChu.TabIndex = 4;
+            lblGhiChu.TabIndex = 5;
             lblGhiChu.Text = "Ghi chú:";
             // 
             // txtGhiChu
             // 
             txtGhiChu.Dock = DockStyle.Fill;
             txtGhiChu.Font = new Font("Segoe UI", 9F);
-            txtGhiChu.Location = new Point(133, 100);
+            txtGhiChu.Location = new Point(133, 146);
             txtGhiChu.Margin = new Padding(3, 8, 3, 3);
             txtGhiChu.Multiline = true;
             txtGhiChu.Name = "txtGhiChu";
             txtGhiChu.PlaceholderText = "Điểm đón, yêu cầu đặc biệt...";
-            txtGhiChu.Size = new Size(292, 55);
-            txtGhiChu.TabIndex = 5;
+            txtGhiChu.Size = new Size(271, 59);
+            txtGhiChu.TabIndex = 6;
             // 
             // grpTimChuyen
             // 
@@ -677,9 +733,9 @@ namespace QuanLyVanTai.UI.UserControls
             btnTaiSoDo.Margin = new Padding(0, 2, 6, 2);
             btnTaiSoDo.Name = "btnTaiSoDo";
             btnTaiSoDo.Padding = new Padding(6, 0, 8, 0);
-            btnTaiSoDo.Size = new Size(125, 34);
+            btnTaiSoDo.Size = new Size(119, 34);
             btnTaiSoDo.TabIndex = 0;
-            btnTaiSoDo.Text = "  Tải lại sơ đồ";
+            btnTaiSoDo.Text = " Tải lại sơ đồ";
             btnTaiSoDo.TextAlign = ContentAlignment.MiddleRight;
             btnTaiSoDo.TextImageRelation = TextImageRelation.ImageBeforeText;
             btnTaiSoDo.UseVisualStyleBackColor = false;
@@ -922,6 +978,8 @@ namespace QuanLyVanTai.UI.UserControls
         private TextBox txtTenKhachHang;
         private Label lblSoDienThoai;
         private TextBox txtSoDienThoai;
+        private Label lblEmail;
+        private TextBox txtEmail;
         private Label lblGhiChu;
         private TextBox txtGhiChu;
         private GroupBox grpThanhToan;
@@ -938,6 +996,8 @@ namespace QuanLyVanTai.UI.UserControls
         private Label lblTienGiam;
         private Label lblTongTienTitle;
         private Label lblTongTien;
+        private Label lblPhuongThucTitle;
+        private ComboBox cboPhuongThucThanhToan;
         private FlowLayoutPanel flpButtons;
         private FontAwesome.Sharp.IconButton btnDatVe;
         private FontAwesome.Sharp.IconButton btnHuyChon;

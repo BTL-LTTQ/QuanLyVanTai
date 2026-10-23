@@ -158,37 +158,16 @@ namespace QuanLyVanTai.UI.Forms
         {
             try
             {
-                // Kiểm tra xem hệ thống có máy in "Microsoft Print to PDF" không
-                string pdfPrinter = "Microsoft Print to PDF";
-                bool hasPdfPrinter = PrinterSettings.InstalledPrinters.Cast<string>()
-                    .Any(p => p.Equals(pdfPrinter, StringComparison.OrdinalIgnoreCase));
-
-                if (!hasPdfPrinter)
-                {
-                    // Fallback nếu máy Windows không cài Microsoft Print to PDF -> lưu dạng ảnh vé sắc nét
-                    string imgPath = Path.ChangeExtension(pdfPath, ".png");
-                    ExportAsImages(imgPath);
-                    MessageBox.Show($"Máy tính không có sẵn máy in ảo 'Microsoft Print to PDF'.\nHệ thống đã tự động xuất vé dưới dạng ảnh chất lượng cao sắc nét tại:\n{imgPath}",
-                        "Xuất Vé Thành Công", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
-                }
-
-                var pdfDoc = TicketPdfExportService.CreatePrintDocument(_tickets);
-                pdfDoc.PrinterSettings.PrinterName = pdfPrinter;
-                pdfDoc.PrinterSettings.PrintToFile = true;
-                pdfDoc.PrinterSettings.PrintFileName = pdfPath;
-
-                pdfDoc.Print();
-
+                TicketPdfExportService.SaveTicketPdf(_tickets, pdfPath);
                 MessageBox.Show($"Xuất vé xe điện tử PDF thành công!\nĐường dẫn: {pdfPath}",
                     "Xuất PDF Thành Công", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                // Fallback nếu có lỗi quyền ghi tệp PDF của driver máy in
+                // Fallback nếu có lỗi quyền ghi tệp PDF -> xuất ảnh vé thay thế
                 string imgPath = Path.ChangeExtension(pdfPath, ".png");
                 ExportAsImages(imgPath);
-                MessageBox.Show($"Lỗi driver PDF ({ex.Message}). Đã lưu file ảnh vé thay thế tại:\n{imgPath}",
+                MessageBox.Show($"Lỗi ghi tệp PDF ({ex.Message}). Đã lưu file ảnh vé thay thế tại:\n{imgPath}",
                     "Thông Báo Lưu File", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }

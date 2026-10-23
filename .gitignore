@@ -10,7 +10,6 @@
 *.userosscache
 *.sln.docstates
 *.env
-
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
@@ -430,3 +429,5 @@ FodyWeavers.xsd
 
 # CodeGraph
 .codegraph/
+QuanLyVanTai.UI/appsettings.json
+QuanLyVanTai.UI/appsettings.json

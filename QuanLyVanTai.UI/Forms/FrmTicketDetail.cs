@@ -121,9 +121,11 @@ namespace QuanLyVanTai.UI.Forms
             lblGiaVe.Text = $"{t.FinalPrice:N0} VNĐ";
             lblThanhToan.Text = t.PaymentStatus switch
             {
-                "Paid" => "Đã thanh toán",
-                "Unpaid" => "Chưa thanh toán",
-                "Refunded" => "Đã hoàn tiền",
+                "Paid" or "Đã thanh toán" => "Đã thanh toán",
+                "Unpaid" or "Chưa thanh toán" => "Chưa thanh toán",
+                "Pending" or "Chờ thanh toán" => "Chờ thanh toán",
+                "Failed" or "Thất bại" => "Thất bại",
+                "Refunded" or "Đã hoàn tiền" => "Đã hoàn tiền",
                 _ => t.PaymentStatus
             };
             lblNgayDat.Text = t.BookingTime.ToString("dd/MM/yyyy HH:mm");

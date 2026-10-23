@@ -1,7 +1,9 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Drawing.Printing;
 using System.Drawing.Text;
+using System.Text;
 using QRCoder;
 using QuanLyVanTai.BLL.DTOs;
 
@@ -365,6 +367,155 @@ namespace QuanLyVanTai.BLL.Services
             };
 
             return doc;
+        }
+
+        /// <summary>
+        /// Sinh mảng byte file PDF vé điện tử chuẩn (PDF 1.4) độc lập 100% với driver máy in
+        /// Có thể mở ngay bằng bất kỳ phần mềm đọc PDF nào (Adobe Acrobat, Chrome, Edge...)
+        /// </summary>
+        public static byte[] GenerateTicketPdf(List<TicketReceiptDto> tickets)
+        {
+            if (tickets == null || tickets.Count == 0)
+                return Array.Empty<byte>();
+
+            int width = 580;
+            int height = 840;
+
+            var pageJpegBytes = new List<byte[]>();
+
+            var jpegCodec = ImageCodecInfo.GetImageEncoders()
+                .FirstOrDefault(c => c.FormatID == ImageFormat.Jpeg.Guid);
+
+            using var encParams = new EncoderParameters(1);
+            encParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 95L);
+
+            foreach (var ticket in tickets)
+            {
+                using var bmp = new Bitmap(width, height);
+                using (var g = Graphics.FromImage(bmp))
+                {
+                    g.Clear(Color.White);
+                    DrawTicket(g, ticket, new Rectangle(0, 0, width, height));
+                }
+
+                using var msJpeg = new MemoryStream();
+                if (jpegCodec != null)
+                {
+                    bmp.Save(msJpeg, jpegCodec, encParams);
+                }
+                else
+                {
+                    bmp.Save(msJpeg, ImageFormat.Jpeg);
+                }
+                pageJpegBytes.Add(msJpeg.ToArray());
+            }
+
+            return BuildPdfFromJpegPages(pageJpegBytes, width, height);
+        }
+
+        /// <summary>
+        /// Sinh file PDF cho một vé duy nhất
+        /// </summary>
+        public static byte[] GenerateSingleTicketPdf(TicketReceiptDto ticket)
+        {
+            return GenerateTicketPdf(new List<TicketReceiptDto> { ticket });
+        }
+
+        /// <summary>
+        /// Lưu vé điện tử trực tiếp thành file PDF trên đĩa cứng
+        /// </summary>
+        public static void SaveTicketPdf(List<TicketReceiptDto> tickets, string filePath)
+        {
+            var bytes = GenerateTicketPdf(tickets);
+            string? dir = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrWhiteSpace(dir) && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+            File.WriteAllBytes(filePath, bytes);
+        }
+
+        /// <summary>
+        /// Đóng gói các trang ảnh JPEG thành tài liệu chuẩn PDF 1.4
+        /// </summary>
+        private static byte[] BuildPdfFromJpegPages(List<byte[]> pageJpegList, int width, int height)
+        {
+            int pageCount = pageJpegList.Count;
+            if (pageCount == 0) return Array.Empty<byte>();
+
+            using var ms = new MemoryStream();
+            using var writer = new StreamWriter(ms, Encoding.ASCII, leaveOpen: true);
+
+            // 1. Header chuẩn PDF 1.4
+            writer.Write("%PDF-1.4\r\n");
+            writer.Write("%\xE2\xE3\xCF\xD3\r\n");
+            writer.Flush();
+
+            int totalObjects = 2 + (pageCount * 3);
+            long[] offsets = new long[totalObjects + 1];
+
+            // Object 1: Catalog
+            offsets[1] = ms.Position;
+            writer.Write("1 0 obj\r\n<< /Type /Catalog /Pages 2 0 R >>\r\nendobj\r\n");
+            writer.Flush();
+
+            // Object 2: Pages
+            offsets[2] = ms.Position;
+            var sbKids = new StringBuilder();
+            for (int i = 0; i < pageCount; i++)
+            {
+                int pId = 3 + (i * 3);
+                sbKids.Append($"{pId} 0 R ");
+            }
+            writer.Write($"2 0 obj\r\n<< /Type /Pages /Kids [ {sbKids} ] /Count {pageCount} >>\r\nendobj\r\n");
+            writer.Flush();
+
+            // Cho từng trang: Page, Content Stream, Image XObject
+            for (int i = 0; i < pageCount; i++)
+            {
+                int pageObjId = 3 + (i * 3);
+                int contentObjId = pageObjId + 1;
+                int imageObjId = pageObjId + 2;
+                byte[] jpegData = pageJpegList[i];
+
+                // Page Object
+                offsets[pageObjId] = ms.Position;
+                writer.Write($"{pageObjId} 0 obj\r\n<< /Type /Page /Parent 2 0 R /MediaBox [ 0 0 {width} {height} ] /Resources << /XObject << /Im1 {imageObjId} 0 R >> >> /Contents {contentObjId} 0 R >>\r\nendobj\r\n");
+                writer.Flush();
+
+                // Content Stream Object
+                string contentStream = $"q\r\n{width} 0 0 {height} 0 0 cm\r\n/Im1 Do\r\nQ\r\n";
+                byte[] contentBytes = Encoding.ASCII.GetBytes(contentStream);
+                offsets[contentObjId] = ms.Position;
+                writer.Write($"{contentObjId} 0 obj\r\n<< /Length {contentBytes.Length} >>\r\nstream\r\n");
+                writer.Flush();
+                ms.Write(contentBytes, 0, contentBytes.Length);
+                writer.Write("\r\nendstream\r\nendobj\r\n");
+                writer.Flush();
+
+                // Image XObject Object
+                offsets[imageObjId] = ms.Position;
+                writer.Write($"{imageObjId} 0 obj\r\n<< /Type /XObject /Subtype /Image /Width {width} /Height {height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length {jpegData.Length} >>\r\nstream\r\n");
+                writer.Flush();
+                ms.Write(jpegData, 0, jpegData.Length);
+                writer.Write("\r\nendstream\r\nendobj\r\n");
+                writer.Flush();
+            }
+
+            // XRef Table
+            long xrefPos = ms.Position;
+            writer.Write($"xref\r\n0 {totalObjects + 1}\r\n");
+            writer.Write("0000000000 65535 f \r\n");
+            for (int objId = 1; objId <= totalObjects; objId++)
+            {
+                writer.Write($"{offsets[objId]:D10} 00000 n \r\n");
+            }
+
+            // Trailer
+            writer.Write($"trailer\r\n<< /Size {totalObjects + 1} /Root 1 0 R >>\r\nstartxref\r\n{xrefPos}\r\n%%EOF\r\n");
+            writer.Flush();
+
+            return ms.ToArray();
         }
     }
 }

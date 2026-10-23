@@ -9,6 +9,7 @@ namespace QuanLyVanTai.BLL.DTOs
         public string TicketCode { get; set; } = string.Empty;
         public string CustomerName { get; set; } = string.Empty;
         public string CustomerPhone { get; set; } = string.Empty;
+        public string? CustomerEmail { get; set; }
         public string RouteName { get; set; } = string.Empty;
         public string RouteCode { get; set; } = string.Empty;
         public string LicensePlate { get; set; } = string.Empty;

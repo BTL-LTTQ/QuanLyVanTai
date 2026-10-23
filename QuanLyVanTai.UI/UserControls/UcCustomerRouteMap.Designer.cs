@@ -17,9 +17,8 @@ namespace QuanLyVanTai.UI.UserControls
 
         private void InitializeComponent()
         {
-            components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             splitMain = new SplitContainer();
             pnlLeftContent = new Panel();
             grpStations = new GroupBox();
@@ -176,34 +175,34 @@ namespace QuanLyVanTai.UI.UserControls
             // colOrder
             // 
             colOrder.FillWeight = 15F;
+            colOrder.HeaderText = "STT";
             colOrder.MinimumWidth = 45;
             colOrder.Name = "colOrder";
             colOrder.ReadOnly = true;
-            colOrder.HeaderText = "STT";
             // 
             // colStationName
             // 
             colStationName.FillWeight = 45F;
+            colStationName.HeaderText = "Tên Trạm Dừng";
             colStationName.MinimumWidth = 120;
             colStationName.Name = "colStationName";
             colStationName.ReadOnly = true;
-            colStationName.HeaderText = "Tên Trạm Dừng";
             // 
             // colCity
             // 
             colCity.FillWeight = 22F;
+            colCity.HeaderText = "Tỉnh / TP";
             colCity.MinimumWidth = 80;
             colCity.Name = "colCity";
             colCity.ReadOnly = true;
-            colCity.HeaderText = "Tỉnh / TP";
             // 
             // colRole
             // 
             colRole.FillWeight = 18F;
+            colRole.HeaderText = "Vai Trò";
             colRole.MinimumWidth = 70;
             colRole.Name = "colRole";
             colRole.ReadOnly = true;
-            colRole.HeaderText = "Vai Trò";
             // 
             // flpLeftActions
             // 
@@ -234,7 +233,7 @@ namespace QuanLyVanTai.UI.UserControls
             btnDatVeTuyenNay.Margin = new Padding(3, 4, 8, 6);
             btnDatVeTuyenNay.Name = "btnDatVeTuyenNay";
             btnDatVeTuyenNay.Padding = new Padding(10, 0, 12, 0);
-            btnDatVeTuyenNay.Size = new Size(200, 42);
+            btnDatVeTuyenNay.Size = new Size(293, 42);
             btnDatVeTuyenNay.TabIndex = 0;
             btnDatVeTuyenNay.Text = "  Đặt Vé Tuyến Này";
             btnDatVeTuyenNay.TextAlign = ContentAlignment.MiddleRight;
@@ -254,11 +253,11 @@ namespace QuanLyVanTai.UI.UserControls
             btnFitBounds.IconFont = FontAwesome.Sharp.IconFont.Auto;
             btnFitBounds.IconSize = 18;
             btnFitBounds.ImageAlign = ContentAlignment.MiddleLeft;
-            btnFitBounds.Location = new Point(214, 14);
+            btnFitBounds.Location = new Point(307, 14);
             btnFitBounds.Margin = new Padding(3, 4, 8, 6);
             btnFitBounds.Name = "btnFitBounds";
             btnFitBounds.Padding = new Padding(8, 0, 10, 0);
-            btnFitBounds.Size = new Size(130, 42);
+            btnFitBounds.Size = new Size(125, 42);
             btnFitBounds.TabIndex = 1;
             btnFitBounds.Text = "  Phóng To";
             btnFitBounds.TextAlign = ContentAlignment.MiddleRight;
@@ -282,7 +281,7 @@ namespace QuanLyVanTai.UI.UserControls
             btnMoGoogleMaps.Margin = new Padding(3, 4, 8, 4);
             btnMoGoogleMaps.Name = "btnMoGoogleMaps";
             btnMoGoogleMaps.Padding = new Padding(8, 0, 10, 0);
-            btnMoGoogleMaps.Size = new Size(180, 36);
+            btnMoGoogleMaps.Size = new Size(430, 36);
             btnMoGoogleMaps.TabIndex = 2;
             btnMoGoogleMaps.Text = "  Mở Google Maps";
             btnMoGoogleMaps.TextAlign = ContentAlignment.MiddleRight;
@@ -337,7 +336,7 @@ namespace QuanLyVanTai.UI.UserControls
             lblRouteTitle.ForeColor = Color.FromArgb(100, 116, 139);
             lblRouteTitle.Location = new Point(3, 8);
             lblRouteTitle.Name = "lblRouteTitle";
-            lblRouteTitle.Size = new Size(67, 20);
+            lblRouteTitle.Size = new Size(62, 20);
             lblRouteTitle.TabIndex = 0;
             lblRouteTitle.Text = "Lộ trình:";
             // 
@@ -349,7 +348,7 @@ namespace QuanLyVanTai.UI.UserControls
             lblRouteNameVal.ForeColor = Color.FromArgb(30, 41, 59);
             lblRouteNameVal.Location = new Point(123, 7);
             lblRouteNameVal.Name = "lblRouteNameVal";
-            lblRouteNameVal.Size = new Size(23, 21);
+            lblRouteNameVal.Size = new Size(22, 21);
             lblRouteNameVal.TabIndex = 1;
             lblRouteNameVal.Text = "...";
             // 
@@ -359,9 +358,9 @@ namespace QuanLyVanTai.UI.UserControls
             lblDistanceTitle.AutoSize = true;
             lblDistanceTitle.Font = new Font("Segoe UI", 9F);
             lblDistanceTitle.ForeColor = Color.FromArgb(100, 116, 139);
-            lblDistanceTitle.Location = new Point(3, 43);
+            lblDistanceTitle.Location = new Point(3, 36);
             lblDistanceTitle.Name = "lblDistanceTitle";
-            lblDistanceTitle.Size = new Size(106, 20);
+            lblDistanceTitle.Size = new Size(83, 34);
             lblDistanceTitle.TabIndex = 2;
             lblDistanceTitle.Text = "Cự ly & Thời gian:";
             // 
@@ -373,7 +372,7 @@ namespace QuanLyVanTai.UI.UserControls
             lblDistanceTimeVal.ForeColor = Color.FromArgb(30, 41, 59);
             lblDistanceTimeVal.Location = new Point(123, 43);
             lblDistanceTimeVal.Name = "lblDistanceTimeVal";
-            lblDistanceTimeVal.Size = new Size(21, 20);
+            lblDistanceTimeVal.Size = new Size(18, 20);
             lblDistanceTimeVal.TabIndex = 3;
             lblDistanceTimeVal.Text = "...";
             // 
@@ -385,7 +384,7 @@ namespace QuanLyVanTai.UI.UserControls
             lblPriceTitle.ForeColor = Color.FromArgb(100, 116, 139);
             lblPriceTitle.Location = new Point(3, 77);
             lblPriceTitle.Name = "lblPriceTitle";
-            lblPriceTitle.Size = new Size(93, 20);
+            lblPriceTitle.Size = new Size(99, 20);
             lblPriceTitle.TabIndex = 4;
             lblPriceTitle.Text = "Giá cước gốc:";
             // 
@@ -397,7 +396,7 @@ namespace QuanLyVanTai.UI.UserControls
             lblBasePriceVal.ForeColor = Color.FromArgb(16, 185, 129);
             lblBasePriceVal.Location = new Point(123, 76);
             lblBasePriceVal.Name = "lblBasePriceVal";
-            lblBasePriceVal.Size = new Size(23, 21);
+            lblBasePriceVal.Size = new Size(22, 21);
             lblBasePriceVal.TabIndex = 5;
             lblBasePriceVal.Text = "...";
             // 
@@ -409,7 +408,7 @@ namespace QuanLyVanTai.UI.UserControls
             lblStationCountTitle.ForeColor = Color.FromArgb(100, 116, 139);
             lblStationCountTitle.Location = new Point(3, 110);
             lblStationCountTitle.Name = "lblStationCountTitle";
-            lblStationCountTitle.Size = new Size(100, 20);
+            lblStationCountTitle.Size = new Size(103, 20);
             lblStationCountTitle.TabIndex = 6;
             lblStationCountTitle.Text = "Số trạm dừng:";
             // 
@@ -421,7 +420,7 @@ namespace QuanLyVanTai.UI.UserControls
             lblStationCountVal.ForeColor = Color.FromArgb(30, 41, 59);
             lblStationCountVal.Location = new Point(123, 110);
             lblStationCountVal.Name = "lblStationCountVal";
-            lblStationCountVal.Size = new Size(21, 20);
+            lblStationCountVal.Size = new Size(18, 20);
             lblStationCountVal.TabIndex = 7;
             lblStationCountVal.Text = "...";
             // 
@@ -488,7 +487,7 @@ namespace QuanLyVanTai.UI.UserControls
             btnLamMoi.Cursor = Cursors.Hand;
             btnLamMoi.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
             btnLamMoi.FlatStyle = FlatStyle.Flat;
-            btnLamMoi.IconChar = FontAwesome.Sharp.IconChar.Rotate;
+            btnLamMoi.IconChar = FontAwesome.Sharp.IconChar.SyncAlt;
             btnLamMoi.IconColor = Color.FromArgb(71, 85, 105);
             btnLamMoi.IconFont = FontAwesome.Sharp.IconFont.Auto;
             btnLamMoi.IconSize = 16;
@@ -566,7 +565,7 @@ namespace QuanLyVanTai.UI.UserControls
             flpMapControls.Dock = DockStyle.Left;
             flpMapControls.Location = new Point(8, 6);
             flpMapControls.Name = "flpMapControls";
-            flpMapControls.Size = new Size(360, 36);
+            flpMapControls.Size = new Size(396, 36);
             flpMapControls.TabIndex = 0;
             // 
             // btnLayerStreet
@@ -586,7 +585,7 @@ namespace QuanLyVanTai.UI.UserControls
             btnLayerStreet.Margin = new Padding(3, 2, 6, 2);
             btnLayerStreet.Name = "btnLayerStreet";
             btnLayerStreet.Padding = new Padding(6, 0, 8, 0);
-            btnLayerStreet.Size = new Size(110, 32);
+            btnLayerStreet.Size = new Size(129, 32);
             btnLayerStreet.TabIndex = 0;
             btnLayerStreet.Text = " Đường phố";
             btnLayerStreet.TextAlign = ContentAlignment.MiddleRight;
@@ -601,16 +600,16 @@ namespace QuanLyVanTai.UI.UserControls
             btnLayerSatellite.FlatStyle = FlatStyle.Flat;
             btnLayerSatellite.Font = new Font("Segoe UI", 8.5F);
             btnLayerSatellite.ForeColor = Color.FromArgb(71, 85, 105);
-            btnLayerSatellite.IconChar = FontAwesome.Sharp.IconChar.EarthAmericas;
+            btnLayerSatellite.IconChar = FontAwesome.Sharp.IconChar.GlobeAmericas;
             btnLayerSatellite.IconColor = Color.FromArgb(71, 85, 105);
             btnLayerSatellite.IconFont = FontAwesome.Sharp.IconFont.Auto;
             btnLayerSatellite.IconSize = 16;
             btnLayerSatellite.ImageAlign = ContentAlignment.MiddleLeft;
-            btnLayerSatellite.Location = new Point(122, 2);
+            btnLayerSatellite.Location = new Point(141, 2);
             btnLayerSatellite.Margin = new Padding(3, 2, 6, 2);
             btnLayerSatellite.Name = "btnLayerSatellite";
             btnLayerSatellite.Padding = new Padding(6, 0, 8, 0);
-            btnLayerSatellite.Size = new Size(95, 32);
+            btnLayerSatellite.Size = new Size(102, 32);
             btnLayerSatellite.TabIndex = 1;
             btnLayerSatellite.Text = " Vệ tinh";
             btnLayerSatellite.TextAlign = ContentAlignment.MiddleRight;
@@ -630,11 +629,11 @@ namespace QuanLyVanTai.UI.UserControls
             btnLayerVoyager.IconFont = FontAwesome.Sharp.IconFont.Auto;
             btnLayerVoyager.IconSize = 16;
             btnLayerVoyager.ImageAlign = ContentAlignment.MiddleLeft;
-            btnLayerVoyager.Location = new Point(226, 2);
+            btnLayerVoyager.Location = new Point(252, 2);
             btnLayerVoyager.Margin = new Padding(3, 2, 6, 2);
             btnLayerVoyager.Name = "btnLayerVoyager";
             btnLayerVoyager.Padding = new Padding(6, 0, 8, 0);
-            btnLayerVoyager.Size = new Size(100, 32);
+            btnLayerVoyager.Size = new Size(111, 32);
             btnLayerVoyager.TabIndex = 2;
             btnLayerVoyager.Text = " Hiện đại";
             btnLayerVoyager.TextAlign = ContentAlignment.MiddleRight;
@@ -649,7 +648,7 @@ namespace QuanLyVanTai.UI.UserControls
             lblMapStatus.ForeColor = Color.FromArgb(100, 116, 139);
             lblMapStatus.Location = new Point(410, 14);
             lblMapStatus.Name = "lblMapStatus";
-            lblMapStatus.Size = new Size(400, 20);
+            lblMapStatus.Size = new Size(399, 20);
             lblMapStatus.TabIndex = 1;
             lblMapStatus.Text = "💡 Click vào một trạm trên bảng hoặc marker để phóng to";
             lblMapStatus.TextAlign = ContentAlignment.MiddleRight;
