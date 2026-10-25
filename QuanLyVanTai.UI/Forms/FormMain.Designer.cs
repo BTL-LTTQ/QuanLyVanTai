@@ -37,6 +37,7 @@ namespace QuanLyVanTai.UI
             mnuBaoCao = new ToolStripMenuItem();
             mnuDashboard = new ToolStripMenuItem();
             mnuNhatKy = new ToolStripMenuItem();
+            mnuAdoReport = new ToolStripMenuItem();
             mnuQuanTri = new ToolStripMenuItem();
             mnuPhanQuyen = new ToolStripMenuItem();
             mnuTroGiup = new ToolStripMenuItem();
@@ -212,7 +213,7 @@ namespace QuanLyVanTai.UI
             // 
             // mnuBaoCao
             // 
-            mnuBaoCao.DropDownItems.AddRange(new ToolStripItem[] { mnuDashboard, mnuNhatKy });
+            mnuBaoCao.DropDownItems.AddRange(new ToolStripItem[] { mnuDashboard, mnuNhatKy, mnuAdoReport });
             mnuBaoCao.Name = "mnuBaoCao";
             mnuBaoCao.Size = new Size(163, 25);
             mnuBaoCao.Text = "&Báo cáo && Thống kê";
@@ -232,6 +233,14 @@ namespace QuanLyVanTai.UI
             mnuNhatKy.Size = new Size(280, 26);
             mnuNhatKy.Text = "&Nhật ký Hoạt động";
             mnuNhatKy.Click += mnuNhatKy_Click;
+            // 
+            // mnuAdoReport
+            // 
+            mnuAdoReport.Name = "mnuAdoReport";
+            mnuAdoReport.ShortcutKeys = Keys.Control | Keys.D8;
+            mnuAdoReport.Size = new Size(280, 26);
+            mnuAdoReport.Text = "📊 &Báo cáo Doanh thu (ADO.NET)";
+            mnuAdoReport.Click += mnuAdoReport_Click;
             // 
             // mnuQuanTri
             // 
@@ -583,6 +592,7 @@ namespace QuanLyVanTai.UI
         private ToolStripMenuItem mnuBaoCao;
         private ToolStripMenuItem mnuDashboard;
         private ToolStripMenuItem mnuNhatKy;
+        private ToolStripMenuItem mnuAdoReport;
         private ToolStripMenuItem mnuQuanTri;
         private ToolStripMenuItem mnuPhanQuyen;
         private ToolStripMenuItem mnuTroGiup;

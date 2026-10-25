@@ -298,6 +298,11 @@ namespace QuanLyVanTai.UI
             OpenMenu(SystemMenus.AuditLog, "NHẬT KÝ HOẠT ĐỘNG (AUDIT TRAIL)", () => new UcAuditLog());
         }
 
+        private void mnuAdoReport_Click(object? sender, EventArgs e)
+        {
+            OpenMenu(SystemMenus.AuditLog, "BÁO CÁO DOANH THU — ADO.NET THUẦN", () => new UcAdoReport());
+        }
+
         private void mnuLamMoi_Click(object? sender, EventArgs e)
         {
             if (_currentView is UcManageRoute)
