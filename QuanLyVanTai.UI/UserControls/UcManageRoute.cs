@@ -87,6 +87,59 @@ namespace QuanLyVanTai.UI.UserControls
 
             cboFkStation.SelectedIndexChanged += (s, e) => ApplyFkStationSelection();
             cboFkVehicle.SelectedIndexChanged += (s, e) => ApplyFkVehicleSelection();
+
+            // ── Drag & Drop: kéo file .xlsx thả vào DataGridView để import ──
+            dgvRoutes.AllowDrop = true;
+            dgvRoutes.DragEnter += DgvRoutes_DragEnter;
+            dgvRoutes.DragDrop  += DgvRoutes_DragDrop;
+        }
+
+        /// <summary>
+        /// Kiểm tra file kéo vào có phải .xlsx không.
+        /// Nếu đúng: đổi cursor thành Copy để báo hiệu "có thể thả".
+        /// Nếu sai : đổi cursor thành None để báo hiệu "không chấp nhận".
+        /// </summary>
+        private void DgvRoutes_DragEnter(object? sender, DragEventArgs e)
+        {
+            if (e.Data is null) return;
+
+            bool isExcelFile =
+                e.Data.GetDataPresent(DataFormats.FileDrop) &&
+                e.Data.GetData(DataFormats.FileDrop) is string[] files &&
+                files.Length == 1 &&
+                files[0].EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase);
+
+            e.Effect = isExcelFile ? DragDropEffects.Copy : DragDropEffects.None;
+        }
+
+        /// <summary>
+        /// Người dùng thả file .xlsx vào DataGridView → gọi import luôn,
+        /// không cần mở OpenFileDialog.
+        /// </summary>
+        private async void DgvRoutes_DragDrop(object? sender, DragEventArgs e)
+        {
+            if (e.Data?.GetData(DataFormats.FileDrop) is not string[] files || files.Length == 0)
+                return;
+
+            string filePath = files[0];
+
+            if (!filePath.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+            {
+                MessageBox.Show("Chỉ hỗ trợ file Excel định dạng .xlsx.",
+                    "Định dạng không hỗ trợ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!AuthorizationGuard.CheckAccess(SystemMenus.Route, PermissionAction.Add))
+                return;
+
+            // Xác nhận trước khi import
+            var confirm = MessageBox.Show(
+                $"Import tuyến xe từ file:\n{Path.GetFileName(filePath)}\n\nXác nhận tiến hành?",
+                "Xác nhận Import", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (confirm != DialogResult.Yes) return;
+
+            await ImportRoutesFromFileAsync(filePath);
         }
 
         private void ApplySecurity()
@@ -530,11 +583,20 @@ namespace QuanLyVanTai.UI.UserControls
             if (ofd.ShowDialog() != DialogResult.OK)
                 return;
 
+            await ImportRoutesFromFileAsync(ofd.FileName);
+        }
+
+        /// <summary>
+        /// Thực hiện import từ đường dẫn file cụ thể — dùng chung cho cả
+        /// nút Import (OpenFileDialog) lẫn Drag &amp; Drop.
+        /// </summary>
+        private async Task ImportRoutesFromFileAsync(string filePath)
+        {
             BeginExcelOperation(true); // Ẩn nút + hiện progress
             try
             {
                 var progress = CreateProgressReporter();
-                var result = await _excelService.ImportRoutesAsync(ofd.FileName, progress);
+                var result = await _excelService.ImportRoutesAsync(filePath, progress);
 
                 MessageBox.Show(
                     $"Import thành công!\n\n" +
@@ -543,12 +605,10 @@ namespace QuanLyVanTai.UI.UserControls
                     $"Bỏ qua (trùng mã): {result.SkippedDuplicateRows}",
                     "Import Excel thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                // Tải lại danh sách sau khi import
                 await ReloadRoutesListAsync(txtSearch.Text);
             }
             catch (ExcelImportException ex)
             {
-                // Hiển thị danh sách dòng lỗi — toàn bộ dữ liệu đã Rollback
                 MessageBox.Show(ex.Message, "Import thất bại", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (DataAccessException ex)
