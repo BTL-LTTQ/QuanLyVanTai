@@ -17,13 +17,15 @@ namespace QuanLyVanTai.BLL.Services
         /// <summary>
         /// Sinh ảnh QR Code từ chuỗi dữ liệu bằng thư viện QRCoder thuần C#
         /// </summary>
-        public static Bitmap GenerateQrCode(string content, int pixelsPerModule = 4)
+        public static Bitmap GenerateQrCode(string content, int pixelsPerModule = 6)
         {
             if (string.IsNullOrWhiteSpace(content))
                 content = "QLVT|EMPTY";
 
             using var qrGenerator = new QRCodeGenerator();
-            using var qrCodeData = qrGenerator.CreateQrCode(content, QRCodeGenerator.ECCLevel.Q);
+            // ECCLevel.M (15% sửa lỗi) là chuẩn công nghiệp tối ưu cho vé điện tử:
+            // Ô module to, rõ ràng, ma trận thông thoáng, giúp camera điện thoại (Zalo/iOS/Android) bắt nét cực nhạy
+            using var qrCodeData = qrGenerator.CreateQrCode(content, QRCodeGenerator.ECCLevel.M);
             
             // QRCoder v1.6+: QRCode.GetGraphic(pixelsPerModule)
             using var qrCode = new QRCode(qrCodeData);
@@ -110,15 +112,37 @@ namespace QuanLyVanTai.BLL.Services
                 ? ticket.LicensePlate
                 : "Đang điều xe";
 
-            // Mã QR và Mã vé đặt ở góc phải
-            int qrSize = 100;
-            int qrX = right - qrSize - 20;
-            int qrY = headerSectionY + 2;
+            // Mã QR và Mã vé đặt ở góc phải (kích thước lớn, viền Quiet Zone chuẩn)
+            int qrSize = 110;
+            int qrX = right - qrSize - 18;
+            int qrY = headerSectionY;
 
             try
             {
-                using var qrBmp = GenerateQrCode(ticket.QrCodeContent, 3);
+                // Hộp nền trắng tinh + viền nhẹ tạo Quiet Zone rõ ràng cho camera điện thoại nhận dạng
+                using (var whiteBrush = new SolidBrush(Color.White))
+                using (var borderPen = new Pen(Color.FromArgb(226, 232, 240), 1f))
+                {
+                    g.FillRectangle(whiteBrush, qrX - 4, qrY - 4, qrSize + 8, qrSize + 8);
+                    g.DrawRectangle(borderPen, qrX - 4, qrY - 4, qrSize + 8, qrSize + 8);
+                }
+
+                using var qrBmp = GenerateQrCode(ticket.QrCodeContent, 6);
+
+                // Quan trọng: Sử dụng NearestNeighbor để các ô vuông mã QR sắc nét 100%, không bị nhòe mờ do Bicubic
+                var prevInterpolation = g.InterpolationMode;
+                var prevSmoothing = g.SmoothingMode;
+                var prevPixelOffset = g.PixelOffsetMode;
+
+                g.InterpolationMode = InterpolationMode.NearestNeighbor;
+                g.SmoothingMode = SmoothingMode.None;
+                g.PixelOffsetMode = PixelOffsetMode.Half;
+
                 g.DrawImage(qrBmp, qrX, qrY, qrSize, qrSize);
+
+                g.InterpolationMode = prevInterpolation;
+                g.SmoothingMode = prevSmoothing;
+                g.PixelOffsetMode = prevPixelOffset;
             }
             catch
             {

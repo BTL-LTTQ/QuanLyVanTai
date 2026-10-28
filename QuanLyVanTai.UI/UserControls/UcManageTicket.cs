@@ -65,12 +65,17 @@ namespace QuanLyVanTai.UI.UserControls
             cboPayStatus.SelectedIndex = 0;
 
             cboTicketStatus.Items.Clear();
-            cboTicketStatus.Items.AddRange(["Tất cả", "Booked", "Completed", "Cancelled"]);
+            cboTicketStatus.Items.AddRange(["Tất cả", "Booked", "Boarded", "Completed", "Cancelled"]);
             cboTicketStatus.SelectedIndex = 0;
+
+            cboPriceRange.Items.Clear();
+            cboPriceRange.Items.AddRange(["Tất cả mức giá", "Dưới 200.000 đ", "200.000 đ - 400.000 đ", "400.000 đ - 700.000 đ", "Trên 700.000 đ"]);
+            cboPriceRange.SelectedIndex = 0;
 
             ThemeConfig.StyleSecondaryButton(btnRefresh, IconChar.RotateLeft);
             ThemeConfig.StyleSuccessButton(btnAdd, IconChar.Plus);
             ThemeConfig.StyleSecondaryButton(btnExport, IconChar.FileExcel);
+            ThemeConfig.StylePrimaryButton(btnCheckInQr, IconChar.Qrcode);
 
             // DataGridView setup
             if (dgvTickets.Columns.Count == 0)
@@ -95,7 +100,7 @@ namespace QuanLyVanTai.UI.UserControls
             cboDetailPayStatus.SelectedIndex = 0;
 
             cboDetailTicketStatus.Items.Clear();
-            cboDetailTicketStatus.Items.AddRange(["Booked", "Completed", "Cancelled"]);
+            cboDetailTicketStatus.Items.AddRange(["Booked", "Boarded", "Completed", "Cancelled"]);
             cboDetailTicketStatus.SelectedIndex = 0;
 
             ThemeConfig.StylePrimaryButton(btnSave, IconChar.FloppyDisk);
@@ -168,6 +173,7 @@ namespace QuanLyVanTai.UI.UserControls
             cboRoute.SelectedIndexChanged += (s, e) => ScheduleRefresh();
             cboPayStatus.SelectedIndexChanged += (s, e) => ScheduleRefresh();
             cboTicketStatus.SelectedIndexChanged += (s, e) => ScheduleRefresh();
+            cboPriceRange.SelectedIndexChanged += (s, e) => ScheduleRefresh();
 
             chkUseDateFilter.CheckedChanged += (s, e) =>
             {
@@ -180,6 +186,7 @@ namespace QuanLyVanTai.UI.UserControls
             btnRefresh.Click += async (s, e) => await LoadInitialDataAsync();
             btnAdd.Click += (s, e) => StartAdd();
             btnExport.Click += async (s, e) => await ExportAsync();
+            btnCheckInQr.Click += async (s, e) => await OpenCheckInDialogAsync();
 
             dgvTickets.SelectionChanged += DgvTickets_SelectionChanged;
             cboDetailRoute.SelectedIndexChanged += async (s, e) => await LoadVehiclesForSelectedRouteAsync();
@@ -255,6 +262,16 @@ namespace QuanLyVanTai.UI.UserControls
                 if (cboRoute.SelectedIndex > 0 && cboRoute.SelectedIndex - 1 < _routes.Count)
                     routeId = _routes[cboRoute.SelectedIndex - 1].Id.ToString();
 
+                decimal? minPrice = null;
+                decimal? maxPrice = null;
+                switch (cboPriceRange.SelectedIndex)
+                {
+                    case 1: maxPrice = 200000m; break;
+                    case 2: minPrice = 200000m; maxPrice = 400000m; break;
+                    case 3: minPrice = 400000m; maxPrice = 700000m; break;
+                    case 4: minPrice = 700000m; break;
+                }
+
                 var criteria = new TicketFilterCriteria
                 {
                     Keyword = txtKeyword.Text,
@@ -262,7 +279,9 @@ namespace QuanLyVanTai.UI.UserControls
                     PaymentStatus = cboPayStatus.SelectedItem?.ToString(),
                     TicketStatus = cboTicketStatus.SelectedItem?.ToString(),
                     DepartureFrom = chkUseDateFilter.Checked ? dtpFrom.Value.Date : null,
-                    DepartureTo = chkUseDateFilter.Checked ? dtpTo.Value.Date : null
+                    DepartureTo = chkUseDateFilter.Checked ? dtpTo.Value.Date : null,
+                    MinPrice = minPrice,
+                    MaxPrice = maxPrice
                 };
 
                 var tickets = await _ticketService.SearchAndFilterTicketsAsync(criteria);
@@ -276,6 +295,20 @@ namespace QuanLyVanTai.UI.UserControls
             finally
             {
                 _isRefreshing = false;
+            }
+        }
+
+        private async Task OpenCheckInDialogAsync()
+        {
+            try
+            {
+                using var frm = new Forms.FrmPassengerCheckIn();
+                frm.ShowDialog(this.FindForm());
+                await RefreshGridAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Không thể mở giao diện Check-in: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -314,6 +347,7 @@ namespace QuanLyVanTai.UI.UserControls
                 var statusCell = row.Cells["colTicketStatus"];
                 statusCell.Style.ForeColor = t.TicketStatus switch
                 {
+                    "Boarded" => Color.FromArgb(14, 165, 233),
                     "Completed" => Color.FromArgb(16, 185, 129),
                     "Cancelled" => Color.FromArgb(239, 68, 68),
                     _ => Color.FromArgb(245, 158, 11)

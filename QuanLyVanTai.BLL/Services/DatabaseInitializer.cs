@@ -121,43 +121,60 @@ namespace QuanLyVanTai.BLL.Services
                 await context.SaveChangesAsync();
             }
 
-            // 5. Khởi tạo một số vé mẫu
-            if (!await context.Tickets.AnyAsync())
+            // 5. Khởi tạo dữ liệu vé giao dịch thực tế phục vụ phân tích & biểu đồ Dashboard
+            if (await context.Tickets.CountAsync() < 10)
             {
-                var r1 = await context.Routes.FirstOrDefaultAsync();
-                var v1 = await context.Vehicles.FirstOrDefaultAsync();
-                if (r1 != null && v1 != null)
+                var routes = await context.Routes.ToListAsync();
+                var vehicles = await context.Vehicles.ToListAsync();
+                var r1 = routes.FirstOrDefault(r => r.RouteCode == "HN-HP-01") ?? routes.FirstOrDefault();
+                var r2 = routes.FirstOrDefault(r => r.RouteCode == "HN-DN-01") ?? routes.Skip(1).FirstOrDefault() ?? r1;
+                var r3 = routes.FirstOrDefault(r => r.RouteCode == "HN-SG-01") ?? routes.Skip(2).FirstOrDefault() ?? r2;
+
+                var v1 = vehicles.FirstOrDefault() ?? new Vehicle { LicensePlate = "29B-123.45" };
+                var v2 = vehicles.Skip(1).FirstOrDefault() ?? v1;
+                var v3 = vehicles.Skip(2).FirstOrDefault() ?? v1;
+
+                if (r1 != null && r2 != null && r3 != null)
                 {
-                    context.Tickets.AddRange(
-                        new Ticket
-                        {
-                            TicketCode = "TK20261001",
-                            CustomerName = "Nguyễn Văn An",
-                            CustomerPhone = "0912345678",
-                            SeatNumber = "A01",
-                            Price = r1.BasePrice,
-                            DepartureTime = DateTime.UtcNow.AddHours(2),
-                            PaymentStatus = "Paid",
-                            TicketStatus = "Booked",
-                            RouteId = r1.Id,
-                            VehicleId = v1.Id,
-                            AccountId = 1
-                        },
-                        new Ticket
-                        {
-                            TicketCode = "TK20261002",
-                            CustomerName = "Trần Thị Mai",
-                            CustomerPhone = "0987654321",
-                            SeatNumber = "A02",
-                            Price = r1.BasePrice,
-                            DepartureTime = DateTime.UtcNow.AddHours(2),
-                            PaymentStatus = "Paid",
-                            TicketStatus = "Booked",
-                            RouteId = r1.Id,
-                            VehicleId = v1.Id,
-                            AccountId = 1
-                        }
-                    );
+                    var now = DateTime.Today;
+                    var sampleTickets = new List<Ticket>
+                    {
+                        // 6 ngày trước
+                        new Ticket { TicketCode = "TK20261011001", CustomerName = "Nguyễn Văn An", CustomerPhone = "0912345678", SeatNumber = "A01", Price = r1.BasePrice, DepartureTime = now.AddDays(-6).AddHours(8), PaymentStatus = "Paid", TicketStatus = "Completed", RouteId = r1.Id, VehicleId = v1.Id, AccountId = 1 },
+                        new Ticket { TicketCode = "TK20261011002", CustomerName = "Trần Thị Mai", CustomerPhone = "0987654321", SeatNumber = "A02", Price = r1.BasePrice, DepartureTime = now.AddDays(-6).AddHours(8), PaymentStatus = "Paid", TicketStatus = "Completed", RouteId = r1.Id, VehicleId = v1.Id, AccountId = 1 },
+                        new Ticket { TicketCode = "TK20261011003", CustomerName = "Lê Hoàng Long", CustomerPhone = "0901234567", SeatNumber = "B01", Price = r2.BasePrice, DepartureTime = now.AddDays(-6).AddHours(19), PaymentStatus = "Paid", TicketStatus = "Completed", RouteId = r2.Id, VehicleId = v2.Id, AccountId = 1 },
+
+                        // 5 ngày trước
+                        new Ticket { TicketCode = "TK20261012001", CustomerName = "Phạm Thị Hương", CustomerPhone = "0934567890", SeatNumber = "A05", Price = r1.BasePrice, DepartureTime = now.AddDays(-5).AddHours(9), PaymentStatus = "Paid", TicketStatus = "Completed", RouteId = r1.Id, VehicleId = v1.Id, AccountId = 1 },
+                        new Ticket { TicketCode = "TK20261012002", CustomerName = "Đặng Minh Quân", CustomerPhone = "0945678901", SeatNumber = "VIP01", Price = r3.BasePrice, DepartureTime = now.AddDays(-5).AddHours(14), PaymentStatus = "Paid", TicketStatus = "Completed", RouteId = r3.Id, VehicleId = v3.Id, AccountId = 1 },
+
+                        // 4 ngày trước
+                        new Ticket { TicketCode = "TK20261013001", CustomerName = "Vũ Hải Đăng", CustomerPhone = "0967890123", SeatNumber = "B03", Price = r2.BasePrice, DepartureTime = now.AddDays(-4).AddHours(7), PaymentStatus = "Paid", TicketStatus = "Completed", RouteId = r2.Id, VehicleId = v2.Id, AccountId = 1 },
+                        new Ticket { TicketCode = "TK20261013002", CustomerName = "Bùi Thu Thảo", CustomerPhone = "0978901234", SeatNumber = "B04", Price = r2.BasePrice, DepartureTime = now.AddDays(-4).AddHours(7), PaymentStatus = "Paid", TicketStatus = "Completed", RouteId = r2.Id, VehicleId = v2.Id, AccountId = 1 },
+                        new Ticket { TicketCode = "TK20261013003", CustomerName = "Ngô Đức Trọng", CustomerPhone = "0989012345", SeatNumber = "A10", Price = r1.BasePrice, DepartureTime = now.AddDays(-4).AddHours(16), PaymentStatus = "Paid", TicketStatus = "Completed", RouteId = r1.Id, VehicleId = v1.Id, AccountId = 1 },
+
+                        // 3 ngày trước
+                        new Ticket { TicketCode = "TK20261014001", CustomerName = "Hoàng Kim Ngân", CustomerPhone = "0911223344", SeatNumber = "VIP02", Price = r3.BasePrice, DepartureTime = now.AddDays(-3).AddHours(10), PaymentStatus = "Paid", TicketStatus = "Completed", RouteId = r3.Id, VehicleId = v3.Id, AccountId = 1 },
+                        new Ticket { TicketCode = "TK20261014002", CustomerName = "Đỗ Quốc Bảo", CustomerPhone = "0922334455", SeatNumber = "VIP03", Price = r3.BasePrice, DepartureTime = now.AddDays(-3).AddHours(10), PaymentStatus = "Paid", TicketStatus = "Completed", RouteId = r3.Id, VehicleId = v3.Id, AccountId = 1 },
+                        new Ticket { TicketCode = "TK20261014003", CustomerName = "Trịnh Phương Ly", CustomerPhone = "0933445566", SeatNumber = "A06", Price = r1.BasePrice, DepartureTime = now.AddDays(-3).AddHours(13), PaymentStatus = "Paid", TicketStatus = "Completed", RouteId = r1.Id, VehicleId = v1.Id, AccountId = 1 },
+
+                        // 2 ngày trước
+                        new Ticket { TicketCode = "TK20261015001", CustomerName = "Mai Tiến Dũng", CustomerPhone = "0944556677", SeatNumber = "B07", Price = r2.BasePrice, DepartureTime = now.AddDays(-2).AddHours(8), PaymentStatus = "Paid", TicketStatus = "Completed", RouteId = r2.Id, VehicleId = v2.Id, AccountId = 1 },
+                        new Ticket { TicketCode = "TK20261015002", CustomerName = "Dương Ngọc Ánh", CustomerPhone = "0955667788", SeatNumber = "B08", Price = r2.BasePrice, DepartureTime = now.AddDays(-2).AddHours(8), PaymentStatus = "Paid", TicketStatus = "Completed", RouteId = r2.Id, VehicleId = v2.Id, AccountId = 1 },
+                        new Ticket { TicketCode = "TK20261015003", CustomerName = "Lý Tuấn Kiệt", CustomerPhone = "0966778899", SeatNumber = "A08", Price = r1.BasePrice, DepartureTime = now.AddDays(-2).AddHours(15), PaymentStatus = "Paid", TicketStatus = "Completed", RouteId = r1.Id, VehicleId = v1.Id, AccountId = 1 },
+
+                        // Hôm qua
+                        new Ticket { TicketCode = "TK20261016001", CustomerName = "Phan Văn Hậu", CustomerPhone = "0977889900", SeatNumber = "VIP05", Price = r3.BasePrice, DepartureTime = now.AddDays(-1).AddHours(9), PaymentStatus = "Paid", TicketStatus = "Completed", RouteId = r3.Id, VehicleId = v3.Id, AccountId = 1 },
+                        new Ticket { TicketCode = "TK20261016002", CustomerName = "Tạ Bích Loan", CustomerPhone = "0988990011", SeatNumber = "A12", Price = r1.BasePrice, DepartureTime = now.AddDays(-1).AddHours(11), PaymentStatus = "Paid", TicketStatus = "Completed", RouteId = r1.Id, VehicleId = v1.Id, AccountId = 1 },
+                        new Ticket { TicketCode = "TK20261016003", CustomerName = "Vương Đình Huệ", CustomerPhone = "0999001122", SeatNumber = "B10", Price = r2.BasePrice, DepartureTime = now.AddDays(-1).AddHours(17), PaymentStatus = "Paid", TicketStatus = "Completed", RouteId = r2.Id, VehicleId = v2.Id, AccountId = 1 },
+
+                        // Hôm nay
+                        new Ticket { TicketCode = "TK20261017001", CustomerName = "Cao Bá Quát", CustomerPhone = "0911335577", SeatNumber = "A01", Price = r1.BasePrice, DepartureTime = now.AddHours(7), PaymentStatus = "Paid", TicketStatus = "Booked", RouteId = r1.Id, VehicleId = v1.Id, AccountId = 1 },
+                        new Ticket { TicketCode = "TK20261017002", CustomerName = "Hà Thu Trang", CustomerPhone = "0922446688", SeatNumber = "VIP06", Price = r3.BasePrice, DepartureTime = now.AddHours(10), PaymentStatus = "Paid", TicketStatus = "Booked", RouteId = r3.Id, VehicleId = v3.Id, AccountId = 1 },
+                        new Ticket { TicketCode = "TK20261017003", CustomerName = "Trương Mỹ Linh", CustomerPhone = "0933557799", SeatNumber = "B02", Price = r2.BasePrice, DepartureTime = now.AddHours(15), PaymentStatus = "Paid", TicketStatus = "Booked", RouteId = r2.Id, VehicleId = v2.Id, AccountId = 1 },
+                    };
+
+                    context.Tickets.AddRange(sampleTickets);
                     await context.SaveChangesAsync();
                 }
             }
