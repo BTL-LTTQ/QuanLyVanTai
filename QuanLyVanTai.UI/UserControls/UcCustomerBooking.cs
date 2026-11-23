@@ -276,8 +276,8 @@ namespace QuanLyVanTai.UI.UserControls
 
                 // Chuyến xe thực tế được điều độ ở màn hình Lịch trình (bảng Schedules).
                 // Chỉ lấy các chuyến đang ở trạng thái 'Scheduled' trong ngày khách chọn.
-                DateTime from = dtpNgayDi.Value.Date.ToUniversalTime();
-                DateTime to = dtpNgayDi.Value.Date.AddDays(1).ToUniversalTime();
+                DateTime from = dtpNgayDi.Value.Date;
+                DateTime to = dtpNgayDi.Value.Date.AddDays(1);
 
                 var schedules = await _scheduleService.GetSchedulesAsync(
                     from, to, status: "Scheduled", routeId: routeId);
@@ -289,9 +289,9 @@ namespace QuanLyVanTai.UI.UserControls
                     LicensePlate = s.LicensePlate,
                     VehicleType = s.VehicleType,
                     TotalSeats = s.TotalSeats,
-                    // DB lưu UTC → hiển thị & đặt vé theo giờ local của máy khách.
-                    DepartureTime = s.DepartureTime.ToLocalTime(),
-                    DisplayText = $"{s.DepartureTime.ToLocalTime():HH:mm} | {s.LicensePlate} " +
+                    // DB lưu giờ địa phương → hiển thị & đặt vé trực tiếp
+                    DepartureTime = s.DepartureTime,
+                    DisplayText = $"{s.DepartureTime:HH:mm} | {s.LicensePlate} " +
                                   $"({s.VehicleType} - {s.TotalSeats} chỗ)"
                 }).ToList();
 
@@ -427,10 +427,11 @@ namespace QuanLyVanTai.UI.UserControls
                 }
                 else
                 {
+                    string rejectMessage = _currentPromotion?.Message ?? "Mã không hợp lệ!";
                     _currentPromotion = null;
                     lblTienGiam.Text = "-0 VNĐ";
                     lblTongTien.Text = $"{subTotal:N0} VNĐ";
-                    MessageBox.Show(_currentPromotion?.Message ?? "Mã không hợp lệ!",
+                    MessageBox.Show(rejectMessage,
                         "Không hợp lệ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }

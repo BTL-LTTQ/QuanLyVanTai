@@ -16,6 +16,7 @@ namespace QuanLyVanTai.UI.UserControls
         private readonly CustomerBookingService _bookingService = new();
         private readonly EmailService _emailService = new();
         private List<TicketDisplayModel> _displayedTickets = new();
+        private readonly int? _accountScopeId;
 
         public event Action<string, bool>? OnStatusChanged;
         public event Action? OnNavigateToBooking;
@@ -24,7 +25,7 @@ namespace QuanLyVanTai.UI.UserControls
         {
         }
 
-        public UcCustomerTicketHistory(string? searchKeyword)
+        public UcCustomerTicketHistory(string? searchKeyword, int? accountId = null)
         {
             InitializeComponent();
 
@@ -33,6 +34,8 @@ namespace QuanLyVanTai.UI.UserControls
             {
                 return;
             }
+
+            _accountScopeId = accountId;
 
             SetupUi();
             WireEvents();
@@ -128,7 +131,8 @@ namespace QuanLyVanTai.UI.UserControls
                 var criteria = new TicketFilterCriteria
                 {
                     Keyword = string.IsNullOrWhiteSpace(kw) ? null : kw,
-                    TicketStatus = status
+                    TicketStatus = status,
+                    AccountId = _accountScopeId
                 };
 
                 var rawList = await _ticketService.SearchAndFilterTicketsAsync(criteria);

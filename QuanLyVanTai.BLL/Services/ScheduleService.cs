@@ -308,7 +308,7 @@ namespace QuanLyVanTai.BLL.Services
             if (newStatus == "Delayed" && newEstimatedArrival.HasValue)
             {
                 // Thời gian mới phải sau thời điểm hiện tại
-                if (newEstimatedArrival.Value <= DateTime.UtcNow)
+                if (newEstimatedArrival.Value <= DateTime.Now)
                     throw new ValidationException("Schedule", "NewEstimatedArrival",
                         "Thời gian đến mới khi trễ phải ở tương lai.");
             }
@@ -325,7 +325,7 @@ namespace QuanLyVanTai.BLL.Services
                 schedule.Status = newStatus;
 
                 if (newStatus == "Completed")
-                    schedule.ActualArrivalTime = actualArrival ?? DateTime.UtcNow;
+                    schedule.ActualArrivalTime = actualArrival ?? DateTime.Now;
 
                 if (newStatus == "Delayed" && newEstimatedArrival.HasValue)
                     schedule.EstimatedArrivalTime = newEstimatedArrival.Value;
@@ -346,7 +346,7 @@ namespace QuanLyVanTai.BLL.Services
             if (dto.VehicleId <= 0)
                 throw new ValidationException("Schedule", "VehicleId", "Vui lòng chọn phương tiện.");
 
-            if (dto.DepartureTime <= DateTime.UtcNow)
+            if (dto.DepartureTime <= DateTime.Now)
                 throw new ValidationException("Schedule", "DepartureTime",
                     "Thời gian khởi hành phải là thời điểm trong tương lai.");
 

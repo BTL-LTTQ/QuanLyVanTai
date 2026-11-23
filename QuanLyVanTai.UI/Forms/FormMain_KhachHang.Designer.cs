@@ -20,7 +20,6 @@ namespace QuanLyVanTai.UI.Forms
             components = new System.ComponentModel.Container();
             msMain = new MenuStrip();
             mnuHeThong = new ToolStripMenuItem();
-            mnuDoiMatKhau = new ToolStripMenuItem();
             mnuDangXuat = new ToolStripMenuItem();
             toolStripSeparator1 = new ToolStripSeparator();
             mnuThoat = new ToolStripMenuItem();
@@ -43,7 +42,6 @@ namespace QuanLyVanTai.UI.Forms
             tsBtnRefresh = new ToolStripButton();
             toolStripSeparator4 = new ToolStripSeparator();
             tsBtnGuide = new ToolStripButton();
-            toolStripSeparator5 = new ToolStripSeparator();
             tsBtnLogout = new ToolStripButton();
             pnlContentHost = new Panel();
             ssStatus = new StatusStrip();
@@ -72,16 +70,10 @@ namespace QuanLyVanTai.UI.Forms
             // 
             // mnuHeThong
             // 
-            mnuHeThong.DropDownItems.AddRange(new ToolStripItem[] { mnuDoiMatKhau, mnuDangXuat, toolStripSeparator1, mnuThoat });
+            mnuHeThong.DropDownItems.AddRange(new ToolStripItem[] { mnuDangXuat, toolStripSeparator1, mnuThoat });
             mnuHeThong.Name = "mnuHeThong";
             mnuHeThong.Size = new Size(88, 25);
             mnuHeThong.Text = "&Hệ thống";
-            // 
-            // mnuDoiMatKhau
-            // 
-            mnuDoiMatKhau.Name = "mnuDoiMatKhau";
-            mnuDoiMatKhau.Size = new Size(224, 26);
-            mnuDoiMatKhau.Text = "Đổi &mật khẩu...";
             // 
             // mnuDangXuat
             // 
@@ -121,7 +113,7 @@ namespace QuanLyVanTai.UI.Forms
             mnuBanDoLoTrinh.Name = "mnuBanDoLoTrinh";
             mnuBanDoLoTrinh.ShortcutKeys = Keys.Control | Keys.M;
             mnuBanDoLoTrinh.Size = new Size(260, 26);
-            mnuBanDoLoTrinh.Text = "🗺️ &Bản đồ lộ trình...";
+            mnuBanDoLoTrinh.Text = "&Bản đồ lộ trình...";
             // 
             // mnuLichSuDatVe
             // 
@@ -174,8 +166,8 @@ namespace QuanLyVanTai.UI.Forms
             tsMain.BackColor = Color.White;
             tsMain.Font = new Font("Segoe UI", 9.5F);
             tsMain.GripStyle = ToolStripGripStyle.Hidden;
-            tsMain.ImageScalingSize = new Size(22, 22);
-            tsMain.Items.AddRange(new ToolStripItem[] { tsBtnBooking, tsBtnRouteMap, tsBtnHistory, tsBtnCheckInQr, toolStripSeparator3, tsBtnRefresh, toolStripSeparator4, tsBtnGuide, toolStripSeparator5, tsBtnLogout });
+            tsMain.ImageScalingSize = new Size(20, 20);
+            tsMain.Items.AddRange(new ToolStripItem[] { tsBtnBooking, tsBtnRouteMap, tsBtnHistory, tsBtnCheckInQr, toolStripSeparator3, tsBtnRefresh, toolStripSeparator4, tsBtnGuide, tsBtnLogout });
             tsMain.Location = new Point(0, 35);
             tsMain.Name = "tsMain";
             tsMain.Padding = new Padding(12, 4, 12, 4);
@@ -191,7 +183,7 @@ namespace QuanLyVanTai.UI.Forms
             tsBtnBooking.Margin = new Padding(0, 1, 8, 2);
             tsBtnBooking.Name = "tsBtnBooking";
             tsBtnBooking.Size = new Size(137, 31);
-            tsBtnBooking.Text = "🎫 Đặt Vé Xe";
+            tsBtnBooking.Text = "Đặt Vé Xe";
             tsBtnBooking.ToolTipText = "Đặt vé xe trực quan qua sơ đồ ghế (Ctrl+B)";
             // 
             // tsBtnRouteMap
@@ -202,7 +194,7 @@ namespace QuanLyVanTai.UI.Forms
             tsBtnRouteMap.Margin = new Padding(0, 1, 8, 2);
             tsBtnRouteMap.Name = "tsBtnRouteMap";
             tsBtnRouteMap.Size = new Size(165, 31);
-            tsBtnRouteMap.Text = "🗺️ Bản Đồ Lộ Trình";
+            tsBtnRouteMap.Text = "Bản Đồ Lộ Trình";
             tsBtnRouteMap.ToolTipText = "Hiển thị trực quan bản đồ lộ trình chuyến xe và vị trí trạm dừng (Ctrl+M)";
             // 
             // tsBtnHistory
@@ -213,7 +205,7 @@ namespace QuanLyVanTai.UI.Forms
             tsBtnHistory.Margin = new Padding(0, 1, 8, 2);
             tsBtnHistory.Name = "tsBtnHistory";
             tsBtnHistory.Size = new Size(138, 31);
-            tsBtnHistory.Text = "📋 Vé Của Tôi";
+            tsBtnHistory.Text = "Vé Của Tôi";
             tsBtnHistory.ToolTipText = "Tra cứu, xem lại và in vé điện tử (Ctrl+H)";
             // 
             // tsBtnCheckInQr
@@ -224,7 +216,7 @@ namespace QuanLyVanTai.UI.Forms
             tsBtnCheckInQr.Margin = new Padding(0, 1, 8, 2);
             tsBtnCheckInQr.Name = "tsBtnCheckInQr";
             tsBtnCheckInQr.Size = new Size(165, 31);
-            tsBtnCheckInQr.Text = "📷 Quét QR Check-in";
+            tsBtnCheckInQr.Text = "Quét QR Check-in";
             tsBtnCheckInQr.ToolTipText = "Quét mã QR Check-in hành khách lên xe (Ctrl+Q)";
             // 
             // toolStripSeparator3
@@ -239,7 +231,7 @@ namespace QuanLyVanTai.UI.Forms
             tsBtnRefresh.Margin = new Padding(8, 1, 8, 2);
             tsBtnRefresh.Name = "tsBtnRefresh";
             tsBtnRefresh.Size = new Size(122, 31);
-            tsBtnRefresh.Text = "🔄 Làm Mới (F5)";
+            tsBtnRefresh.Text = "Làm Mới (F5)";
             tsBtnRefresh.ToolTipText = "Tải lại dữ liệu (F5)";
             // 
             // toolStripSeparator4
@@ -254,23 +246,19 @@ namespace QuanLyVanTai.UI.Forms
             tsBtnGuide.Margin = new Padding(8, 1, 8, 2);
             tsBtnGuide.Name = "tsBtnGuide";
             tsBtnGuide.Size = new Size(134, 31);
-            tsBtnGuide.Text = "❓ Hướng Dẫn (F1)";
+            tsBtnGuide.Text = "Hướng Dẫn (F1)";
             tsBtnGuide.ToolTipText = "Xem hướng dẫn đặt vé (F1)";
-            // 
-            // toolStripSeparator5
-            // 
-            toolStripSeparator5.Name = "toolStripSeparator5";
-            toolStripSeparator5.Size = new Size(6, 34);
             // 
             // tsBtnLogout
             // 
+            tsBtnLogout.Alignment = ToolStripItemAlignment.Right;
             tsBtnLogout.ForeColor = Color.FromArgb(220, 38, 38);
             tsBtnLogout.ImageTransparentColor = Color.Magenta;
             tsBtnLogout.Margin = new Padding(8, 1, 0, 2);
             tsBtnLogout.Name = "tsBtnLogout";
             tsBtnLogout.Size = new Size(103, 31);
-            tsBtnLogout.Text = "🚪 Đăng Xuất";
-            tsBtnLogout.ToolTipText = "Đăng xuất khỏi hệ thống (Ctrl+Q)";
+            tsBtnLogout.Text = "Đăng Xuất";
+            tsBtnLogout.ToolTipText = "Đăng xuất khỏi hệ thống (Ctrl+L)";
             // 
             // pnlContentHost
             // 
@@ -326,7 +314,7 @@ namespace QuanLyVanTai.UI.Forms
             lblClock.Name = "lblClock";
             lblClock.Size = new Size(926, 24);
             lblClock.Spring = true;
-            lblClock.Text = "🕒 10/10/2026 20:30:00";
+            lblClock.Text = "10/10/2026 20:30:00";
             lblClock.TextAlign = ContentAlignment.MiddleRight;
             // 
             // FormMain_KhachHang
@@ -361,7 +349,6 @@ namespace QuanLyVanTai.UI.Forms
         private MenuStrip msMain;
         private ToolStripMenuItem mnuHeThong;
         private ToolStripMenuItem mnuDangXuat;
-        private ToolStripMenuItem mnuDoiMatKhau;
         private ToolStripSeparator toolStripSeparator1;
         private ToolStripMenuItem mnuThoat;
         private ToolStripMenuItem mnuChucNang;
@@ -383,7 +370,6 @@ namespace QuanLyVanTai.UI.Forms
         private ToolStripButton tsBtnRefresh;
         private ToolStripSeparator toolStripSeparator4;
         private ToolStripButton tsBtnGuide;
-        private ToolStripSeparator toolStripSeparator5;
         private ToolStripButton tsBtnLogout;
         private Panel pnlContentHost;
         private StatusStrip ssStatus;

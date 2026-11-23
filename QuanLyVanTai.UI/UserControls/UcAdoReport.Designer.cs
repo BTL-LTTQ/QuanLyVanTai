@@ -113,10 +113,7 @@ namespace QuanLyVanTai.UI.UserControls
             splitMain = new System.Windows.Forms.SplitContainer
             {
                 Dock        = DockStyle.Fill,
-                Orientation = Orientation.Vertical,
-                SplitterDistance = 420,
-                Panel1MinSize    = 280,
-                Panel2MinSize    = 280
+                Orientation = Orientation.Vertical
             };
 
             // GroupBox trái

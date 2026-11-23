@@ -47,6 +47,24 @@ namespace QuanLyVanTai.UI.UserControls
             _ = LoadReportAsync();
         }
 
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            // SplitterDistance/MinSize chỉ đặt được khi SplitContainer đã có kích thước thật,
+            // nếu đặt trong InitializeComponent sẽ ném InvalidOperationException.
+            int width = splitMain.Width;
+            if (width <= 0)
+                return;
+
+            int target = Math.Min(420, width / 2);
+            int minSize = Math.Min(280, Math.Max(20, target - 40));
+
+            splitMain.Panel1MinSize = minSize;
+            splitMain.Panel2MinSize = minSize;
+            splitMain.SplitterDistance = Math.Clamp(target, minSize, Math.Max(minSize, width - minSize - splitMain.SplitterWidth));
+        }
+
         // ─────────────────────────────────────────────────────────────────────
         //  Sự kiện bộ lọc
         // ─────────────────────────────────────────────────────────────────────

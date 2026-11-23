@@ -7,6 +7,7 @@ namespace QuanLyVanTai.BLL.Services
     public class TicketFilterCriteria
     {
         public string? Keyword { get; set; }
+        public int? AccountId { get; set; }
         public string? RouteId { get; set; }
         public string? PaymentStatus { get; set; }
         public string? TicketStatus { get; set; }
@@ -75,6 +76,9 @@ namespace QuanLyVanTai.BLL.Services
                     (t.Route != null && (t.Route.RouteName.ToLower().Contains(kw) || t.Route.RouteCode.ToLower().Contains(kw))) ||
                     (t.Vehicle != null && t.Vehicle.LicensePlate.ToLower().Contains(kw)));
             }
+
+            if (criteria.AccountId.HasValue)
+                query = query.Where(t => t.AccountId == criteria.AccountId.Value);
 
             if (!string.IsNullOrWhiteSpace(criteria.RouteId) && criteria.RouteId != "Tất cả"
                 && int.TryParse(criteria.RouteId, out int routeId))

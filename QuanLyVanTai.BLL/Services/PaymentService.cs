@@ -85,7 +85,7 @@ namespace QuanLyVanTai.BLL.Services
                 using var transaction = await db.Database.BeginTransactionAsync();
                 try
                 {
-                    string targetPaymentStatus = callbackResult.Success ? "Đã thanh toán" : "Thất bại";
+                    string targetPaymentStatus = callbackResult.Success ? "Paid" : "Failed";
                     string targetTicketStatus = callbackResult.Success ? "Booked" : "Cancelled";
 
                     // 1. Cập nhật các vé trong danh sách
@@ -179,7 +179,7 @@ namespace QuanLyVanTai.BLL.Services
 
                 foreach (var t in tickets)
                 {
-                    t.PaymentStatus = "Thất bại";
+                    t.PaymentStatus = "Failed";
                     t.TicketStatus = "Cancelled";
                     t.UpdatedAt = DateTime.UtcNow;
                     t.UpdatedBy = "Customer_Cancel";
@@ -193,7 +193,7 @@ namespace QuanLyVanTai.BLL.Services
                     Username = "Customer",
                     Role = "Khách hàng",
                     OldValues = "PaymentStatus: Pending",
-                    NewValues = $"PaymentStatus: Thất bại, TicketStatus: Cancelled ({reason})",
+                    NewValues = $"PaymentStatus: Failed, TicketStatus: Cancelled ({reason})",
                     Timestamp = DateTime.UtcNow
                 };
                 db.AuditLogs.Add(audit);

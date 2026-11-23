@@ -2,6 +2,7 @@ using Core.Configs;
 using Core.Helpers;
 using Core.Logging;
 using Core.Security;
+using FontAwesome.Sharp;
 using QuanLyVanTai.BLL.Services;
 using QuanLyVanTai.DAL;
 using QuanLyVanTai.UI.UserControls;
@@ -13,6 +14,7 @@ namespace QuanLyVanTai.UI
     {
         private readonly PermissionService _permissionService = new();
         private readonly AuditLogService _auditLogService = new();
+        private readonly List<Image> _navIcons = [];
         private bool _isChangingLanguage = false;
         private UcAiChatbot? _chatbotWidget;
         private UserControl? _currentView;
@@ -30,6 +32,7 @@ namespace QuanLyVanTai.UI
             this.WindowState = FormWindowState.Maximized;
             this.MinimumSize = new Size(1024, 650);
 
+            ApplyNavigationIcons();
             SetupCanhBao();
             UserSession.SessionChanged += OnSessionChanged;
             btnDong.Click += btnDong_Click;
@@ -86,38 +89,91 @@ namespace QuanLyVanTai.UI
             var user = SessionManager.CurrentUser;
             if (user != null)
             {
-                lblStatusUser.Text = $"👤 {user.FullName} ({user.Role})";
+                lblStatusUser.Text = $"{user.FullName} ({user.Role})";
             }
             else
             {
                 string role = UserSession.CurrentRole;
                 string username = UserSession.CurrentUsername;
-                lblStatusUser.Text = $"👤 {username} ({role})";
+                lblStatusUser.Text = $"{username} ({role})";
             }
         }
 
         private void UpdateClock()
         {
-            lblClock.Text = $"🕒 {DateTime.Now:HH:mm:ss  dd/MM/yyyy}";
+            lblClock.Text = $"{DateTime.Now:HH:mm:ss  dd/MM/yyyy}";
         }
 
         private void UpdateMenuPermissions()
         {
-            mnuTuyenXe.Enabled = UserSession.HasPermission(SystemMenus.Route, PermissionAction.View);
-            mnuLichTrinh.Enabled = UserSession.HasPermission(SystemMenus.Schedule, PermissionAction.View);
-            mnuPhuongTien.Enabled = UserSession.HasPermission(SystemMenus.Vehicle, PermissionAction.View);
-            mnuGiaVe.Enabled = UserSession.HasPermission(SystemMenus.Ticket, PermissionAction.View);
-            mnuNhanSu.Enabled = UserSession.HasPermission(SystemMenus.Staff, PermissionAction.View);
-            mnuKhuyenMai.Enabled = UserSession.HasPermission(SystemMenus.Promotion, PermissionAction.View);
-            mnuDichVu.Enabled = UserSession.HasPermission(SystemMenus.Vehicle, PermissionAction.View);
-            mnuPhanQuyen.Enabled = UserSession.HasPermission(SystemMenus.Permission, PermissionAction.View);
-            mnuNhatKy.Enabled = UserSession.HasPermission(SystemMenus.AuditLog, PermissionAction.View);
+            // Ẩn hẳn chức năng không có quyền (thay vì để xám gây rối mắt)
+            SetMenuVisible(mnuTuyenXe, SystemMenus.Route);
+            SetMenuVisible(mnuPhuongTien, SystemMenus.Vehicle);
+            SetMenuVisible(mnuNhanSu, SystemMenus.Staff);
+            SetMenuVisible(mnuLichTrinh, SystemMenus.Schedule);
+            SetMenuVisible(mnuGiaVe, SystemMenus.Ticket);
+            SetMenuVisible(mnuKhuyenMai, SystemMenus.Promotion);
+            SetMenuVisible(mnuDichVu, SystemMenus.Service);
+            SetMenuVisible(mnuCheckInQr, SystemMenus.Ticket);
+            SetMenuVisible(mnuDashboard, SystemMenus.Route);
+            SetMenuVisible(mnuAdoReport, SystemMenus.AuditLog);
+            SetMenuVisible(mnuNhatKy, SystemMenus.AuditLog);
+            SetMenuVisible(mnuPhanQuyen, SystemMenus.Permission);
 
-            tsBtnDatVe.Enabled = UserSession.HasPermission(SystemMenus.Ticket, PermissionAction.View);
-            tsBtnCheckInQr.Enabled = UserSession.HasPermission(SystemMenus.Ticket, PermissionAction.View);
-            mnuCheckInQr.Enabled = UserSession.HasPermission(SystemMenus.Ticket, PermissionAction.View);
-            tsBtnTuyenXe.Enabled = UserSession.HasPermission(SystemMenus.Route, PermissionAction.View);
-            tsBtnNhatKy.Enabled = UserSession.HasPermission(SystemMenus.AuditLog, PermissionAction.View);
+            tsBtnDashboard.Visible = UserSession.HasPermission(SystemMenus.Route, PermissionAction.View);
+            tsBtnDatVe.Visible = UserSession.HasPermission(SystemMenus.Ticket, PermissionAction.View);
+            tsBtnCheckInQr.Visible = UserSession.HasPermission(SystemMenus.Ticket, PermissionAction.View);
+
+            // Nhóm menu cấp 1 chỉ hiện khi còn ít nhất một mục con được phép sử dụng
+            foreach (var topMenu in msMain.Items.OfType<ToolStripMenuItem>())
+            {
+                if (topMenu.DropDownItems.Count == 0)
+                    continue;
+
+                topMenu.Visible = topMenu.DropDownItems
+                    .OfType<ToolStripMenuItem>()
+                    .Any(item => item.Available);
+            }
+        }
+
+        private static void SetMenuVisible(ToolStripMenuItem menuItem, string menuCode)
+            => menuItem.Available = UserSession.HasPermission(menuCode, PermissionAction.View);
+
+        /// <summary>Gán icon FontAwesome thống nhất cho menu, toolbar và nhãn ngôn ngữ.</summary>
+        private void ApplyNavigationIcons()
+        {
+            mnuLamMoi.Image = NavIcon(IconChar.ArrowsRotate);
+            mnuDangXuat.Image = NavIcon(IconChar.RightFromBracket, ThemeConfig.DangerColor);
+            mnuThoat.Image = NavIcon(IconChar.DoorOpen);
+
+            mnuTuyenXe.Image = NavIcon(IconChar.Route);
+            mnuPhuongTien.Image = NavIcon(IconChar.Bus);
+            mnuNhanSu.Image = NavIcon(IconChar.Users);
+            mnuLichTrinh.Image = NavIcon(IconChar.CalendarDays);
+            mnuGiaVe.Image = NavIcon(IconChar.Tags);
+            mnuKhuyenMai.Image = NavIcon(IconChar.Percent);
+            mnuDichVu.Image = NavIcon(IconChar.BellConcierge);
+            mnuCheckInQr.Image = NavIcon(IconChar.Qrcode);
+
+            mnuDashboard.Image = NavIcon(IconChar.ChartPie);
+            mnuAdoReport.Image = NavIcon(IconChar.FileInvoiceDollar);
+            mnuNhatKy.Image = NavIcon(IconChar.ShieldHalved);
+            mnuPhanQuyen.Image = NavIcon(IconChar.UserShield);
+            mnuThongTin.Image = NavIcon(IconChar.CircleInfo);
+
+            tsBtnDashboard.Image = NavIcon(IconChar.ChartPie);
+            tsBtnDatVe.Image = NavIcon(IconChar.Tags);
+            tsBtnCheckInQr.Image = NavIcon(IconChar.Qrcode);
+            tsBtnLamMoi.Image = NavIcon(IconChar.ArrowsRotate);
+            tsLblLanguage.Image = NavIcon(IconChar.Globe);
+            tsBtnDangXuat.Image = NavIcon(IconChar.RightFromBracket, ThemeConfig.DangerColor);
+        }
+
+        private Image NavIcon(IconChar icon, Color? color = null)
+        {
+            var bitmap = FormsIconHelper.ToBitmap(icon, (Color?)color ?? Color.FromArgb(51, 65, 85), 20, 0, FlipOrientation.Normal);
+            _navIcons.Add(bitmap);
+            return bitmap;
         }
 
         private void SetupLanguageControls()
@@ -210,14 +266,14 @@ namespace QuanLyVanTai.UI
             }
         }
 
-        private void OpenMenu(string menuCode, string title, Func<UserControl> createControl)
+        private void OpenMenu(string menuCode, string title, Func<UserControl> createControl, ToolStripMenuItem? menuItem = null)
         {
             // 1. Kiểm tra quyền trước khi nạp Form
             if (!AuthorizationGuard.CheckAccess(menuCode, PermissionAction.View, showWarning: false))
             {
                 AnNoiDungCu();
                 HienCanhBao($"BẢO MẬT HỆ THỐNG:\n\nTài khoản '{UserSession.CurrentUsername}' (Vai trò: {UserSession.CurrentRole}) bị CHẶN truy cập vào chức năng '{title}'.\n\nHành động mở Form trái phép qua code đã được ghi lại trong Nhật ký an ninh.");
-                lblStatusReady.Text = $"⛔ Truy cập bị từ chối: {title}";
+                lblStatusReady.Text = $"Truy cập bị từ chối: {title}";
                 return;
             }
 
@@ -225,7 +281,20 @@ namespace QuanLyVanTai.UI
             AnCanhBao();
             var control = createControl();
             SwitchView(control);
-            lblStatusReady.Text = $"🟢 Đang làm việc: {title}";
+            SetActiveMenu(menuItem);
+            lblStatusReady.Text = $"Đang làm việc: {title}";
+        }
+
+        /// <summary>Đánh dấu checkmark ở mục menu tương ứng với màn hình đang mở.</summary>
+        private void SetActiveMenu(ToolStripMenuItem? activeItem)
+        {
+            foreach (var topMenu in msMain.Items.OfType<ToolStripMenuItem>())
+            {
+                foreach (var child in topMenu.DropDownItems.OfType<ToolStripMenuItem>())
+                {
+                    child.Checked = ReferenceEquals(child, activeItem);
+                }
+            }
         }
 
         private void AnNoiDungCu()
@@ -244,42 +313,42 @@ namespace QuanLyVanTai.UI
         // ==========================================
         private void mnuDashboard_Click(object? sender, EventArgs e)
         {
-            OpenMenu(SystemMenus.Route, "DASHBOARD TỔNG QUAN", () => new UcDashboard());
+            OpenMenu(SystemMenus.Route, "Dashboard tổng quan", () => new UcDashboard(), mnuDashboard);
         }
 
         private void mnuTuyenXe_Click(object? sender, EventArgs e)
         {
-            OpenMenu(SystemMenus.Route, "QUẢN LÝ TUYẾN XE & LỘ TRÌNH", () => new UcManageRoute());
+            OpenMenu(SystemMenus.Route, "Quản lý tuyến xe & lộ trình", () => new UcManageRoute(), mnuTuyenXe);
         }
 
         private void mnuLichTrinh_Click(object? sender, EventArgs e)
         {
-            OpenMenu(SystemMenus.Schedule, "ĐIỀU ĐỘ LỊCH TRÌNH & PHÂN CÔNG TÀI XẾ", () => new UcManageSchedule());
+            OpenMenu(SystemMenus.Schedule, "Điều độ lịch trình & phân công tài xế", () => new UcManageSchedule(), mnuLichTrinh);
         }
 
         private void mnuPhuongTien_Click(object? sender, EventArgs e)
         {
-            OpenMenu(SystemMenus.Vehicle, "QUẢN LÝ PHƯƠNG TIỆN & TRẠM DỪNG", () => new UcManageVehicleAndStation());
+            OpenMenu(SystemMenus.Vehicle, "Quản lý phương tiện & trạm dừng", () => new UcManageVehicleAndStation(), mnuPhuongTien);
         }
 
         private void mnuGiaVe_Click(object? sender, EventArgs e)
         {
-            OpenMenu(SystemMenus.Ticket, "QUẢN LÝ BẢNG GIÁ VÉ", () => new UcManageTicket());
+            OpenMenu(SystemMenus.Ticket, "Quản lý bảng giá vé", () => new UcManageTicket(), mnuGiaVe);
         }
 
         private void mnuNhanSu_Click(object? sender, EventArgs e)
         {
-            OpenMenu(SystemMenus.Staff, "QUẢN LÝ NHÂN SỰ", () => new UcManageStaff());
+            OpenMenu(SystemMenus.Staff, "Quản lý nhân sự", () => new UcManageStaff(), mnuNhanSu);
         }
 
         private void mnuKhuyenMai_Click(object? sender, EventArgs e)
         {
-            OpenMenu(SystemMenus.Promotion, "QUẢN LÝ CHƯƠNG TRÌNH KHUYẾN MÃI", () => new UcManagePromotion());
+            OpenMenu(SystemMenus.Promotion, "Quản lý chương trình khuyến mãi", () => new UcManagePromotion(), mnuKhuyenMai);
         }
 
         private void mnuDichVu_Click(object? sender, EventArgs e)
         {
-            OpenMenu(SystemMenus.Vehicle, "QUẢN LÝ DỊCH VỤ VẬN TẢI", () => new UcManageService());
+            OpenMenu(SystemMenus.Service, "Quản lý dịch vụ vận tải", () => new UcManageService(), mnuDichVu);
         }
 
         private void mnuCheckInQr_Click(object? sender, EventArgs e)
@@ -290,17 +359,17 @@ namespace QuanLyVanTai.UI
 
         private void mnuPhanQuyen_Click(object? sender, EventArgs e)
         {
-            OpenMenu(SystemMenus.Permission, "QUẢN LÝ PHÂN QUYỀN HỆ THỐNG", () => new UcPermission());
+            OpenMenu(SystemMenus.Permission, "Quản lý phân quyền hệ thống", () => new UcPermission(), mnuPhanQuyen);
         }
 
         private void mnuNhatKy_Click(object? sender, EventArgs e)
         {
-            OpenMenu(SystemMenus.AuditLog, "NHẬT KÝ HOẠT ĐỘNG (AUDIT TRAIL)", () => new UcAuditLog());
+            OpenMenu(SystemMenus.AuditLog, "Nhật ký hoạt động (Audit Trail)", () => new UcAuditLog(), mnuNhatKy);
         }
 
         private void mnuAdoReport_Click(object? sender, EventArgs e)
         {
-            OpenMenu(SystemMenus.AuditLog, "BÁO CÁO DOANH THU — ADO.NET THUẦN", () => new UcAdoReport());
+            OpenMenu(SystemMenus.AuditLog, "Báo cáo doanh thu — ADO.NET thuần", () => new UcAdoReport(), mnuAdoReport);
         }
 
         private void mnuLamMoi_Click(object? sender, EventArgs e)
@@ -366,7 +435,8 @@ namespace QuanLyVanTai.UI
                 "• Kiến trúc: 3 tầng (UI - BLL - DAL)\n" +
                 "• CSDL: SQL Server (EF Core Code-First + ADO.NET)\n" +
                 "• Thiết kế chuẩn Desktop: MenuStrip, ToolStrip, StatusStrip, UserControls\n" +
-                "• Đồ án Lập trình trực quan (LTTQ) - Đại học Thủy lợi\n\n" +
+                "• Đồ án Lập trình trực quan (LTTQ)\n" +
+                "• Trường Đại học Giao thông Vận tải - Phân hiệu Thành phố Hồ Chí Minh\n\n" +
                 "Phiên bản: 1.0.0",
                 "Thông Tin Phần Mềm",
                 MessageBoxButtons.OK,
@@ -388,7 +458,7 @@ namespace QuanLyVanTai.UI
             lblNoiDung.Font = new Font("Segoe UI", 9.5F);
             lblNoiDung.ForeColor = Color.FromArgb(71, 85, 105);
 
-            btnDong.Text = " Đóng";
+            btnDong.Text = "Đóng";
             btnDong.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             btnDong.ForeColor = Color.White;
             btnDong.BackColor = ThemeConfig.PrimaryColor;
@@ -466,6 +536,11 @@ namespace QuanLyVanTai.UI
             CultureHelper.CultureChanged -= OnCultureChanged;
             _chatbotWidget?.Dispose();
             _currentView?.Dispose();
+
+            foreach (var icon in _navIcons)
+                icon.Dispose();
+            _navIcons.Clear();
+
             base.OnFormClosed(e);
         }
     }

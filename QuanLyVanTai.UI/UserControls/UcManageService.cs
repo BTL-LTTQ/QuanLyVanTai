@@ -2,6 +2,7 @@ using Core.Configs;
 using Core.Helpers;
 using Core.Security;
 using FontAwesome.Sharp;
+using QuanLyVanTai.UI.Forms;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -24,6 +25,7 @@ namespace QuanLyVanTai.UI.UserControls
                 return;
             SetupRuntimeUI();
             LoadDemoServices();
+            FilterServices();
             ApplySecurity();
         }
 
@@ -36,6 +38,7 @@ namespace QuanLyVanTai.UI.UserControls
             ThemeConfig.StyleSecondaryButton(btnRefresh, IconChar.ArrowsRotate);
             btnRefresh.BackColor = Color.FromArgb(100, 116, 139);
 
+            cboFilterCategory.SelectedIndex = 0;
             txtSearch.TextChanged += (s, e) => FilterServices();
             cboFilterCategory.SelectedIndexChanged += (s, e) => FilterServices();
             btnAddService.Click += BtnAddService_Click;
@@ -325,8 +328,29 @@ namespace QuanLyVanTai.UI.UserControls
             if (!AuthorizationGuard.CheckAccess(SystemMenus.Service, PermissionAction.Add))
                 return;
 
-            MessageBox.Show("Chức năng thêm dịch vụ mới!\n\nSẽ mở form nhập thông tin dịch vụ.", 
-                "Thêm Dịch Vụ", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            using var editor = new FrmServiceEditor();
+            if (editor.ShowDialog(this) != DialogResult.OK)
+                return;
+
+            var (icon, color) = GetCategoryStyle(editor.Category);
+            var service = new ServiceItem
+            {
+                Id = _allServices.Count == 0 ? 1 : _allServices.Max(s => s.Id) + 1,
+                Name = editor.ServiceName,
+                Description = string.IsNullOrWhiteSpace(editor.DescriptionText)
+                    ? "Chưa có mô tả chi tiết."
+                    : editor.DescriptionText,
+                Category = editor.Category,
+                Price = editor.Price,
+                Icon = icon,
+                IconColor = color,
+                IsActive = editor.IsActive
+            };
+
+            _allServices.Add(service);
+            FilterServices();
+            MessageBox.Show($"Đã thêm dịch vụ \"{service.Name}\" thành công!", "Thành công",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void EditService(ServiceItem service)
@@ -334,9 +358,33 @@ namespace QuanLyVanTai.UI.UserControls
             if (!AuthorizationGuard.CheckAccess(SystemMenus.Service, PermissionAction.Edit))
                 return;
 
-            MessageBox.Show($"Chỉnh sửa dịch vụ:\n\n{service.Name}\n{service.Description}", 
-                "Chỉnh Sửa Dịch Vụ", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            var seed = new ServiceEditorSeed(service.Name, service.Description, service.Category, service.Price, service.IsActive);
+            using var editor = new FrmServiceEditor(seed);
+            if (editor.ShowDialog(this) != DialogResult.OK)
+                return;
+
+            service.Name = editor.ServiceName;
+            service.Description = string.IsNullOrWhiteSpace(editor.DescriptionText)
+                ? "Chưa có mô tả chi tiết."
+                : editor.DescriptionText;
+            if (service.Category != editor.Category)
+            {
+                service.Category = editor.Category;
+                (service.Icon, service.IconColor) = GetCategoryStyle(editor.Category);
+            }
+            service.Price = editor.Price;
+            service.IsActive = editor.IsActive;
+
+            FilterServices();
         }
+
+        private static (IconChar Icon, Color Color) GetCategoryStyle(string category) => category switch
+        {
+            "Bảo hiểm" => (IconChar.Shield, Color.FromArgb(16, 185, 129)),
+            "Ưu đãi" => (IconChar.GraduationCap, Color.FromArgb(139, 92, 246)),
+            "Hỗ trợ" => (IconChar.Headset, Color.FromArgb(236, 72, 153)),
+            _ => (IconChar.TruckFast, Color.FromArgb(59, 130, 246))
+        };
 
         private void DeleteService(ServiceItem service)
         {
