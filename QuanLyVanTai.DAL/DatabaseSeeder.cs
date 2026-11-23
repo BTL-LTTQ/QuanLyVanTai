@@ -139,15 +139,15 @@ namespace QuanLyVanTai.DAL
 
                         var arrival = departure.AddHours((double)route.EstimatedHours);
 
-                        // Cột DepartureTime / EstimatedArrivalTime lưu UTC theo quy ước của entity Schedule.
+                        // Toàn hệ thống thống nhất lưu giờ địa phương (local wall-clock) cho Schedule và Ticket
                         return new Schedule
                         {
                             ScheduleCode = code,
                             RouteId = route.Id,
                             VehicleId = vehicle.Id,
-                            DepartureTime = departure.ToUniversalTime(),
-                            EstimatedArrivalTime = arrival.ToUniversalTime(),
-                            ActualArrivalTime = status == "Completed" ? arrival.AddMinutes(15).ToUniversalTime() : null,
+                            DepartureTime = departure,
+                            EstimatedArrivalTime = arrival,
+                            ActualArrivalTime = status == "Completed" ? arrival.AddMinutes(15) : null,
                             Status = status,
                             Notes = notes,
                             CreatedBy = "System"

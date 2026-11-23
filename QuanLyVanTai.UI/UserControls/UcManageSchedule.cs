@@ -275,8 +275,8 @@ namespace QuanLyVanTai.UI.UserControls
             {
                 BeginBusy(true, "Đang tải lịch trình...");
 
-                DateTime from = dtpTuNgay.Value.Date.ToUniversalTime();
-                DateTime to = dtpDenNgay.Value.Date.AddDays(1).ToUniversalTime();
+                DateTime from = dtpTuNgay.Value.Date;
+                DateTime to = dtpDenNgay.Value.Date.AddDays(1);
                 string? status = (cboLocTrangThai.SelectedItem as StatusItem)?.Value;
 
                 _allSchedules = await _scheduleService.GetSchedulesAsync(from, to, status);
@@ -322,8 +322,8 @@ namespace QuanLyVanTai.UI.UserControls
                     s.ScheduleCode,
                     $"{s.RouteCode} - {s.RouteName}",
                     s.LicensePlate,
-                    s.DepartureTime.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
-                    s.EstimatedArrivalTime.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
+                    s.DepartureTime.ToString("dd/MM/yyyy HH:mm"),
+                    s.EstimatedArrivalTime.ToString("dd/MM/yyyy HH:mm"),
                     string.IsNullOrWhiteSpace(s.PrimaryDriverName) ? "(chưa phân công)" : s.PrimaryDriverName,
                     StatusLabels.TryGetValue(s.Status, out var label) ? label : s.Status,
                     s.Notes ?? string.Empty);
@@ -386,8 +386,8 @@ namespace QuanLyVanTai.UI.UserControls
                 SelectComboById(cboTuyen, detail.RouteId);
                 SelectComboById(cboXe, detail.VehicleId);
 
-                dtpKhoiHanh.Value = detail.DepartureTime.ToLocalTime();
-                dtpDuKienDen.Value = detail.EstimatedArrivalTime.ToLocalTime();
+                dtpKhoiHanh.Value = detail.DepartureTime;
+                dtpDuKienDen.Value = detail.EstimatedArrivalTime;
 
                 var primary = detail.Assignments
                     .FirstOrDefault(a => a.Role == "Primary" && a.AssignmentStatus != "Cancelled");
@@ -531,9 +531,9 @@ namespace QuanLyVanTai.UI.UserControls
             {
                 RouteId = routeId,
                 VehicleId = vehicleId,
-                // DateTimePicker trả giờ local → chuyển sang UTC vì DB lưu UTC.
-                DepartureTime = dtpKhoiHanh.Value.ToUniversalTime(),
-                EstimatedArrivalTime = dtpDuKienDen.Value.ToUniversalTime(),
+                // DateTimePicker trả giờ local → lưu trực tiếp theo chuẩn giờ địa phương
+                DepartureTime = dtpKhoiHanh.Value,
+                EstimatedArrivalTime = dtpDuKienDen.Value,
                 Notes = string.IsNullOrWhiteSpace(txtGhiChu.Text) ? null : txtGhiChu.Text.Trim(),
                 Drivers =
                 [

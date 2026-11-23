@@ -189,12 +189,13 @@ namespace QuanLyVanTai.UI.Forms
         public void ShowHistoryView(string? phoneOrKeyword = null)
         {
             string? searchPhone = phoneOrKeyword;
-            if (string.IsNullOrWhiteSpace(searchPhone))
+            if (string.IsNullOrWhiteSpace(searchPhone) && !IsStaffRole())
             {
+                // Khách hàng: gợi ý tìm theo SĐT tài khoản; danh sách luôn chỉ giới hạn trong tài khoản đang đăng nhập
                 searchPhone = SessionManager.CurrentUser?.PhoneNumber;
             }
 
-            var historyView = new UcCustomerTicketHistory(searchPhone);
+            var historyView = new UcCustomerTicketHistory(searchPhone, SessionManager.CurrentUser?.Id);
             historyView.OnStatusChanged += (msg, isLoading) => SetStatus(msg, isLoading);
             historyView.OnNavigateToBooking += () => ShowBookingView();
 

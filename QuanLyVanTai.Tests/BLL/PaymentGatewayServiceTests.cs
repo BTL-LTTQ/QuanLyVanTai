@@ -242,14 +242,14 @@ namespace QuanLyVanTai.Tests.BLL
             // Kiểm tra trạng thái vé đã được cập nhật thành Đã thanh toán
             var updatedTicket = await db.Tickets.FindAsync(ticket.Id);
             Assert.NotNull(updatedTicket);
-            Assert.Equal("Đã thanh toán", updatedTicket.PaymentStatus);
+            Assert.Equal("Paid", updatedTicket.PaymentStatus);
             Assert.Equal("Booked", updatedTicket.TicketStatus);
 
             // Kiểm tra bản ghi giao dịch trong bảng PaymentTransactions
             var tx = db.PaymentTransactions.FirstOrDefault(p => p.OrderCode == "ORDER-TK_PAY_001");
             Assert.NotNull(tx);
             Assert.Equal("VNPay", tx.Gateway);
-            Assert.Equal("Đã thanh toán", tx.Status);
+            Assert.Equal("Paid", tx.Status);
             Assert.Equal(150000m, tx.Amount);
             Assert.Equal("00", tx.ResponseCode);
         }
@@ -304,7 +304,7 @@ namespace QuanLyVanTai.Tests.BLL
 
             var updatedTicket = await db.Tickets.FindAsync(ticket.Id);
             Assert.NotNull(updatedTicket);
-            Assert.Equal("Thất bại", updatedTicket.PaymentStatus);
+            Assert.Equal("Failed", updatedTicket.PaymentStatus);
             Assert.Equal("Cancelled", updatedTicket.TicketStatus);
         }
 

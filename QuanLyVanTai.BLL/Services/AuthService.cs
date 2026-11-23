@@ -156,6 +156,9 @@ namespace QuanLyVanTai.BLL.Services
                     account.Role
                 );
 
+                // Đồng bộ phiên phân quyền: menu + nhật ký (UpdatedBy) phải mang đúng vai trò thật
+                UserSession.Login(account.Id, account.Username, account.FullName, account.Role);
+
                 // Lưu cấu hình Remember Me
                 SessionManager.SaveRememberMe(request.RememberMe, request.Username);
 

@@ -403,9 +403,9 @@ namespace QuanLyVanTai.BLL.Services
 
                 if (criteria.DepartureDate.HasValue)
                 {
-                    var fromUtc = criteria.DepartureDate.Value.Date.ToUniversalTime();
-                    var toUtc = criteria.DepartureDate.Value.Date.AddDays(1).ToUniversalTime();
-                    query = query.Where(s => s.DepartureTime >= fromUtc && s.DepartureTime < toUtc);
+                    var fromLocal = criteria.DepartureDate.Value.Date;
+                    var toLocal = criteria.DepartureDate.Value.Date.AddDays(1);
+                    query = query.Where(s => s.DepartureTime >= fromLocal && s.DepartureTime < toLocal);
                 }
 
                 if (criteria.MinPrice.HasValue && criteria.MinPrice.Value > 0)
@@ -460,8 +460,8 @@ namespace QuanLyVanTai.BLL.Services
                         BookedSeats = bookedCount,
                         AvailableSeats = avail,
                         BasePrice = s.Route?.BasePrice ?? 0m,
-                        DepartureTime = s.DepartureTime.ToLocalTime(),
-                        EstimatedArrivalTime = s.EstimatedArrivalTime.ToLocalTime()
+                        DepartureTime = s.DepartureTime,
+                        EstimatedArrivalTime = s.EstimatedArrivalTime
                     });
                 }
 

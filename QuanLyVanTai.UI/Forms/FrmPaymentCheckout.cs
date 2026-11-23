@@ -113,10 +113,24 @@ namespace QuanLyVanTai.UI.Forms
                 StartCountdownTimer();
             };
 
-            this.FormClosing += (s, e) =>
+            this.FormClosing += async (s, e) =>
             {
                 timerCountdown.Stop();
                 StopCallbackServer();
+
+                // Đóng cửa sổ khi giao dịch chưa hoàn tất -> hủy vé giữ chỗ để giải phóng ghế
+                if (!_isCompleted && _ticketIds.Count > 0)
+                {
+                    e.Cancel = true;
+                    if (MessageBox.Show(
+                            "Giao dịch thanh toán chưa hoàn tất!\nQuý khách có chắc chắn muốn hủy giao dịch và đóng cửa sổ không?\nCác vé đang giữ chỗ sẽ bị hủy và ghế sẽ được giải phóng trên hệ thống.",
+                            "Xác nhận hủy thanh toán",
+                            MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Question) == DialogResult.Yes)
+                    {
+                        await CancelPaymentAsync("Khách hàng đóng cửa sổ thanh toán khi giao dịch chưa hoàn tất");
+                    }
+                }
             };
 
             cboChonCong.SelectedIndexChanged += async (s, e) =>
@@ -391,6 +405,13 @@ namespace QuanLyVanTai.UI.Forms
                 lblTrangThai.Text = $" GIAO DỊCH THẤT BẠI HOẶC BỊ HỦY!\n" +
                                    $"{callbackResult.Message}\n" +
                                    $"Trạng thái 'Thất bại' đã được cập nhật vào CSDL. Ghế đã được giải phóng.";
+
+                // Cập nhật DB thất bại -> vé vẫn còn Pending, hủy luôn để không giữ ghế
+                if (!dbSuccess)
+                {
+                    await _paymentService.CancelPendingPaymentTicketsAsync(_ticketIds,
+                        "Cập nhật kết quả thanh toán vào CSDL thất bại");
+                }
 
                 await Task.Delay(2000);
                 this.DialogResult = DialogResult.Cancel;
