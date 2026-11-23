@@ -24,6 +24,22 @@ namespace QuanLyVanTai.BLL.Services
 
     public class RouteManagementService
     {
+        // Context do bên ngoài truyền vào (unit test dùng InMemory) — null nghĩa là
+        // service tự tạo context từ appsettings.json như các luồng chạy thật.
+        private readonly AppDbContext? _injectedContext;
+
+        public RouteManagementService()
+        {
+        }
+
+        public RouteManagementService(AppDbContext context)
+        {
+            _injectedContext = context;
+        }
+
+        private AppDbContext CreateContext() => _injectedContext ?? new AppDbContext();
+        private bool ShouldDisposeContext => _injectedContext == null;
+
         // ── Truy vấn ──────────────────────────────────────────────────────────
 
         /// <summary>
@@ -319,6 +335,100 @@ namespace QuanLyVanTai.BLL.Services
             catch (Exception ex)
             {
                 throw new DataAccessException("Route", "DeleteRoute", ex);
+            }
+        }
+
+        // ── Dashboard & Audit Trail ───────────────────────────────────────────
+
+        /// <summary>
+        /// Tính số liệu tổng hợp cho 4 thẻ KPI: tổng tuyến, tuyến đang hoạt động,
+        /// tổng quãng đường và giá cước trung bình. Dùng aggregate trên CSDL
+        /// (COUNT/SUM/AVG) thay vì tải toàn bộ danh sách về bộ nhớ.
+        /// </summary>
+        /// <exception cref="DataAccessException">Nếu có lỗi truy vấn database.</exception>
+        public async Task<RouteDashboardStatsDto> GetDashboardStatsAsync()
+        {
+            var db = CreateContext();
+            try
+            {
+                var query = db.Routes.AsNoTracking();
+
+                return new RouteDashboardStatsDto
+                {
+                    TotalRoutes      = await query.CountAsync(),
+                    ActiveRoutes     = await query.CountAsync(r => r.Status == "Active"),
+                    TotalDistanceKm  = await query.SumAsync(r => (decimal?)r.DistanceKm) ?? 0m,
+                    AverageBasePrice = await query.AverageAsync(r => (decimal?)r.BasePrice) ?? 0m
+                };
+            }
+            catch (BusStationException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DataAccessException("Route", "GetDashboardStats", ex);
+            }
+            finally
+            {
+                if (ShouldDisposeContext)
+                    await db.DisposeAsync();
+            }
+        }
+
+        /// <summary>
+        /// Lấy lịch sử thao tác của một tuyến xe từ bảng AuditLogs.
+        /// Log của thao tác Sửa/Xóa khớp theo <c>RecordId</c>. Riêng log "Thêm" được ghi
+        /// trước khi EF gán khóa chính nên RecordId còn là giá trị tạm — nhận diện bằng
+        /// RouteCode nằm trong <c>NewValues</c>.
+        /// </summary>
+        /// <exception cref="EntityNotFoundException">Nếu tuyến xe không tồn tại (hoặc đã bị xóa mềm).</exception>
+        /// <exception cref="DataAccessException">Nếu có lỗi truy vấn database.</exception>
+        public async Task<List<RouteAuditHistoryDto>> GetRouteAuditHistoryAsync(int routeId)
+        {
+            var db = CreateContext();
+            try
+            {
+                var route = await db.Routes.AsNoTracking()
+                    .FirstOrDefaultAsync(r => r.Id == routeId)
+                    ?? throw new EntityNotFoundException("Route", routeId);
+
+                string recordId = routeId.ToString();
+                string creationMarker = $"\"RouteCode\":\"{route.RouteCode}\"";
+
+                var logs = await db.AuditLogs.AsNoTracking()
+                    .Where(a => a.EntityName == "Route" &&
+                                (a.RecordId == recordId ||
+                                 (a.Action == "Thêm" &&
+                                  a.NewValues != null &&
+                                  a.NewValues.Contains(creationMarker))))
+                    .OrderByDescending(a => a.Timestamp)
+                    .Take(200)
+                    .ToListAsync();
+
+                return logs.Select(a => new RouteAuditHistoryDto
+                {
+                    Timestamp = a.Timestamp,
+                    Username  = a.Username,
+                    Role      = a.Role,
+                    Action    = a.Action,
+                    OldValues = a.OldValues,
+                    NewValues = a.NewValues,
+                    IpAddress = a.IpAddress
+                }).ToList();
+            }
+            catch (BusStationException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DataAccessException("Route", "GetRouteAuditHistory", ex);
+            }
+            finally
+            {
+                if (ShouldDisposeContext)
+                    await db.DisposeAsync();
             }
         }
 

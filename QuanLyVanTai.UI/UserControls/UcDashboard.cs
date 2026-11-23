@@ -1,4 +1,5 @@
 using Core.Configs;
+using Core.Security;
 using FontAwesome.Sharp;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
@@ -20,9 +21,13 @@ namespace QuanLyVanTai.UI.UserControls
     public partial class UcDashboard : UserControl
     {
         private readonly IDashboardService _dashboardService = new DashboardService();
+        private readonly RevenueReportPdfExportService _pdfExportService = new();
         private bool _isGdiMode = false;
         private List<RevenueByDateDto> _dateRevenueData = new();
         private List<RevenueByRouteDto> _routeRevenueData = new();
+        private DashboardSummaryDto _summary = new();
+        private DateTime _lastFromDate = DateTime.Today.AddDays(-6);
+        private DateTime _lastToDate = DateTime.Today;
         private System.Windows.Forms.Timer? _clockTimer;
 
         public UcDashboard()
@@ -59,6 +64,7 @@ namespace QuanLyVanTai.UI.UserControls
             cboDateFilter.SelectedIndexChanged += CboDateFilter_SelectedIndexChanged;
             btnApplyFilter.Click += async (_, _) => await LoadDashboardDataAsync();
             btnRefresh.Click += async (_, _) => await LoadDashboardDataAsync();
+            btnExportPdf.Click += async (_, _) => await ExportRevenueReportPdfAsync();
             btnToggleMode.Click += BtnToggleMode_Click;
 
             // Timer đồng hồ thời gian thực ở footer
@@ -176,6 +182,11 @@ namespace QuanLyVanTai.UI.UserControls
                 _routeRevenueData = await routeRevenueTask;
                 var recentTransactions = await recentTask;
 
+                // Giữ snapshot số liệu để xuất PDF khớp đúng những gì đang hiển thị
+                _summary = summary;
+                _lastFromDate = fromDate;
+                _lastToDate = toDate;
+
                 // 1. Cập nhật Stat Cards
                 lblStatRevenue.Text = $"{summary.TotalRevenue:N0} VNĐ";
                 lblStatTickets.Text = $"{summary.TotalTickets:N0} vé";
@@ -214,6 +225,68 @@ namespace QuanLyVanTai.UI.UserControls
             {
                 btnRefresh.Enabled = true;
                 btnApplyFilter.Enabled = true;
+            }
+        }
+
+        /// <summary>
+        /// Xuất báo cáo doanh thu PDF (khổ A4 ngang) đúng theo khoảng thời gian
+        /// và số liệu đang hiển thị. Việc render trang + đóng gói PDF chạy trong
+        /// Task.Run để không đơ giao diện.
+        /// </summary>
+        private async Task ExportRevenueReportPdfAsync()
+        {
+            if (!AuthorizationGuard.CheckAccess(SystemMenus.Route, PermissionAction.Export))
+                return;
+
+            using SaveFileDialog sfd = new()
+            {
+                Title = "Xuất báo cáo doanh thu ra PDF",
+                FileName = $"BaoCaoDoanhThu_{_lastFromDate:yyyyMMdd}_{_lastToDate:yyyyMMdd}",
+                Filter = "File PDF (*.pdf)|*.pdf",
+                DefaultExt = "pdf"
+            };
+            if (sfd.ShowDialog() != DialogResult.OK)
+                return;
+
+            var report = new RevenueReportDto
+            {
+                FromDate = _lastFromDate,
+                ToDate = _lastToDate,
+                GeneratedBy = string.IsNullOrWhiteSpace(UserSession.CurrentFullName)
+                    ? UserSession.CurrentUsername
+                    : UserSession.CurrentFullName,
+                GeneratedAt = DateTime.Now,
+                Summary = _summary,
+                DailyRevenue = _dateRevenueData.ToList(),
+                RouteRevenue = _routeRevenueData.ToList()
+            };
+
+            btnExportPdf.Enabled = false;
+            try
+            {
+                string filePath = sfd.FileName;
+                await Task.Run(() => _pdfExportService.SaveReportPdf(report, filePath));
+
+                DialogResult open = MessageBox.Show(
+                    $"Đã xuất báo cáo doanh thu ra file:\n{filePath}\n\nBạn có muốn mở file ngay bây giờ không?",
+                    "Xuất PDF thành công", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+
+                if (open == DialogResult.Yes)
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = filePath,
+                        UseShellExecute = true
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi xuất báo cáo PDF: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnExportPdf.Enabled = true;
             }
         }
 

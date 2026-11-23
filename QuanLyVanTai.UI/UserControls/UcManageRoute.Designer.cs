@@ -17,6 +17,7 @@ namespace QuanLyVanTai.UI.UserControls
 
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             pnlDashboard = new Panel();
             pnlStats = new Panel();
             cardRevenue = new Panel();
@@ -51,6 +52,9 @@ namespace QuanLyVanTai.UI.UserControls
             lblExcelProgress = new Label();
             splitMain = new SplitContainer();
             dgvRoutes = new DataGridView();
+            cmsRoutes = new ContextMenuStrip(components);
+            mnuXuatExcel = new ToolStripMenuItem();
+            mnuXuatJson = new ToolStripMenuItem();
             colId = new DataGridViewTextBoxColumn();
             colCode = new DataGridViewTextBoxColumn();
             colName = new DataGridViewTextBoxColumn();
@@ -564,6 +568,7 @@ namespace QuanLyVanTai.UI.UserControls
             dgvRoutes.ColumnHeadersHeight = 44;
             dgvRoutes.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dgvRoutes.Columns.AddRange(new DataGridViewColumn[] { colId, colCode, colName, colDistance, colHours, colPrice, colStations, colVehicles, colStatus, colUpdatedBy });
+            dgvRoutes.ContextMenuStrip = cmsRoutes;
             dgvRoutes.Dock = DockStyle.Fill;
             dgvRoutes.EnableHeadersVisualStyles = false;
             dgvRoutes.Location = new Point(0, 0);
@@ -576,6 +581,24 @@ namespace QuanLyVanTai.UI.UserControls
             dgvRoutes.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgvRoutes.Size = new Size(750, 479);
             dgvRoutes.TabIndex = 0;
+            // 
+            // cmsRoutes
+            // 
+            cmsRoutes.Items.AddRange(new ToolStripItem[] { mnuXuatExcel, mnuXuatJson });
+            cmsRoutes.Name = "cmsRoutes";
+            cmsRoutes.Size = new Size(190, 48);
+            // 
+            // mnuXuatExcel
+            // 
+            mnuXuatExcel.Name = "mnuXuatExcel";
+            mnuXuatExcel.Size = new Size(189, 22);
+            mnuXuatExcel.Text = "Xuất Excel danh sách tuyến";
+            // 
+            // mnuXuatJson
+            // 
+            mnuXuatJson.Name = "mnuXuatJson";
+            mnuXuatJson.Size = new Size(189, 22);
+            mnuXuatJson.Text = "Xuất JSON nghiệp vụ (*.json)";
             // 
             // colId
             // 
@@ -949,6 +972,9 @@ namespace QuanLyVanTai.UI.UserControls
         private System.Windows.Forms.Label lblExcelProgress;
         private System.Windows.Forms.SplitContainer splitMain;
         private System.Windows.Forms.DataGridView dgvRoutes;
+        private System.Windows.Forms.ContextMenuStrip cmsRoutes;
+        private System.Windows.Forms.ToolStripMenuItem mnuXuatExcel;
+        private System.Windows.Forms.ToolStripMenuItem mnuXuatJson;
         private System.Windows.Forms.DataGridViewTextBoxColumn colId;
         private System.Windows.Forms.DataGridViewTextBoxColumn colCode;
         private System.Windows.Forms.DataGridViewTextBoxColumn colName;

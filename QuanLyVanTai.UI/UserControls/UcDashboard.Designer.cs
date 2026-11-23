@@ -20,6 +20,7 @@ namespace QuanLyVanTai.UI.UserControls
         private System.Windows.Forms.DateTimePicker dtpToDate;
         private FontAwesome.Sharp.IconButton btnApplyFilter;
         private FontAwesome.Sharp.IconButton btnRefresh;
+        private FontAwesome.Sharp.IconButton btnExportPdf;
         private FontAwesome.Sharp.IconButton btnToggleMode;
 
         // Stat Cards Flow
@@ -127,6 +128,7 @@ namespace QuanLyVanTai.UI.UserControls
             dtpToDate = new System.Windows.Forms.DateTimePicker();
             btnApplyFilter = new FontAwesome.Sharp.IconButton();
             btnRefresh = new FontAwesome.Sharp.IconButton();
+            btnExportPdf = new FontAwesome.Sharp.IconButton();
             btnToggleMode = new FontAwesome.Sharp.IconButton();
 
             flpStatCards = new System.Windows.Forms.FlowLayoutPanel();
@@ -300,6 +302,7 @@ namespace QuanLyVanTai.UI.UserControls
             pnlFilterBar.Controls.Add(dtpToDate);
             pnlFilterBar.Controls.Add(btnApplyFilter);
             pnlFilterBar.Controls.Add(btnRefresh);
+            pnlFilterBar.Controls.Add(btnExportPdf);
             pnlFilterBar.Controls.Add(btnToggleMode);
             pnlFilterBar.Dock = System.Windows.Forms.DockStyle.Fill;
             pnlFilterBar.Location = new System.Drawing.Point(0, 68);
@@ -431,6 +434,31 @@ namespace QuanLyVanTai.UI.UserControls
             btnRefresh.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             btnRefresh.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             btnRefresh.UseVisualStyleBackColor = false;
+
+            // 
+            // btnExportPdf
+            // 
+            btnExportPdf.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            btnExportPdf.BackColor = System.Drawing.Color.FromArgb(220, 38, 38);
+            btnExportPdf.Cursor = System.Windows.Forms.Cursors.Hand;
+            btnExportPdf.FlatAppearance.BorderSize = 0;
+            btnExportPdf.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            btnExportPdf.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            btnExportPdf.ForeColor = System.Drawing.Color.White;
+            btnExportPdf.IconChar = FontAwesome.Sharp.IconChar.FilePdf;
+            btnExportPdf.IconColor = System.Drawing.Color.White;
+            btnExportPdf.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            btnExportPdf.IconSize = 16;
+            btnExportPdf.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            btnExportPdf.Location = new System.Drawing.Point(876, 8);
+            btnExportPdf.Name = "btnExportPdf";
+            btnExportPdf.Padding = new System.Windows.Forms.Padding(8, 0, 8, 0);
+            btnExportPdf.Size = new System.Drawing.Size(90, 29);
+            btnExportPdf.TabIndex = 9;
+            btnExportPdf.Text = "  PDF";
+            btnExportPdf.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            btnExportPdf.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            btnExportPdf.UseVisualStyleBackColor = false;
 
             // 
             // btnToggleMode
