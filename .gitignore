@@ -215,6 +215,8 @@ publish/
 # but database connection strings (with potential passwords) will be unencrypted
 *.pubxml
 *.publishproj
+# Profile publish chia sẻ cho cả nhóm (self-contained win-x64) — không chứa thông tin máy cá nhân
+!QuanLyVanTai.UI/Properties/PublishProfiles/WinX64SelfContained.pubxml
 
 # Microsoft Azure Web App publish settings. Comment the next line if you want to
 # checkin your Azure Web App publish settings, but sensitive information contained

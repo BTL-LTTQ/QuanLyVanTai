@@ -6,6 +6,7 @@ using QuanLyVanTai.BLL.DTOs;
 using QuanLyVanTai.BLL.Exceptions;
 using QuanLyVanTai.BLL.Services;
 using QuanLyVanTai.UI.Forms;
+using QuanLyVanTai.UI.Models;
 using UserSession = Core.Security.UserSession;
 
 namespace QuanLyVanTai.UI.UserControls
@@ -14,8 +15,12 @@ namespace QuanLyVanTai.UI.UserControls
     {
         private readonly RouteManagementService _routeService = new();
         private readonly RouteExcelService _excelService = new();
+        private readonly RouteJsonExportService _jsonExportService = new();
         private readonly StationManagementService _stationService = new();
         private readonly VehicleManagementService _vehicleService = new();
+
+        // Data binding hai chiều: mọi control nhập liệu dùng chung một nguồn RouteEditModel
+        private readonly BindingSource _routeBindingSource = new();
 
         // State tracking
         private bool _isAddingNew = false;
@@ -33,7 +38,7 @@ namespace QuanLyVanTai.UI.UserControls
         public UcManageRoute()
         {
             InitializeComponent();
-            if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
+            if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime || DesignMode)
                 return;
             SetupRuntimeUI();
             SetupEvents();
@@ -45,6 +50,8 @@ namespace QuanLyVanTai.UI.UserControls
         {
             this.Font = ThemeConfig.MainFont;
             this.BackColor = Color.FromArgb(248, 250, 252);
+
+            SetupRouteDataBinding();
 
             // Style Buttons with icons & colors
             ThemeConfig.StyleSuccessButton(btnAdd, IconChar.PlusCircle);
@@ -66,6 +73,43 @@ namespace QuanLyVanTai.UI.UserControls
             SetFormEditable(false);
         }
 
+        /// <summary>
+        /// Thiết lập data binding hai chiều giữa control nhập liệu và <see cref="RouteEditModel"/>.
+        /// DataSourceUpdateMode.OnPropertyChanged: mỗi lần người dùng gõ/chọn, model được cập nhật ngay.
+        /// </summary>
+        private void SetupRouteDataBinding()
+        {
+            _routeBindingSource.DataSource = typeof(RouteEditModel);
+
+            txtRouteCode.DataBindings.Add(
+                nameof(TextBox.Text), _routeBindingSource, nameof(RouteEditModel.RouteCode),
+                true, DataSourceUpdateMode.OnPropertyChanged);
+
+            txtRouteName.DataBindings.Add(
+                nameof(TextBox.Text), _routeBindingSource, nameof(RouteEditModel.RouteName),
+                true, DataSourceUpdateMode.OnPropertyChanged);
+
+            numDistance.DataBindings.Add(
+                nameof(NumericUpDown.Value), _routeBindingSource, nameof(RouteEditModel.DistanceKm),
+                true, DataSourceUpdateMode.OnPropertyChanged);
+
+            numEstimatedHours.DataBindings.Add(
+                nameof(NumericUpDown.Value), _routeBindingSource, nameof(RouteEditModel.EstimatedHours),
+                true, DataSourceUpdateMode.OnPropertyChanged);
+
+            numBasePrice.DataBindings.Add(
+                nameof(NumericUpDown.Value), _routeBindingSource, nameof(RouteEditModel.BasePrice),
+                true, DataSourceUpdateMode.OnPropertyChanged);
+
+            cboStatus.DataBindings.Add(
+                nameof(ComboBox.SelectedItem), _routeBindingSource, nameof(RouteEditModel.Status),
+                true, DataSourceUpdateMode.OnPropertyChanged);
+        }
+
+        /// <summary>Model đang gắn với form nhập liệu (BindingSource có thể đang ở trạng thái thêm mới).</summary>
+        private RouteEditModel CurrentRouteModel =>
+            _routeBindingSource.Current as RouteEditModel ?? new RouteEditModel();
+
         private void SetupEvents()
         {
             dgvRoutes.SelectionChanged += dgvRoutes_SelectionChanged;
@@ -84,6 +128,10 @@ namespace QuanLyVanTai.UI.UserControls
             btnHistory.Click += async (s, e) => await ViewAuditHistoryAsync();
             btnExport.Click += async (s, e) => await ExportRoutesToExcelAsync();
             btnImport.Click += async (s, e) => await ImportRoutesFromExcelAsync();
+
+            // ContextMenuStrip trên DataGridView: xuất Excel / JSON nhanh
+            mnuXuatExcel.Click += async (s, e) => await ExportRoutesToExcelAsync();
+            mnuXuatJson.Click += async (s, e) => await ExportRoutesToJsonAsync();
 
             cboFkStation.SelectedIndexChanged += (s, e) => ApplyFkStationSelection();
             cboFkVehicle.SelectedIndexChanged += (s, e) => ApplyFkVehicleSelection();
@@ -250,12 +298,16 @@ namespace QuanLyVanTai.UI.UserControls
 
         private void DisplayRouteDetails(RouteDetailDto route)
         {
-            txtRouteCode.Text = route.RouteCode;
-            txtRouteName.Text = route.RouteName;
-            numDistance.Value = Math.Min(numDistance.Maximum, route.DistanceKm);
-            numEstimatedHours.Value = Math.Min(numEstimatedHours.Maximum, route.EstimatedHours);
-            numBasePrice.Value = Math.Min(numBasePrice.Maximum, route.BasePrice);
-            cboStatus.SelectedItem = route.Status;
+            // Gán model cho BindingSource — toàn bộ text/numeric/combo tự cập nhật nhờ data binding
+            _routeBindingSource.DataSource = new RouteEditModel
+            {
+                RouteCode      = route.RouteCode,
+                RouteName      = route.RouteName,
+                DistanceKm     = Math.Min(numDistance.Maximum, route.DistanceKm),
+                EstimatedHours = Math.Min(numEstimatedHours.Maximum, route.EstimatedHours),
+                BasePrice      = Math.Min(numBasePrice.Maximum, route.BasePrice),
+                Status         = route.Status
+            };
 
             // Check multi-table Stations
             var routeStationIds = route.Stations.Select(s => s.Id).ToHashSet();
@@ -302,12 +354,12 @@ namespace QuanLyVanTai.UI.UserControls
             _isAddingNew = true;
             _selectedRouteId = null;
 
-            txtRouteCode.Clear();
-            txtRouteName.Clear();
-            numDistance.Value = 0;
-            numEstimatedHours.Value = 0;
-            numBasePrice.Value = 100000;
-            cboStatus.SelectedIndex = 0;
+            // Reset model rỗng — BindingSource tự đẩy giá trị mặc định xuống các control
+            _routeBindingSource.DataSource = new RouteEditModel
+            {
+                BasePrice = 100000m,
+                Status    = "Active"
+            };
 
             for (int i = 0; i < clbStations.Items.Count; i++)
                 clbStations.SetItemChecked(i, false);
@@ -344,8 +396,12 @@ namespace QuanLyVanTai.UI.UserControls
 
         private async Task SaveRouteAsync()
         {
-            string code = txtRouteCode.Text.Trim();
-            string name = txtRouteName.Text.Trim();
+            // Đẩy nốt giá trị control đang chỉnh dở xuống model (binding hai chiều)
+            _routeBindingSource.EndEdit();
+            RouteEditModel model = CurrentRouteModel;
+
+            string code = model.RouteCode.Trim();
+            string name = model.RouteName.Trim();
 
             if (string.IsNullOrWhiteSpace(code))
             {
@@ -375,10 +431,10 @@ namespace QuanLyVanTai.UI.UserControls
                 Id                 = _selectedRouteId ?? 0,
                 RouteCode          = code,
                 RouteName          = name,
-                DistanceKm         = numDistance.Value,
-                EstimatedHours     = numEstimatedHours.Value,
-                BasePrice          = numBasePrice.Value,
-                Status             = cboStatus.SelectedItem?.ToString() ?? "Active",
+                DistanceKm         = model.DistanceKm,
+                EstimatedHours     = model.EstimatedHours,
+                BasePrice          = model.BasePrice,
+                Status             = model.Status,
                 SelectedStationIds = selectedStationIds,
                 AssignedVehicleIds = selectedVehicleIds
             };
@@ -560,6 +616,48 @@ namespace QuanLyVanTai.UI.UserControls
             finally
             {
                 BeginExcelOperation(false); // Khôi phục UI
+            }
+        }
+
+        /// <summary>
+        /// Xuất danh sách tuyến xe ra file JSON nghiệp vụ (.json) để tích hợp
+        /// hệ thống ngoài. Chuỗi UTF-8 giữ nguyên tiếng Việt; bộ lọc từ ô tìm
+        /// kiếm hiện tại được áp dụng để chỉ xuất đúng tập dữ liệu đang xem.
+        /// </summary>
+        private async Task ExportRoutesToJsonAsync()
+        {
+            if (!AuthorizationGuard.CheckAccess(SystemMenus.Route, PermissionAction.Export))
+                return;
+
+            using SaveFileDialog sfd = new SaveFileDialog
+            {
+                Title = "Xuất danh sách tuyến xe ra JSON",
+                FileName = $"DanhSach_TuyenXe_{DateTime.Now:yyyyMMdd_HHmmss}",
+                Filter = "File JSON (*.json)|*.json",
+                DefaultExt = "json"
+            };
+            if (sfd.ShowDialog() != DialogResult.OK)
+                return;
+
+            try
+            {
+                int rowCount = await _jsonExportService.ExportRoutesAsync(sfd.FileName, txtSearch.Text);
+
+                MessageBox.Show(
+                    $"Đã xuất {rowCount} tuyến xe ra file JSON:\n{sfd.FileName}",
+                    "Xuất JSON thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (BusinessRuleViolationException ex)
+            {
+                MessageBox.Show(ex.Message, "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (DataAccessException ex)
+            {
+                MessageBox.Show($"Lỗi database khi xuất JSON: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi xuất JSON: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

@@ -56,8 +56,8 @@ QuanLyVanTai/
 │   └── Security/         # AuthorizationGuard, Enums (SystemRoles), UserSession
 │
 ├── QuanLyVanTai.DAL/
-│   ├── Migrations/       # 6 migration Code-First
-│   ├── Models/           # 10 entity
+│   ├── Migrations/       # 10 migration Code-First
+│   ├── Models/           # 11 entity
 │   ├── Repositories/     # BaseRepository + Route/Schedule/Station/Vehicle/Driver
 │   ├── AppDbContext.cs    # DbContext + Fluent API + seed tài khoản mặc định
 │   └── DatabaseSeeder.cs  # Dữ liệu mẫu runtime
@@ -67,10 +67,11 @@ QuanLyVanTai/
 │   ├── Exceptions/       # BusStationException (BusinessRuleViolationException...)
 │   └── Services/
 │       ├── AuthService / AccountService / PermissionService
-│       ├── RouteManagementService / RouteExcelService
+│       ├── RouteManagementService / RouteExcelService / RouteJsonExportService
 │       ├── StationManagementService / VehicleManagementService
 │       ├── ScheduleService / CustomerBookingService / SeatMapService
 │       ├── TicketService / TicketPdfExportService
+│       ├── RevenueReportPdfExportService / PdfImageDocumentBuilder
 │       ├── AuditLogService / AiChatbotService
 │       └── DatabaseInitializer
 │
@@ -211,6 +212,45 @@ Ngoài dữ liệu mẫu về trạm, xe, tuyến, tài xế, chuyến xe và ph
 | `khachhang` | `khachhang123` | Khách hàng |
 
 > Mật khẩu được băm bằng **PBKDF2 SHA-256** (100.000 vòng lặp, salt 16 byte, key 32 byte) qua `SecurityHelper`.
+
+---
+
+## 📦 Đóng Gói & Triển Khai (Publish)
+
+Dự án có sẵn profile **`WinX64SelfContained`** để đóng gói ứng dụng thành bản chạy độc lập
+(self-contained, single-file) cho Windows x64 — máy đích **không cần cài .NET SDK/Visual Studio**.
+
+### Cách 1: Chạy script một lần
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\publish.ps1
+```
+
+### Cách 2: Dùng profile trong Visual Studio
+
+1. Chuột phải project `QuanLyVanTai.UI` → **Publish**.
+2. Chọn profile **WinX64SelfContained** → **Publish**.
+
+### Cách 3: Dòng lệnh
+
+```powershell
+dotnet publish QuanLyVanTai.UI -c Release -p:PublishProfile=WinX64SelfContained
+```
+
+Kết quả tại `QuanLyVanTai.UI\bin\Release\net10.0-windows\publish\win-x64\`:
+
+| Tệp | Mô tả |
+| --- | --- |
+| `QuanLyVanTai.UI.exe` | Ứng dụng single-file, mang theo .NET 10 runtime |
+| `appsettings.json` | Chuỗi kết nối + cấu hình (chỉnh theo máy đích) |
+| `logs\` | Serilog tự tạo khi ứng dụng chạy |
+
+**Yêu cầu trên máy đích:** SQL Server (Developer/Express/LocalDB) chứa database `QuanLyVanTaiDb`,
+và **WebView2 Evergreen Runtime** (có sẵn trên Windows 11 hoặc khi đã cài Microsoft Edge).
+Lần chạy đầu, ứng dụng tự gọi `Database.Migrate()` + seed dữ liệu mẫu như khi chạy từ Visual Studio.
+
+> Profile đặt `PublishTrimmed=false` vì WinForms, EF Core và LiveCharts dùng reflection —
+> trimming sẽ làm hỏng binding và biểu đồ.
 
 ---
 
