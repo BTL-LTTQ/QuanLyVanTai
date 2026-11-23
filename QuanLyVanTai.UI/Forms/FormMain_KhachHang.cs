@@ -2,12 +2,14 @@ using System.ComponentModel;
 using Core.Configs;
 using Core.Helpers;
 using Core.Security;
+using FontAwesome.Sharp;
 using QuanLyVanTai.UI.UserControls;
 
 namespace QuanLyVanTai.UI.Forms
 {
     public partial class FormMain_KhachHang : Form
     {
+        private readonly List<Image> _navIcons = [];
         private UserControl? _currentView;
 
         public FormMain_KhachHang()
@@ -20,7 +22,6 @@ namespace QuanLyVanTai.UI.Forms
                 return;
             }
 
-            this.KeyPreview = true;
             SetupFormUi();
             WireEvents();
         }
@@ -30,9 +31,10 @@ namespace QuanLyVanTai.UI.Forms
             this.Font = ThemeConfig.MainFont;
             this.BackColor = ThemeConfig.BackgroundColor;
 
+            ApplyNavigationIcons();
             ApplyRolePermissions();
 
-            lblClock.Text = $"🕒 {DateTime.Now:dd/MM/yyyy HH:mm:ss}";
+            lblClock.Text = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
             timerClock.Interval = 1000;
             timerClock.Start();
         }
@@ -51,19 +53,19 @@ namespace QuanLyVanTai.UI.Forms
                 if (isStaff)
                 {
                     this.Text = "Hệ Thống Bán Vé & Quét QR Check-in (Dành Cho Nhân Viên / Lơ Xe)";
-                    lblCurrentUser.Text = $"👤 {user.FullName} ({user.Role} - Nhà xe)";
+                    lblCurrentUser.Text = $"{user.FullName} ({user.Role} - Nhà xe)";
                     tsBtnCheckInQr.ToolTipText = "Chức năng dành riêng cho Nhân viên / Lơ xe: Quét mã QR Check-in hành khách lên xe (Ctrl+Q)";
                 }
                 else
                 {
                     this.Text = "Hệ Thống Đặt Vé Xe Trực Tuyến - Dành Cho Khách Hàng";
-                    lblCurrentUser.Text = $"👤 {user.FullName} (Khách hàng)";
+                    lblCurrentUser.Text = $"{user.FullName} (Khách hàng)";
                 }
             }
             else
             {
                 this.Text = "Hệ Thống Đặt Vé Xe Trực Tuyến - Khách Hàng";
-                lblCurrentUser.Text = "👤 Khách Hàng Trực Tuyến";
+                lblCurrentUser.Text = "Khách Hàng Trực Tuyến";
             }
         }
 
@@ -99,11 +101,10 @@ namespace QuanLyVanTai.UI.Forms
                 ApplyRolePermissions();
                 ShowBookingView();
             };
-            this.KeyDown += FormMain_KhachHang_KeyDown;
 
             timerClock.Tick += (s, e) =>
             {
-                lblClock.Text = $"🕒 {DateTime.Now:dd/MM/yyyy HH:mm:ss}";
+                lblClock.Text = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
             };
 
             // Điều hướng chức năng
@@ -223,6 +224,41 @@ namespace QuanLyVanTai.UI.Forms
             tsBtnBooking.Checked = isBooking;
             tsBtnRouteMap.Checked = isRouteMap;
             tsBtnHistory.Checked = !isBooking && !isRouteMap;
+
+            mnuDatVe.Checked = isBooking;
+            mnuBanDoLoTrinh.Checked = isRouteMap;
+            mnuLichSuDatVe.Checked = !isBooking && !isRouteMap;
+        }
+
+        /// <summary>Gán icon FontAwesome thống nhất cho menu và toolbar.</summary>
+        private void ApplyNavigationIcons()
+        {
+            mnuDangXuat.Image = NavIcon(IconChar.RightFromBracket, ThemeConfig.DangerColor);
+            mnuThoat.Image = NavIcon(IconChar.DoorOpen);
+
+            mnuDatVe.Image = NavIcon(IconChar.Ticket);
+            mnuBanDoLoTrinh.Image = NavIcon(IconChar.MapLocationDot);
+            mnuLichSuDatVe.Image = NavIcon(IconChar.ClockRotateLeft);
+            mnuCheckInQr.Image = NavIcon(IconChar.Qrcode);
+            mnuLamMoi.Image = NavIcon(IconChar.ArrowsRotate);
+
+            mnuHuongDan.Image = NavIcon(IconChar.CircleQuestion);
+            mnuThongTin.Image = NavIcon(IconChar.CircleInfo);
+
+            tsBtnBooking.Image = NavIcon(IconChar.Ticket);
+            tsBtnRouteMap.Image = NavIcon(IconChar.MapLocationDot);
+            tsBtnHistory.Image = NavIcon(IconChar.ClockRotateLeft);
+            tsBtnCheckInQr.Image = NavIcon(IconChar.Qrcode);
+            tsBtnRefresh.Image = NavIcon(IconChar.ArrowsRotate);
+            tsBtnGuide.Image = NavIcon(IconChar.CircleQuestion);
+            tsBtnLogout.Image = NavIcon(IconChar.RightFromBracket, ThemeConfig.DangerColor);
+        }
+
+        private Image NavIcon(IconChar icon, Color? color = null)
+        {
+            var bitmap = FormsIconHelper.ToBitmap(icon, (Color?)color ?? Color.FromArgb(51, 65, 85), 20, 0, FlipOrientation.Normal);
+            _navIcons.Add(bitmap);
+            return bitmap;
         }
 
         public void SetStatus(string text, bool isLoading)
@@ -233,49 +269,7 @@ namespace QuanLyVanTai.UI.Forms
 
         #endregion
 
-        #region Phím Tắt & Tác Vụ Phụ
-
-        private void FormMain_KhachHang_KeyDown(object? sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.F1)
-            {
-                e.Handled = true;
-                ShowGuideDialog();
-            }
-            else if (e.KeyCode == Keys.F5)
-            {
-                e.Handled = true;
-                RefreshCurrentView();
-            }
-            else if (e.Control && e.KeyCode == Keys.B)
-            {
-                e.Handled = true;
-                ShowBookingView();
-            }
-            else if (e.Control && e.KeyCode == Keys.M)
-            {
-                e.Handled = true;
-                ShowRouteMapView();
-            }
-            else if (e.Control && e.KeyCode == Keys.H)
-            {
-                e.Handled = true;
-                ShowHistoryView();
-            }
-            else if (e.Control && e.KeyCode == Keys.Q)
-            {
-                if (IsStaffRole())
-                {
-                    e.Handled = true;
-                    OpenCheckInDialog();
-                }
-            }
-            else if (e.Control && e.KeyCode == Keys.L)
-            {
-                e.Handled = true;
-                PerformLogout();
-            }
-        }
+        #region Tác Vụ Phụ
 
         private void OpenCheckInDialog()
         {
@@ -331,5 +325,14 @@ namespace QuanLyVanTai.UI.Forms
         }
 
         #endregion
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            foreach (var icon in _navIcons)
+                icon.Dispose();
+            _navIcons.Clear();
+
+            base.OnFormClosed(e);
+        }
     }
 }
