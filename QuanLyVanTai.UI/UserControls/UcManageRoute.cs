@@ -125,7 +125,7 @@ namespace QuanLyVanTai.UI.UserControls
             btnSave.Click += async (s, e) => await SaveRouteAsync();
             btnCancel.Click += (s, e) => CancelEdit();
             btnDelete.Click += async (s, e) => await DeleteSelectedRouteAsync();
-            btnHistory.Click += async (s, e) => await ViewAuditHistoryAsync();
+            btnHistory.Click += (s, e) => ViewAuditHistory();
             btnExport.Click += async (s, e) => await ExportRoutesToExcelAsync();
             btnImport.Click += async (s, e) => await ImportRoutesFromExcelAsync();
 
@@ -229,6 +229,7 @@ namespace QuanLyVanTai.UI.UserControls
 
                 BindForeignKeyComboBoxes();
                 await ReloadRoutesListAsync();
+                await RefreshDashboardStatsAsync();
             }
             catch (DataAccessException ex)
             {
@@ -270,6 +271,20 @@ namespace QuanLyVanTai.UI.UserControls
 
             if (dgvRoutes.SelectedRows.Count == 0 && dgvRoutes.Rows.Count > 0)
                 dgvRoutes.Rows[0].Selected = true;
+        }
+
+        /// <summary>
+        /// Cập nhật 4 thẻ KPI từ số liệu tổng hợp trong CSDL.
+        /// Luôn tính trên toàn bộ tuyến xe (không phụ thuộc từ khóa tìm kiếm đang gõ).
+        /// </summary>
+        private async Task RefreshDashboardStatsAsync()
+        {
+            var stats = await _routeService.GetDashboardStatsAsync();
+
+            lblCard1Val.Text = stats.TotalRoutes.ToString("N0");
+            lblCard2Val.Text = stats.ActiveRoutes.ToString("N0");
+            lblCard3Val.Text = $"{stats.TotalDistanceKm:N0} km";
+            lblCard4Val.Text = $"{stats.AverageBasePrice:N0} VNĐ";
         }
 
         private async void dgvRoutes_SelectionChanged(object? sender, EventArgs e)
@@ -449,6 +464,7 @@ namespace QuanLyVanTai.UI.UserControls
                     SetFormEditable(false);
                     _isAddingNew = false;
                     await ReloadRoutesListAsync();
+                    await RefreshDashboardStatsAsync();
                 }
                 else if (_selectedRouteId.HasValue)
                 {
@@ -456,6 +472,7 @@ namespace QuanLyVanTai.UI.UserControls
                     MessageBox.Show("Cập nhật tuyến xe thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     SetFormEditable(false);
                     await ReloadRoutesListAsync();
+                    await RefreshDashboardStatsAsync();
                 }
             }
             catch (QuanLyVanTai.BLL.Exceptions.ValidationException ex)
@@ -511,6 +528,7 @@ namespace QuanLyVanTai.UI.UserControls
                 MessageBox.Show("Xóa tuyến xe thành công!", "Kết quả xóa an toàn", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 _selectedRouteId = null;
                 await ReloadRoutesListAsync();
+                await RefreshDashboardStatsAsync();
             }
             catch (EntityNotFoundException ex)
             {
@@ -530,13 +548,20 @@ namespace QuanLyVanTai.UI.UserControls
             }
         }
 
-        // TODO: GetRouteAuditHistoryAsync chưa được implement trong RouteManagementService.
-        // Uncomment và implement sau khi ManagementService hỗ trợ audit history.
-        private async Task ViewAuditHistoryAsync()
+        /// <summary>
+        /// Mở dialog lịch sử thao tác (Audit Trail) của tuyến xe đang chọn.
+        /// </summary>
+        private void ViewAuditHistory()
         {
-            await Task.CompletedTask;
-            MessageBox.Show("Tính năng xem lịch sử đang được phát triển.", "Thông báo",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            if (_selectedRouteId is not int routeId)
+            {
+                MessageBox.Show("Vui lòng chọn một tuyến xe để xem lịch sử thao tác!",
+                    "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            using var dialog = new FrmRouteAuditHistory(routeId, txtRouteCode.Text, txtRouteName.Text);
+            dialog.ShowDialog(FindForm());
         }
 
         // ── Import / Export Excel ─────────────────────────────────────────────
@@ -704,6 +729,7 @@ namespace QuanLyVanTai.UI.UserControls
                     "Import Excel thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 await ReloadRoutesListAsync(txtSearch.Text);
+                await RefreshDashboardStatsAsync();
             }
             catch (ExcelImportException ex)
             {

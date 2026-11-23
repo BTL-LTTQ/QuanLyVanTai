@@ -115,6 +115,35 @@ namespace QuanLyVanTai.BLL.DTOs
         public int SkippedDuplicateRows { get; set; }
     }
 
+    // ── Dashboard & Audit Trail ───────────────────────────────────────────────
+
+    /// <summary>
+    /// Số liệu tổng hợp hiển thị trên 4 thẻ KPI của màn hình Quản lý Tuyến xe.
+    /// Toàn bộ giá trị được tính bằng aggregate trên CSDL, không phụ thuộc bộ lọc tìm kiếm.
+    /// </summary>
+    public class RouteDashboardStatsDto
+    {
+        public int TotalRoutes { get; set; }
+        public int ActiveRoutes { get; set; }
+        public decimal TotalDistanceKm { get; set; }
+        public decimal AverageBasePrice { get; set; }
+    }
+
+    /// <summary>
+    /// Một dòng lịch sử thao tác (Audit Trail) của tuyến xe.
+    /// Chỉ chứa các trường cần hiển thị, không lộ chi tiết bảng AuditLogs ra UI.
+    /// </summary>
+    public class RouteAuditHistoryDto
+    {
+        public DateTime Timestamp { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public string Action { get; set; } = string.Empty;
+        public string? OldValues { get; set; }
+        public string? NewValues { get; set; }
+        public string IpAddress { get; set; } = string.Empty;
+    }
+
     // ── Sub-DTOs ──────────────────────────────────────────────────────────────
 
     /// <summary>DTO tóm tắt trạm dừng — dùng trong RouteDetailDto.</summary>
