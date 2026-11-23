@@ -68,7 +68,9 @@ namespace Core.Helpers
                 }
 
                 // Tô highlight từng vị trí xuất hiện của searchText
-                using (Font font = e.CellStyle.Font ?? dgv.Font)
+                // Lưu ý: font lấy từ CellStyle là Font dùng chung của grid — TUYỆT ĐỐI không Dispose,
+                // nếu không các lần vẽ sau sẽ ném lỗi "Parameter is not valid" và làm ứng dụng dừng.
+                Font font = e.CellStyle.Font ?? dgv.Font;
                 using (Brush normalTextBrush = new SolidBrush(
                     (e.State & DataGridViewElementStates.Selected) != 0 ? e.CellStyle.SelectionForeColor : e.CellStyle.ForeColor))
                 using (Brush highlightBgBrush = new SolidBrush(HighlightBackColor))

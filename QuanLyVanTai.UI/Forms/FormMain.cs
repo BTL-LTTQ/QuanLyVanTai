@@ -435,7 +435,8 @@ namespace QuanLyVanTai.UI
                 "• Kiến trúc: 3 tầng (UI - BLL - DAL)\n" +
                 "• CSDL: SQL Server (EF Core Code-First + ADO.NET)\n" +
                 "• Thiết kế chuẩn Desktop: MenuStrip, ToolStrip, StatusStrip, UserControls\n" +
-                "• Đồ án Lập trình trực quan (LTTQ) - Đại học Thủy lợi\n\n" +
+                "• Đồ án Lập trình trực quan (LTTQ)\n" +
+                "• Trường Đại học Giao thông Vận tải - Phân hiệu Thành phố Hồ Chí Minh\n\n" +
                 "Phiên bản: 1.0.0",
                 "Thông Tin Phần Mềm",
                 MessageBoxButtons.OK,
