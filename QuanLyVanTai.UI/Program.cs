@@ -44,6 +44,9 @@ namespace QuanLyVanTai.UI
                     CultureHelper.SetCulture(prefs.Language, savePreference: false);
                 }
 
+                // Dịch toàn bộ giao diện theo ngôn ngữ đang chọn
+                UiTranslator.Initialize();
+
                 // 4. Đọc file appsettings.json
                 var configuration = new ConfigurationBuilder()
                     .SetBasePath(AppContext.BaseDirectory)

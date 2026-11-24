@@ -221,7 +221,7 @@ namespace QuanLyVanTai.UI.UserControls
             {
                 cboChuyenXe.DataSource = null;
                 seatMapControl.LoadSeatMap(new VehicleSeatMapDto());
-                lblDonGia.Text = "0 VNĐ";
+                lblDonGia.Text = UiTranslator.Translate("0 VNĐ");
                 SetStatus("Không tìm thấy tuyến xe nào phù hợp với từ khóa.", false);
             }
         }
@@ -308,7 +308,7 @@ namespace QuanLyVanTai.UI.UserControls
                 else
                 {
                     seatMapControl.LoadSeatMap(new VehicleSeatMapDto());
-                    lblDonGia.Text = "0 VNĐ";
+                    lblDonGia.Text = UiTranslator.Translate("0 VNĐ");
                     SetStatus("Tuyến này chưa có chuyến xe nào được điều độ trong ngày đã chọn.", false);
                 }
             }
@@ -336,7 +336,7 @@ namespace QuanLyVanTai.UI.UserControls
                 _currentSeatMap = await _seatMapService.GetVehicleSeatMapAsync(trip.VehicleId, trip.DepartureTime, basePrice);
                 seatMapControl.LoadSeatMap(_currentSeatMap);
 
-                lblDonGia.Text = $"{_currentSeatMap.BasePrice:N0} VNĐ / vé";
+                lblDonGia.Text = string.Format(UiTranslator.Translate("{0:N0} VNĐ / vé"), _currentSeatMap.BasePrice);
                 OnSeatSelectionChanged(new List<SeatVisualItem>());
                 SetStatus($"Đã tải sơ đồ xe {trip.LicensePlate} ({trip.VehicleType}). Vui lòng chọn ghế!", false);
             }
@@ -358,16 +358,16 @@ namespace QuanLyVanTai.UI.UserControls
         {
             if (selectedSeats == null || selectedSeats.Count == 0)
             {
-                lblDanhSachGhe.Text = "Chưa chọn ghế";
+                lblDanhSachGhe.Text = UiTranslator.Translate("Chưa chọn ghế");
                 lblDanhSachGhe.ForeColor = Color.FromArgb(71, 85, 105);
-                lblTongTien.Text = "0 VNĐ";
-                lblTienGiam.Text = "-0 VNĐ";
+                lblTongTien.Text = UiTranslator.Translate("0 VNĐ");
+                lblTienGiam.Text = UiTranslator.Translate("-0 VNĐ");
                 _currentPromotion = null;
                 return;
             }
 
             var seatCodes = selectedSeats.Select(s => s.SeatCode).ToList();
-            lblDanhSachGhe.Text = $"{string.Join(", ", seatCodes)} ({selectedSeats.Count} chỗ)";
+            lblDanhSachGhe.Text = string.Format(UiTranslator.Translate("{0} ({1} chỗ)"), string.Join(", ", seatCodes), selectedSeats.Count);
             lblDanhSachGhe.ForeColor = Color.FromArgb(37, 99, 235);
 
             decimal subTotal = selectedSeats.Sum(s => s.FinalPrice);
@@ -381,13 +381,13 @@ namespace QuanLyVanTai.UI.UserControls
                 _currentPromotion.DiscountAmount = discount;
                 _currentPromotion.FinalTotal = Math.Max(0, subTotal - discount);
 
-                lblTienGiam.Text = $"-{discount:N0} VNĐ";
-                lblTongTien.Text = $"{_currentPromotion.FinalTotal:N0} VNĐ";
+                lblTienGiam.Text = string.Format(UiTranslator.Translate("-{0:N0} VNĐ"), discount);
+                lblTongTien.Text = string.Format(UiTranslator.Translate("{0:N0} VNĐ"), _currentPromotion.FinalTotal);
             }
             else
             {
-                lblTienGiam.Text = "-0 VNĐ";
-                lblTongTien.Text = $"{subTotal:N0} VNĐ";
+                lblTienGiam.Text = UiTranslator.Translate("-0 VNĐ");
+                lblTongTien.Text = string.Format(UiTranslator.Translate("{0:N0} VNĐ"), subTotal);
             }
 
             errorProviderMain.SetError(seatMapControl, string.Empty);
@@ -420,8 +420,8 @@ namespace QuanLyVanTai.UI.UserControls
 
                 if (_currentPromotion.IsValid)
                 {
-                    lblTienGiam.Text = $"-{_currentPromotion.DiscountAmount:N0} VNĐ";
-                    lblTongTien.Text = $"{_currentPromotion.FinalTotal:N0} VNĐ";
+                    lblTienGiam.Text = string.Format(UiTranslator.Translate("-{0:N0} VNĐ"), _currentPromotion.DiscountAmount);
+                    lblTongTien.Text = string.Format(UiTranslator.Translate("{0:N0} VNĐ"), _currentPromotion.FinalTotal);
                     MessageBox.Show($"{_currentPromotion.Message}\n{_currentPromotion.Description}",
                         "Áp dụng thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
@@ -429,8 +429,8 @@ namespace QuanLyVanTai.UI.UserControls
                 {
                     string rejectMessage = _currentPromotion?.Message ?? "Mã không hợp lệ!";
                     _currentPromotion = null;
-                    lblTienGiam.Text = "-0 VNĐ";
-                    lblTongTien.Text = $"{subTotal:N0} VNĐ";
+                    lblTienGiam.Text = UiTranslator.Translate("-0 VNĐ");
+                    lblTongTien.Text = string.Format(UiTranslator.Translate("{0:N0} VNĐ"), subTotal);
                     MessageBox.Show(rejectMessage,
                         "Không hợp lệ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }

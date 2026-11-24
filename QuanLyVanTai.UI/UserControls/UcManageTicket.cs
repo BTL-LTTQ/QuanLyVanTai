@@ -24,6 +24,7 @@ namespace QuanLyVanTai.UI.UserControls
         private int? _selectedTicketId = null;
         private List<Route> _routes = [];
         private List<Vehicle> _vehiclesForRoute = [];
+        private readonly CancellationTokenSource _lifetimeCts = new();
 
         public UcManageTicket()
         {
@@ -40,6 +41,15 @@ namespace QuanLyVanTai.UI.UserControls
             SetupRuntimeUI();
             WireEvents();
             ApplySecurity();
+
+            // Bấm mở màn hình nhiều lần sẽ Dispose view cũ trong khi tác vụ nạp vé còn chạy.
+            // Huỷ token để continuation không ghi vào DataGridView đã bị dispose (Columns = 0).
+            this.Disposed += (_, _) =>
+            {
+                _debounceTimer?.Stop();
+                _lifetimeCts.Cancel();
+            };
+
             _ = LoadInitialDataAsync();
         }
 
@@ -209,7 +219,8 @@ namespace QuanLyVanTai.UI.UserControls
                 _debounceTimer?.Stop();
                 _debounceTimer?.Dispose();
                 _debounceTimer = null;
-                await RefreshGridAsync();
+                if (IsDisposed) return;
+                await RefreshGridAsync(_lifetimeCts.Token);
             };
             _debounceTimer.Start();
         }
@@ -227,10 +238,12 @@ namespace QuanLyVanTai.UI.UserControls
         // ==========================================
         private async Task LoadInitialDataAsync()
         {
+            var token = _lifetimeCts.Token;
             try
             {
                 // Load routes vào filter và detail combobox
                 _routes = await _ticketService.GetActiveRoutesAsync();
+                if (token.IsCancellationRequested || IsDisposed) return;
 
                 cboRoute.Items.Clear();
                 cboRoute.Items.Add("Tất cả");
@@ -244,17 +257,22 @@ namespace QuanLyVanTai.UI.UserControls
 
                 if (cboRoute.Items.Count > 0) cboRoute.SelectedIndex = 0;
 
-                await RefreshGridAsync();
+                await RefreshGridAsync(token);
+            }
+            catch (OperationCanceledException)
+            {
+                // Màn hình đã bị đóng — bỏ qua kết quả nạp dở.
             }
             catch (Exception ex)
             {
+                if (IsDisposed) return;
                 MessageBox.Show($"Lỗi tải dữ liệu: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private async Task RefreshGridAsync()
+        private async Task RefreshGridAsync(CancellationToken token = default)
         {
-            if (_isRefreshing) return;
+            if (_isRefreshing || token.IsCancellationRequested || IsDisposed) return;
             _isRefreshing = true;
             try
             {
@@ -285,11 +303,17 @@ namespace QuanLyVanTai.UI.UserControls
                 };
 
                 var tickets = await _ticketService.SearchAndFilterTicketsAsync(criteria);
+                if (token.IsCancellationRequested || IsDisposed) return;
                 RenderGrid(tickets);
                 UpdateStats(tickets);
             }
+            catch (OperationCanceledException)
+            {
+                // Màn hình đã bị đóng — bỏ qua kết quả lọc dở.
+            }
             catch (Exception ex)
             {
+                if (IsDisposed) return;
                 MessageBox.Show($"Lỗi lọc dữ liệu: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
@@ -304,7 +328,8 @@ namespace QuanLyVanTai.UI.UserControls
             {
                 using var frm = new Forms.FrmPassengerCheckIn();
                 frm.ShowDialog(this.FindForm());
-                await RefreshGridAsync();
+                if (IsDisposed) return;
+                await RefreshGridAsync(_lifetimeCts.Token);
             }
             catch (Exception ex)
             {
@@ -314,6 +339,9 @@ namespace QuanLyVanTai.UI.UserControls
 
         private void RenderGrid(List<Ticket> tickets)
         {
+            // DataGridView đã bị dispose (Columns = 0) thì không thể thêm dòng.
+            if (dgvTickets.IsDisposed || dgvTickets.Columns.Count == 0) return;
+
             dgvTickets.Rows.Clear();
 
             foreach (var t in tickets)
@@ -489,7 +517,9 @@ namespace QuanLyVanTai.UI.UserControls
             }
 
             int routeId = _routes[cboDetailRoute.SelectedIndex].Id;
-            _vehiclesForRoute = await _ticketService.GetVehiclesByRouteAsync(routeId);
+            var vehicles = await _ticketService.GetVehiclesByRouteAsync(routeId);
+            if (IsDisposed || _lifetimeCts.IsCancellationRequested) return;
+            _vehiclesForRoute = vehicles;
 
             cboDetailVehicle.Items.Clear();
             if (_vehiclesForRoute.Count == 0)

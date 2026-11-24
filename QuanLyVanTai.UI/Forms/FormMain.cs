@@ -18,6 +18,8 @@ namespace QuanLyVanTai.UI
         private bool _isChangingLanguage = false;
         private UcAiChatbot? _chatbotWidget;
         private UserControl? _currentView;
+        private string? _statusPrefix;
+        private string? _currentModuleTitle;
 
         public FormMain()
         {
@@ -89,13 +91,13 @@ namespace QuanLyVanTai.UI
             var user = SessionManager.CurrentUser;
             if (user != null)
             {
-                lblStatusUser.Text = $"{user.FullName} ({user.Role})";
+                lblStatusUser.Text = $"{UiTranslator.Translate(user.FullName)} ({UiTranslator.Translate(user.Role)})";
             }
             else
             {
                 string role = UserSession.CurrentRole;
                 string username = UserSession.CurrentUsername;
-                lblStatusUser.Text = $"{username} ({role})";
+                lblStatusUser.Text = $"{username} ({UiTranslator.Translate(role)})";
             }
         }
 
@@ -111,7 +113,6 @@ namespace QuanLyVanTai.UI
             SetMenuVisible(mnuPhuongTien, SystemMenus.Vehicle);
             SetMenuVisible(mnuNhanSu, SystemMenus.Staff);
             SetMenuVisible(mnuLichTrinh, SystemMenus.Schedule);
-            SetMenuVisible(mnuGiaVe, SystemMenus.Ticket);
             SetMenuVisible(mnuKhuyenMai, SystemMenus.Promotion);
             SetMenuVisible(mnuDichVu, SystemMenus.Service);
             SetMenuVisible(mnuCheckInQr, SystemMenus.Ticket);
@@ -150,7 +151,6 @@ namespace QuanLyVanTai.UI
             mnuPhuongTien.Image = NavIcon(IconChar.Bus);
             mnuNhanSu.Image = NavIcon(IconChar.Users);
             mnuLichTrinh.Image = NavIcon(IconChar.CalendarDays);
-            mnuGiaVe.Image = NavIcon(IconChar.Tags);
             mnuKhuyenMai.Image = NavIcon(IconChar.Percent);
             mnuDichVu.Image = NavIcon(IconChar.BellConcierge);
             mnuCheckInQr.Image = NavIcon(IconChar.Qrcode);
@@ -216,6 +216,7 @@ namespace QuanLyVanTai.UI
                     tsCboLanguage.ComboBox.SelectedValue = match.Code;
                 }
                 UpdateLocalizedTexts();
+                UpdateUserInfoDisplay();
             }
             finally
             {
@@ -232,6 +233,12 @@ namespace QuanLyVanTai.UI
             catch
             {
                 // Bỏ qua lỗi tài nguyên ngôn ngữ
+            }
+
+            // Ghép lại dòng trạng thái theo ngôn ngữ mới (không thể dịch chuỗi ghép bằng quét từ điển)
+            if (_currentModuleTitle != null && _statusPrefix != null)
+            {
+                lblStatusReady.Text = $"{UiTranslator.Translate(_statusPrefix)} {UiTranslator.Translate(_currentModuleTitle)}";
             }
         }
 
@@ -255,6 +262,7 @@ namespace QuanLyVanTai.UI
                 newView.Dock = DockStyle.Fill;
                 pnlContentHost.Controls.Add(newView);
                 newView.BringToFront();
+                UiTranslator.Apply(newView);
                 _currentView = newView;
 
                 // Đảm bảo AI Chatbot Widget luôn nổi trên cùng
@@ -272,8 +280,12 @@ namespace QuanLyVanTai.UI
             if (!AuthorizationGuard.CheckAccess(menuCode, PermissionAction.View, showWarning: false))
             {
                 AnNoiDungCu();
-                HienCanhBao($"BẢO MẬT HỆ THỐNG:\n\nTài khoản '{UserSession.CurrentUsername}' (Vai trò: {UserSession.CurrentRole}) bị CHẶN truy cập vào chức năng '{title}'.\n\nHành động mở Form trái phép qua code đã được ghi lại trong Nhật ký an ninh.");
-                lblStatusReady.Text = $"Truy cập bị từ chối: {title}";
+                HienCanhBao(string.Format(
+                    UiTranslator.Translate("BẢO MẬT HỆ THỐNG:\n\nTài khoản '{0}' (Vai trò: {1}) bị CHẶN truy cập vào chức năng '{2}'.\n\nHành động mở Form trái phép qua code đã được ghi lại trong Nhật ký an ninh."),
+                    UserSession.CurrentUsername, UiTranslator.Translate(UserSession.CurrentRole), UiTranslator.Translate(title)));
+                _statusPrefix = "Truy cập bị từ chối:";
+                _currentModuleTitle = title;
+                lblStatusReady.Text = $"{UiTranslator.Translate(_statusPrefix)} {UiTranslator.Translate(title)}";
                 return;
             }
 
@@ -282,7 +294,9 @@ namespace QuanLyVanTai.UI
             var control = createControl();
             SwitchView(control);
             SetActiveMenu(menuItem);
-            lblStatusReady.Text = $"Đang làm việc: {title}";
+            _statusPrefix = "Đang làm việc:";
+            _currentModuleTitle = title;
+            lblStatusReady.Text = $"{UiTranslator.Translate(_statusPrefix)} {UiTranslator.Translate(title)}";
         }
 
         /// <summary>Đánh dấu checkmark ở mục menu tương ứng với màn hình đang mở.</summary>
@@ -331,9 +345,9 @@ namespace QuanLyVanTai.UI
             OpenMenu(SystemMenus.Vehicle, "Quản lý phương tiện & trạm dừng", () => new UcManageVehicleAndStation(), mnuPhuongTien);
         }
 
-        private void mnuGiaVe_Click(object? sender, EventArgs e)
+        private void tsBtnDatVe_Click(object? sender, EventArgs e)
         {
-            OpenMenu(SystemMenus.Ticket, "Quản lý bảng giá vé", () => new UcManageTicket(), mnuGiaVe);
+            OpenMenu(SystemMenus.Ticket, "Quản lý bảng giá vé", () => new UcManageTicket());
         }
 
         private void mnuNhanSu_Click(object? sender, EventArgs e)
@@ -381,7 +395,7 @@ namespace QuanLyVanTai.UI
             else if (_currentView is UcManageVehicleAndStation)
                 mnuPhuongTien_Click(sender, e);
             else if (_currentView is UcManageTicket)
-                mnuGiaVe_Click(sender, e);
+                tsBtnDatVe_Click(sender, e);
             else if (_currentView is UcManageStaff)
                 mnuNhanSu_Click(sender, e);
             else if (_currentView is UcManagePromotion)

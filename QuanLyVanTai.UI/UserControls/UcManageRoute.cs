@@ -284,7 +284,7 @@ namespace QuanLyVanTai.UI.UserControls
             lblCard1Val.Text = stats.TotalRoutes.ToString("N0");
             lblCard2Val.Text = stats.ActiveRoutes.ToString("N0");
             lblCard3Val.Text = $"{stats.TotalDistanceKm:N0} km";
-            lblCard4Val.Text = $"{stats.AverageBasePrice:N0} VNĐ";
+            lblCard4Val.Text = string.Format(UiTranslator.Translate("{0:N0} VNĐ"), stats.AverageBasePrice);
         }
 
         private async void dgvRoutes_SelectionChanged(object? sender, EventArgs e)
@@ -576,7 +576,7 @@ namespace QuanLyVanTai.UI.UserControls
             {
                 int clamped = Math.Clamp(pct, 0, 100);
                 pbExcelProgress.Value = clamped;
-                lblExcelProgress.Text = $"Tiến độ: {clamped}%";
+                lblExcelProgress.Text = string.Format(UiTranslator.Translate("Tiến độ: {0}%"), clamped);
             });
         }
 
@@ -584,7 +584,7 @@ namespace QuanLyVanTai.UI.UserControls
         {
             // enabled == true: đang chạy Import/Export → hiện progress, khóa các nút thao tác khác.
             pbExcelProgress.Value = 0;
-            lblExcelProgress.Text = "Tiến độ: 0%";
+            lblExcelProgress.Text = string.Format(UiTranslator.Translate("Tiến độ: {0}%"), 0);
             pbExcelProgress.Visible = enabled;
             lblExcelProgress.Visible = enabled;
 

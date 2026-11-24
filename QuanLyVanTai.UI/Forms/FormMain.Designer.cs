@@ -27,7 +27,6 @@ namespace QuanLyVanTai.UI
             mnuDanhMuc = new ToolStripMenuItem();
             mnuTuyenXe = new ToolStripMenuItem();
             mnuPhuongTien = new ToolStripMenuItem();
-            mnuGiaVe = new ToolStripMenuItem();
             mnuNghiepVu = new ToolStripMenuItem();
             mnuLichTrinh = new ToolStripMenuItem();
             mnuNhanSu = new ToolStripMenuItem();
@@ -147,19 +146,10 @@ namespace QuanLyVanTai.UI
             mnuPhuongTien.Text = "&Phương tiện && Trạm";
             mnuPhuongTien.Click += mnuPhuongTien_Click;
             // 
-            // mnuGiaVe
-            // 
-            mnuGiaVe.Name = "mnuGiaVe";
-            mnuGiaVe.ShortcutKeys = Keys.Control | Keys.D5;
-            mnuGiaVe.Size = new Size(290, 26);
-            mnuGiaVe.Text = "&Bảng giá vé";
-            mnuGiaVe.Click += mnuGiaVe_Click;
-            // 
             // mnuNghiepVu
             // 
             mnuNghiepVu.DropDownItems.AddRange(new ToolStripItem[] {
                 mnuLichTrinh,
-                mnuGiaVe,
                 mnuKhuyenMai,
                 mnuDichVu,
                 mnuCheckInQr
@@ -322,8 +312,8 @@ namespace QuanLyVanTai.UI
             tsBtnDatVe.Padding = new Padding(6, 2, 6, 2);
             tsBtnDatVe.Size = new Size(124, 28);
             tsBtnDatVe.Text = "Bảng giá vé";
-            tsBtnDatVe.ToolTipText = "Mở nhanh Bảng quản lý giá vé & Đặt vé (Ctrl+5)";
-            tsBtnDatVe.Click += mnuGiaVe_Click;
+            tsBtnDatVe.ToolTipText = "Mở nhanh màn hình Quản lý bảng giá vé & Đặt vé";
+            tsBtnDatVe.Click += tsBtnDatVe_Click;
             // 
             // tsBtnCheckInQr
             // 
@@ -564,7 +554,6 @@ namespace QuanLyVanTai.UI
         private ToolStripMenuItem mnuDanhMuc;
         private ToolStripMenuItem mnuTuyenXe;
         private ToolStripMenuItem mnuPhuongTien;
-        private ToolStripMenuItem mnuGiaVe;
         private ToolStripMenuItem mnuNghiepVu;
         private ToolStripMenuItem mnuLichTrinh;
         private ToolStripMenuItem mnuNhanSu;

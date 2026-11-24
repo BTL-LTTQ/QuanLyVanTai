@@ -5,6 +5,7 @@ using System.Media;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Core.Configs;
+using Core.Helpers;
 using Core.Security;
 using FontAwesome.Sharp;
 using QuanLyVanTai.BLL.DTOs;
@@ -353,7 +354,7 @@ namespace QuanLyVanTai.UI.Forms
             {
                 var list = await _checkInService.GetTodayCheckedInTicketsAsync();
                 dgvCheckedIn.DataSource = list;
-                lblCountBadge.Text = $"{list.Count} hành khách";
+                lblCountBadge.Text = string.Format(UiTranslator.Translate("{0} hành khách"), list.Count);
             }
             catch (Exception ex)
             {

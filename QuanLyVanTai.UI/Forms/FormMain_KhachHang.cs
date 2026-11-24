@@ -53,13 +53,13 @@ namespace QuanLyVanTai.UI.Forms
                 if (isStaff)
                 {
                     this.Text = "Hệ Thống Bán Vé & Quét QR Check-in (Dành Cho Nhân Viên / Lơ Xe)";
-                    lblCurrentUser.Text = $"{user.FullName} ({user.Role} - Nhà xe)";
+                    lblCurrentUser.Text = $"{UiTranslator.Translate(user.FullName)} ({UiTranslator.Translate(user.Role)} - {UiTranslator.Translate("Nhà xe")})";
                     tsBtnCheckInQr.ToolTipText = "Chức năng dành riêng cho Nhân viên / Lơ xe: Quét mã QR Check-in hành khách lên xe (Ctrl+Q)";
                 }
                 else
                 {
                     this.Text = "Hệ Thống Đặt Vé Xe Trực Tuyến - Dành Cho Khách Hàng";
-                    lblCurrentUser.Text = $"{user.FullName} (Khách hàng)";
+                    lblCurrentUser.Text = $"{UiTranslator.Translate(user.FullName)} ({UiTranslator.Translate("Khách hàng")})";
                 }
             }
             else
@@ -155,6 +155,7 @@ namespace QuanLyVanTai.UI.Forms
                 newView.Dock = DockStyle.Fill;
                 pnlContentHost.Controls.Add(newView);
                 newView.BringToFront();
+                UiTranslator.Apply(newView);
                 _currentView = newView;
             }
             finally

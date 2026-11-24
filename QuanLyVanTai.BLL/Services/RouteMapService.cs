@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using Core.Helpers;
 using Microsoft.EntityFrameworkCore;
 using QuanLyVanTai.BLL.DTOs;
 using QuanLyVanTai.BLL.Exceptions;
@@ -181,13 +182,27 @@ namespace QuanLyVanTai.BLL.Services
             string routeNameEscaped = System.Web.HttpUtility.HtmlEncode(routeMap.RouteName);
             string routeCodeEscaped = System.Web.HttpUtility.HtmlEncode(routeMap.RouteCode);
 
+            string mapTitle = string.Format(UiTranslator.Translate("Bản Đồ Lộ Trình - {0}"), routeCodeEscaped);
+            string statStations = string.Format(UiTranslator.Translate("{0} trạm dừng"), routeMap.Stations.Count);
+            string statDistance = string.Format(UiTranslator.Translate("{0:N0} km"), routeMap.DistanceKm);
+            string statHours = string.Format(UiTranslator.Translate("{0:N1} giờ"), routeMap.EstimatedHours);
+            string statPrice = string.Format(UiTranslator.Translate("{0:N0} VNĐ"), routeMap.BasePrice);
+            string layerStreet = UiTranslator.Translate("🗺️ Đường phố (Street Map)");
+            string layerSatellite = UiTranslator.Translate("🛰️ Ảnh vệ tinh (Satellite)");
+            string layerVoyager = UiTranslator.Translate("🎨 Sáng hiện đại (Voyager)");
+            string roleWaypoint = UiTranslator.Translate("Trạm trung gian");
+            string roleDeparture = UiTranslator.Translate("Điểm khởi hành");
+            string roleDestination = UiTranslator.Translate("Bến đến");
+            string stationCodeLabel = UiTranslator.Translate("Mã trạm:");
+            string addressLabel = UiTranslator.Translate("Địa chỉ:");
+
             return $$"""
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bản Đồ Lộ Trình - {{routeCodeEscaped}}</title>
+    <title>{{mapTitle}}</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
@@ -350,10 +365,10 @@ namespace QuanLyVanTai.BLL.Services
         <span class="route-badge">{{routeCodeEscaped}}</span>
         <div class="route-title">{{routeNameEscaped}}</div>
         <div class="route-stats">
-            <span>📍 {{routeMap.Stations.Count}} trạm dừng</span>
-            <span>📏 {{routeMap.DistanceKm:N0}} km</span>
-            <span>⏱️ {{routeMap.EstimatedHours:N1}} giờ</span>
-            <span>💵 {{routeMap.BasePrice:N0}} đ</span>
+            <span>📍 {{statStations}}</span>
+            <span>📏 {{statDistance}}</span>
+            <span>⏱️ {{statHours}}</span>
+            <span>💵 {{statPrice}}</span>
         </div>
     </div>
 
@@ -387,9 +402,9 @@ namespace QuanLyVanTai.BLL.Services
         });
 
         const baseMaps = {
-            "🗺️ Đường phố (Street Map)": streetLayer,
-            "🛰️ Ảnh vệ tinh (Satellite)": satelliteLayer,
-            "🎨 Sáng hiện đại (Voyager)": cartoVoyager
+            "{{layerStreet}}": streetLayer,
+            "{{layerSatellite}}": satelliteLayer,
+            "{{layerVoyager}}": cartoVoyager
         };
 
         L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
@@ -404,16 +419,16 @@ namespace QuanLyVanTai.BLL.Services
             // Phân loại pin màu
             let pinClass = "pin-waypoint";
             let badgeClass = "badge-way";
-            let roleText = "Trạm trung gian";
+            let roleText = "{{roleWaypoint}}";
 
             if (st.IsDeparture) {
                 pinClass = "pin-departure";
                 badgeClass = "badge-dep";
-                roleText = "Điểm khởi hành";
+                roleText = "{{roleDeparture}}";
             } else if (st.IsDestination) {
                 pinClass = "pin-destination";
                 badgeClass = "badge-des";
-                roleText = "Bến đến";
+                roleText = "{{roleDestination}}";
             }
 
             // Tạo icon HTML
@@ -433,8 +448,8 @@ namespace QuanLyVanTai.BLL.Services
                 <div class="station-popup">
                     <span class="station-popup-badge ${badgeClass}">${roleText}</span>
                     <h4>${st.StopOrder}. ${st.StationName}</h4>
-                    <p><strong>Mã trạm:</strong> ${st.StationCode}</p>
-                    <p><strong>Địa chỉ:</strong> ${st.Address}, ${st.City}</p>
+                    <p><strong>{{stationCodeLabel}}</strong> ${st.StationCode}</p>
+                    <p><strong>{{addressLabel}}</strong> ${st.Address}, ${st.City}</p>
                     <div class="coords">GPS: ${st.Latitude.toFixed(6)}, ${st.Longitude.toFixed(6)}</div>
                 </div>
             `;
