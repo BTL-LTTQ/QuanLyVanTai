@@ -232,5 +232,47 @@ namespace QuanLyVanTai.Tests.BLL
                 Assert.NotNull(r.TicketCode);
             });
         }
+
+        [Theory]
+        [InlineData("001", "002", true, 3)]
+        [InlineData("001", "010", false, 11)]
+        [InlineData("999", "1000", false, 1001)]
+        public async Task TicketCreation_UsesHighestIssuedNumberAcrossBothFlows(
+            string firstSuffix, string lastSuffix, bool lastIsDeleted, int nextNumber)
+        {
+            using var db = QuanLyVanTai.Tests.Helpers.TestDbContextFactory.Create();
+            await QuanLyVanTai.Tests.Helpers.SeedData.SeedBasicAsync(db);
+            var prefix = $"TK{DateTime.Today:yyyyMMdd}";
+            var departure = DateTime.Today.AddDays(2).AddHours(8);
+            db.Tickets.AddRange(
+                new QuanLyVanTai.DAL.Models.Ticket
+                {
+                    TicketCode = prefix + firstSuffix, RouteId = 1, VehicleId = 1,
+                    SeatNumber = "A01", DepartureTime = departure
+                },
+                new QuanLyVanTai.DAL.Models.Ticket
+                {
+                    TicketCode = prefix + lastSuffix, RouteId = 1, VehicleId = 1,
+                    SeatNumber = "A02", DepartureTime = departure, IsDeleted = lastIsDeleted
+                });
+            await db.SaveChangesAsync();
+
+            var booking = await new CustomerBookingService(db).BookTicketsAsync(new BookingRequestDto
+            {
+                CustomerName = "Khách kiểm thử", CustomerPhone = "0905123456",
+                RouteId = 1, VehicleId = 1, DepartureTime = departure,
+                SelectedSeats = ["A03", "A04"]
+            });
+            Assert.True(booking.Success, booking.Message);
+            Assert.Equal(new[] { $"{prefix}{nextNumber:D3}", $"{prefix}{nextNumber + 1:D3}" }, booking.CreatedTicketCodes);
+
+            var manual = await new TicketService(db).CreateTicketAsync(new QuanLyVanTai.DAL.Models.Ticket
+            {
+                CustomerName = "Khách tại quầy", CustomerPhone = "0905123456", Price = 350000m,
+                RouteId = 1, VehicleId = 1, SeatNumber = "A05", DepartureTime = departure
+            });
+            Assert.True(manual.Success, manual.Message);
+            Assert.Equal($"{prefix}{nextNumber + 2:D3}", manual.Ticket!.TicketCode);
+        }
     }
 }

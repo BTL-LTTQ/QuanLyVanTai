@@ -161,6 +161,7 @@ namespace QuanLyVanTai.BLL.Services
                     if (route == null)
                         return new BookingResultDto { Success = false, Message = "Không tìm thấy thông tin tuyến xe!" };
 
+                    var createdTicketCodes = await TicketService.AllocateTicketCodesAsync(db, request.SelectedSeats.Count);
                     decimal unitPrice = route.BasePrice > 0 ? route.BasePrice : 200000m;
 
                     // 1. Kiểm tra tranh chấp ghế đồng thời (Concurrency check)
@@ -188,17 +189,12 @@ namespace QuanLyVanTai.BLL.Services
                     var promoResult = await VerifyPromotionAsync(request.PromotionCode, subTotal);
                     decimal discountPerSeat = promoResult.DiscountAmount / request.SelectedSeats.Count;
 
-                    string datePrefix = "TK" + DateTime.Now.ToString("yyyyMMdd");
-                    int currentCount = await db.Tickets.CountAsync(t => t.TicketCode.StartsWith(datePrefix));
-
                     var createdTickets = new List<Ticket>();
-                    var createdTicketCodes = new List<string>();
 
                     for (int i = 0; i < request.SelectedSeats.Count; i++)
                     {
                         string seat = request.SelectedSeats[i];
-                        currentCount++;
-                        string ticketCode = $"{datePrefix}{currentCount:D3}";
+                        string ticketCode = createdTicketCodes[i];
 
                         decimal seatFinalPrice = Math.Max(0, unitPrice - discountPerSeat);
 
@@ -222,7 +218,6 @@ namespace QuanLyVanTai.BLL.Services
 
                         db.Tickets.Add(newTicket);
                         createdTickets.Add(newTicket);
-                        createdTicketCodes.Add(ticketCode);
                     }
 
                     // Lưu các vé
