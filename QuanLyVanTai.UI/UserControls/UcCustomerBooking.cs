@@ -54,7 +54,6 @@ namespace QuanLyVanTai.UI.UserControls
             // Nút tác vụ chuẩn theme
             ThemeConfig.StyleSuccessButton(btnDatVe, IconChar.Ticket);
             ThemeConfig.StyleSecondaryButton(btnHuyChon, IconChar.RotateLeft);
-            ThemeConfig.StyleSecondaryButton(btnTaiSoDo, IconChar.RotateLeft);
             ThemeConfig.StylePrimaryButton(btnTimChuyen, IconChar.MagnifyingGlass);
             ThemeConfig.StyleSecondaryButton(btnXemBanDo, IconChar.MapLocationDot);
 
@@ -99,7 +98,6 @@ namespace QuanLyVanTai.UI.UserControls
             cboTuyenXe.SelectedIndexChanged += async (s, e) => await OnRouteChangedAsync();
             dtpNgayDi.ValueChanged += async (s, e) => await OnRouteChangedAsync();
             cboChuyenXe.SelectedIndexChanged += async (s, e) => await LoadSeatMapForSelectedTripAsync();
-            btnTaiSoDo.Click += async (s, e) => await LoadSeatMapForSelectedTripAsync();
             btnXemBanDo.Click += (s, e) =>
             {
                 int rId = cboTuyenXe.SelectedValue is int id ? id : 0;
@@ -702,7 +700,6 @@ namespace QuanLyVanTai.UI.UserControls
         private void SetStatus(string msg, bool isLoading)
         {
             btnDatVe.Enabled = !isLoading;
-            btnTaiSoDo.Enabled = !isLoading;
             OnStatusChanged?.Invoke(msg, isLoading);
         }
 
