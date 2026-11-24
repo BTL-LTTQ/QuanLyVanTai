@@ -40,7 +40,7 @@ namespace QuanLyVanTai.UI.Forms
 
             // Nút bấm
             ThemeConfig.StyleSuccessButton(btnCheckIn, IconChar.Check);
-            ThemeConfig.StylePrimaryButton(btnScanFile, IconChar.FolderOpen);
+            ThemeConfig.StylePrimaryButton(btnScanCamera, IconChar.Camera);
             ThemeConfig.StyleSecondaryButton(btnRevert, IconChar.RotateLeft);
             ThemeConfig.StyleSecondaryButton(btnRefreshList, IconChar.RotateLeft);
             ThemeConfig.StyleSecondaryButton(btnClose, IconChar.Xmark);
@@ -158,7 +158,7 @@ namespace QuanLyVanTai.UI.Forms
             };
 
             btnCheckIn.Click += async (s, e) => await HandleCheckInActionAsync();
-            btnScanFile.Click += async (s, e) => await HandleScanFileAsync();
+            btnScanCamera.Click += async (s, e) => await HandleScanCameraAsync();
             btnRevert.Click += async (s, e) => await HandleRevertActionAsync();
             btnRefreshList.Click += async (s, e) => await LoadCheckedInListAsync();
             btnClose.Click += (s, e) => this.Close();
@@ -206,35 +206,17 @@ namespace QuanLyVanTai.UI.Forms
             }
         }
 
-        private async Task HandleScanFileAsync()
+        private async Task HandleScanCameraAsync()
         {
-            using var ofd = new OpenFileDialog
+            using var scanner = new FrmCameraScanner();
+            if (scanner.ShowDialog(this) == DialogResult.OK && !string.IsNullOrWhiteSpace(scanner.QrPayload))
             {
-                Title = "Chọn hình ảnh mã QR vé xe hoặc vé điện tử",
-                Filter = "Tệp hình ảnh (*.png;*.jpg;*.jpeg;*.bmp)|*.png;*.jpg;*.jpeg;*.bmp|Tất cả tệp (*.*)|*.*"
-            };
-
-            if (ofd.ShowDialog(this) == DialogResult.OK)
+                txtQrInput.Text = scanner.QrPayload;
+                await HandleCheckInActionAsync();
+            }
+            else
             {
-                lblFooterStatus.Text = $"Đang đọc mã QR từ tệp: {System.IO.Path.GetFileName(ofd.FileName)}...";
-                try
-                {
-                    string? decoded = _checkInService.DecodeQrFromFile(ofd.FileName);
-                    if (string.IsNullOrWhiteSpace(decoded))
-                    {
-                        MessageBox.Show("Không thể giải mã mã QR từ tệp hình ảnh đã chọn. Vui lòng chọn ảnh rõ nét hơn!",
-                                        "Lỗi đọc mã QR", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        lblFooterStatus.Text = "Giải mã thất bại từ tệp hình ảnh.";
-                        return;
-                    }
-
-                    txtQrInput.Text = decoded;
-                    await HandleCheckInActionAsync();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Lỗi đọc file: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                txtQrInput.Focus();
             }
         }
 

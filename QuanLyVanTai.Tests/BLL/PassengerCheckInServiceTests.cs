@@ -71,6 +71,57 @@ namespace QuanLyVanTai.Tests.BLL
         }
 
         [Fact]
+        public async Task CheckIn_FromCameraFrame_DecodesAndRejectsSecondScan()
+        {
+            using var db = TestDbContextFactory.Create();
+            await SeedData.SeedBasicAsync(db);
+            var ticket = new Ticket
+            {
+                TicketCode = "TK_CAMERA_TEST",
+                CustomerName = "Khách kiểm thử camera",
+                CustomerPhone = "0901234567",
+                RouteId = 1,
+                VehicleId = 1,
+                SeatNumber = "A05",
+                Price = 350000,
+                PaymentStatus = "Paid",
+                TicketStatus = "Booked",
+                DepartureTime = DateTime.Now.AddDays(1)
+            };
+            db.Tickets.Add(ticket);
+            await db.SaveChangesAsync();
+
+            var service = new PassengerCheckInService(db);
+            using var frame = new Bitmap(640, 480);
+            using (var graphics = Graphics.FromImage(frame))
+            {
+                graphics.Clear(Color.Gray);
+                using var qr = TicketPdfExportService.GenerateQrCode("QLVT|MAVE:TK_CAMERA_TEST|GHE:A05", 6);
+                qr.RotateFlip(RotateFlipType.Rotate90FlipNone);
+                graphics.DrawImageUnscaled(qr, 160, 80);
+            }
+
+            string? payload = service.DecodeQrFromBitmap(frame);
+            Assert.NotNull(payload);
+            var first = await service.ProcessCheckInAsync(payload, "CameraStaff");
+            var second = await service.ProcessCheckInAsync(payload, "CameraStaff");
+
+            Assert.True(first.Success);
+            Assert.Equal("Boarded", ticket.TicketStatus);
+            Assert.Equal("CameraStaff", ticket.UpdatedBy);
+            Assert.Equal(CheckInStatus.AlreadyBoarded, second.Status);
+        }
+
+        [Fact]
+        public void DecodeQrFromBitmap_WithBlankCameraFrame_ReturnsNull()
+        {
+            using var frame = new Bitmap(640, 480);
+            using var graphics = Graphics.FromImage(frame);
+            graphics.Clear(Color.White);
+            Assert.Null(new PassengerCheckInService().DecodeQrFromBitmap(frame));
+        }
+
+        [Fact]
         public void DecodeQrFromBitmap_WithNullBitmap_ReturnsNull()
         {
             var service = new PassengerCheckInService();
