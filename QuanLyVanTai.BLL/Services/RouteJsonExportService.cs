@@ -16,7 +16,7 @@ namespace QuanLyVanTai.BLL.Services
     // Minh họa yêu cầu Import/Export dữ liệu của Chương 5.
     // =========================================================================
 
-    public class RouteJsonExportService
+    public class RouteJsonExportService : BaseExportService
     {
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
@@ -45,14 +45,10 @@ namespace QuanLyVanTai.BLL.Services
             ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
 
             var routes = await _routeService.GetRouteListAsync(keyword);
-            if (routes.Count == 0)
-                throw new BusinessRuleViolationException("Route", "Không có tuyến xe nào để xuất JSON.");
+            EnsureHasData(routes.Count, "Route", "Không có tuyến xe nào để xuất JSON.");
 
             string json = Serialize(routes);
-
-            string? directory = Path.GetDirectoryName(filePath);
-            if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
-                Directory.CreateDirectory(directory);
+            EnsureOutputDirectory(filePath);
 
             await File.WriteAllTextAsync(
                 filePath,

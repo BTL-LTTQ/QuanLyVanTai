@@ -57,39 +57,9 @@ namespace QuanLyVanTai.UI.UserControls
 
         private void SetupGiaoDien()
         {
-            dgvAuditLog.Dock = DockStyle.None;
-            dgvAuditLog.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
+            // Kích thước co giãn theo vùng nội dung; các thuộc tính hiển thị khác đặt trong Designer.
             dgvAuditLog.Location = new Point(30, 200);
             dgvAuditLog.Size = new Size(this.ClientSize.Width - 60, this.ClientSize.Height - 220);
-
-            dgvAuditLog.AllowUserToAddRows = false;
-            dgvAuditLog.AllowUserToDeleteRows = false;
-            dgvAuditLog.AllowUserToResizeRows = false;
-            dgvAuditLog.AllowUserToResizeColumns = false;
-            dgvAuditLog.RowHeadersVisible = false;
-            dgvAuditLog.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dgvAuditLog.ColumnHeadersHeight = 44;
-            dgvAuditLog.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            dgvAuditLog.RowTemplate.Height = 40;
-            dgvAuditLog.CellBorderStyle = DataGridViewCellBorderStyle.Single;
-            dgvAuditLog.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
-            dgvAuditLog.GridColor = Color.FromArgb(226, 232, 240);
-            dgvAuditLog.BorderStyle = BorderStyle.FixedSingle;
-
-            dgvAuditLog.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-            dgvAuditLog.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(241, 245, 249);
-            dgvAuditLog.ColumnHeadersDefaultCellStyle.ForeColor = ThemeConfig.TextMain;
-            dgvAuditLog.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            dgvAuditLog.EnableHeadersVisualStyles = false;
-
-            dgvAuditLog.DefaultCellStyle.Font = new Font("Segoe UI", 9.5F);
-            dgvAuditLog.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvAuditLog.MultiSelect = false;
-            dgvAuditLog.ReadOnly = true;
-
-            dgvAuditLog.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(248, 249, 250);
-            dgvAuditLog.DefaultCellStyle.SelectionBackColor = Color.FromArgb(225, 235, 255);
-            dgvAuditLog.DefaultCellStyle.SelectionForeColor = Color.Black;
 
             DataGridViewHighlightHelper.AttachSearchHighlighter(dgvAuditLog, () => comboBox1.SelectedItem?.ToString() == "Tất cả" ? "" : comboBox1.SelectedItem?.ToString() ?? "");
         }

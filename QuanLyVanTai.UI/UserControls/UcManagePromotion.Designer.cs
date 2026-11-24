@@ -45,14 +45,20 @@ namespace QuanLyVanTai.UI.UserControls
             // 
             // dgvKhuyenMai
             // 
+            dgvKhuyenMai.AllowUserToAddRows = false;
+            dgvKhuyenMai.AllowUserToResizeRows = false;
             dgvKhuyenMai.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvKhuyenMai.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             dgvKhuyenMai.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvKhuyenMai.Columns.AddRange(new DataGridViewColumn[] { colTen, colLoai, colGiaTri, colThoiGian, ColTrangThai, colThaoTac });
-            dgvKhuyenMai.Dock = DockStyle.Bottom;
+            dgvKhuyenMai.Dock = DockStyle.Fill;
             dgvKhuyenMai.Location = new Point(0, 156);
+            dgvKhuyenMai.MultiSelect = false;
             dgvKhuyenMai.Name = "dgvKhuyenMai";
             dgvKhuyenMai.RowHeadersVisible = false;
             dgvKhuyenMai.RowHeadersWidth = 51;
+            dgvKhuyenMai.RowTemplate.Height = 44;
+            dgvKhuyenMai.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgvKhuyenMai.Size = new Size(754, 551);
             dgvKhuyenMai.TabIndex = 11;
             dgvKhuyenMai.Visible = false;
@@ -76,6 +82,7 @@ namespace QuanLyVanTai.UI.UserControls
             // 
             // colGiaTri
             // 
+            colGiaTri.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             colGiaTri.HeaderText = "Giá trị";
             colGiaTri.MinimumWidth = 6;
             colGiaTri.Name = "colGiaTri";
@@ -83,6 +90,7 @@ namespace QuanLyVanTai.UI.UserControls
             // 
             // colThoiGian
             // 
+            colThoiGian.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             colThoiGian.HeaderText = "Thời Gian";
             colThoiGian.MinimumWidth = 6;
             colThoiGian.Name = "colThoiGian";
@@ -90,6 +98,7 @@ namespace QuanLyVanTai.UI.UserControls
             // 
             // ColTrangThai
             // 
+            ColTrangThai.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             ColTrangThai.HeaderText = "Trạng Thái";
             ColTrangThai.MinimumWidth = 6;
             ColTrangThai.Name = "ColTrangThai";
@@ -97,10 +106,12 @@ namespace QuanLyVanTai.UI.UserControls
             // 
             // colThaoTac
             // 
+            colThaoTac.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            colThaoTac.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             colThaoTac.HeaderText = "Thao Tác";
             colThaoTac.MinimumWidth = 6;
             colThaoTac.Name = "colThaoTac";
-            colThaoTac.Width = 125;
+            colThaoTac.Width = 130;
             // 
             // btnThemKhuyenMai
             // 

@@ -545,6 +545,26 @@ namespace QuanLyVanTai.UI
             _chatbotWidget.BringToFront();
         }
 
+        /// <summary>
+        /// Cập nhật thanh tiến độ trên StatusStrip cho tác vụ nền (import/export…).
+        /// percent = null để ẩn thanh khi tác vụ kết thúc.
+        /// </summary>
+        public void SetStatusProgress(int? percent)
+        {
+            if (prgAction == null)
+                return;
+
+            if (percent is null)
+            {
+                prgAction.Visible = false;
+                prgAction.Value = 0;
+                return;
+            }
+
+            prgAction.Visible = true;
+            prgAction.Value = Math.Clamp(percent.Value, 0, 100);
+        }
+
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             CultureHelper.CultureChanged -= OnCultureChanged;

@@ -116,10 +116,11 @@ namespace QuanLyVanTai.DAL
                 // 5. Seed Lịch trình (Schedule) kèm Phân công tài xế (DriverAssignment)
                 //    Dữ liệu trải đều 3 trạng thái (Completed / InProgress / Scheduled) để test bộ lọc.
                 {
-                    // Tự động làm sạch bảng Schedules để seed dữ liệu mới nhất (dành cho môi trường dev/test)
-                    if (db.Schedules.Any())
+                    // Chỉ dọn các chuyến do seeder tạo (CreatedBy = "System") để làm mới dữ liệu demo
+                    // theo ngày hiện tại; lịch trình người dùng tự tạo được giữ nguyên qua các lần mở app.
+                    if (db.Schedules.Any(s => s.CreatedBy == "System"))
                     {
-                        db.Schedules.ExecuteDelete();
+                        db.Schedules.Where(s => s.CreatedBy == "System").ExecuteDelete();
                         db.SaveChanges();
                     }
 

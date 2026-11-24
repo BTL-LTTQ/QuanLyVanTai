@@ -30,16 +30,11 @@ namespace QuanLyVanTai.UI.UserControls
             if (!AuthorizationGuard.GuardFormAccess(this, SystemMenus.Promotion))
                 return;
 
-            SetupDataGridView();
             dgvKhuyenMai.Visible = true;
             WirePromotionSecurityAndAudit();
             this.Load += UcManagePromotion_Load;
             dgvKhuyenMai.CellPainting += dgvKhuyenMai_CellPainting;
             dgvKhuyenMai.CellMouseClick += dgvKhuyenMai_CellMouseClick;
-
-            // Đảm bảo hiển thị header
-            dgvKhuyenMai.ColumnHeadersVisible = true;
-            dgvKhuyenMai.RowHeadersVisible = false;
 
             // Dữ liệu mẫu
             dgvKhuyenMai.Rows.Add(
@@ -58,60 +53,6 @@ namespace QuanLyVanTai.UI.UserControls
                 "Đã kết thúc"
             );
         }
-        private void SetupDataGridView()
-        {
-            dgvKhuyenMai.Dock = DockStyle.Fill;
-
-            dgvKhuyenMai.AllowUserToAddRows = false;
-            dgvKhuyenMai.AllowUserToResizeRows = false;
-
-            dgvKhuyenMai.SelectionMode =
-                DataGridViewSelectionMode.FullRowSelect;
-
-            dgvKhuyenMai.MultiSelect = false;
-
-            dgvKhuyenMai.RowHeadersVisible = false;
-            dgvKhuyenMai.ColumnHeadersVisible = true; // Đảm bảo hiển thị header
-            dgvKhuyenMai.RowTemplate.Height = 44;
-            dgvKhuyenMai.ColumnHeadersHeight = 45; // Tăng chiều cao header
-
-            dgvKhuyenMai.AutoSizeColumnsMode =
-                DataGridViewAutoSizeColumnsMode.Fill;
-
-            // Đảm bảo tên cột hiển thị đúng
-            if (dgvKhuyenMai.Columns.Count >= 6)
-            {
-                dgvKhuyenMai.Columns[0].HeaderText = "Tên Khuyến Mãi";
-                dgvKhuyenMai.Columns[1].HeaderText = "Loại";
-                dgvKhuyenMai.Columns[2].HeaderText = "Giá Trị";
-                dgvKhuyenMai.Columns[3].HeaderText = "Thời Gian";
-                dgvKhuyenMai.Columns[4].HeaderText = "Trạng Thái";
-                dgvKhuyenMai.Columns[5].HeaderText = "Thao Tác";
-
-                // Cột thao tác
-                dgvKhuyenMai.Columns[5].AutoSizeMode =
-                    DataGridViewAutoSizeColumnMode.None;
-
-                dgvKhuyenMai.Columns[5].Width = 130;
-
-                // Căn giữa
-                dgvKhuyenMai.Columns[2].DefaultCellStyle.Alignment =
-                    DataGridViewContentAlignment.MiddleCenter;
-
-                dgvKhuyenMai.Columns[3].DefaultCellStyle.Alignment =
-                    DataGridViewContentAlignment.MiddleCenter;
-
-                dgvKhuyenMai.Columns[4].DefaultCellStyle.Alignment =
-                    DataGridViewContentAlignment.MiddleCenter;
-
-                dgvKhuyenMai.Columns[5].DefaultCellStyle.Alignment =
-                    DataGridViewContentAlignment.MiddleCenter;
-            }
-
-            dgvKhuyenMai.ColumnHeadersDefaultCellStyle.Alignment =
-                DataGridViewContentAlignment.MiddleCenter;
-        }
-
         private void dgvKhuyenMai_CellPainting(object? sender, DataGridViewCellPaintingEventArgs e)
         {
             if (e.RowIndex < 0)
