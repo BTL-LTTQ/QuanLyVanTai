@@ -377,7 +377,7 @@ namespace QuanLyVanTai.UI.UserControls
                 }
             };
 
-            cartesianChartTime.LegendPosition = LiveChartsCore.Measure.LegendPosition.Top;
+            cartesianChartTime.LegendPosition = LiveChartsCore.Measure.LegendPosition.Bottom;
             cartesianChartTime.TooltipPosition = LiveChartsCore.Measure.TooltipPosition.Top;
         }
 

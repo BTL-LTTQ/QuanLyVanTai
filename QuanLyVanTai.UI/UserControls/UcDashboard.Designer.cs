@@ -859,7 +859,7 @@ namespace QuanLyVanTai.UI.UserControls
             pnlTimeChartWrap.Location = new System.Drawing.Point(0, 0);
             pnlTimeChartWrap.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
             pnlTimeChartWrap.Name = "pnlTimeChartWrap";
-            pnlTimeChartWrap.Padding = new System.Windows.Forms.Padding(16, 12, 16, 12);
+            pnlTimeChartWrap.Padding = new System.Windows.Forms.Padding(16, 58, 16, 12);
             pnlTimeChartWrap.Size = new System.Drawing.Size(724, 359);
             pnlTimeChartWrap.TabIndex = 0;
 
@@ -890,7 +890,7 @@ namespace QuanLyVanTai.UI.UserControls
             // 
             // pnlTimeChartContainer
             // 
-            pnlTimeChartContainer.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            pnlTimeChartContainer.Dock = System.Windows.Forms.DockStyle.Fill;
             pnlTimeChartContainer.BackColor = System.Drawing.Color.White;
             pnlTimeChartContainer.Controls.Add(cartesianChartTime);
             pnlTimeChartContainer.Controls.Add(pnlTimeChartGdi);
@@ -930,7 +930,7 @@ namespace QuanLyVanTai.UI.UserControls
             pnlRouteChartWrap.Location = new System.Drawing.Point(732, 0);
             pnlRouteChartWrap.Margin = new System.Windows.Forms.Padding(0, 0, 0, 0);
             pnlRouteChartWrap.Name = "pnlRouteChartWrap";
-            pnlRouteChartWrap.Padding = new System.Windows.Forms.Padding(16, 12, 16, 12);
+            pnlRouteChartWrap.Padding = new System.Windows.Forms.Padding(16, 58, 16, 12);
             pnlRouteChartWrap.Size = new System.Drawing.Size(488, 359);
             pnlRouteChartWrap.TabIndex = 1;
 
@@ -961,7 +961,7 @@ namespace QuanLyVanTai.UI.UserControls
             // 
             // pnlRouteChartContainer
             // 
-            pnlRouteChartContainer.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            pnlRouteChartContainer.Dock = System.Windows.Forms.DockStyle.Fill;
             pnlRouteChartContainer.BackColor = System.Drawing.Color.White;
             pnlRouteChartContainer.Controls.Add(pieChartRoutes);
             pnlRouteChartContainer.Controls.Add(pnlRouteChartGdi);
