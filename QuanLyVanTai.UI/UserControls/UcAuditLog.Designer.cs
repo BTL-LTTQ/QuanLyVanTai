@@ -43,14 +43,14 @@ namespace QuanLyVanTai.UI.UserControls
             label1.Text = "Từ ngày";
             // label2
             label2.AutoSize = true;
-            label2.Location = new Point(325, 33);
+            label2.Location = new Point(295, 33);
             label2.Name = "label2";
             label2.Size = new Size(72, 20);
             label2.TabIndex = 1;
             label2.Text = "Đến ngày";
             // label3
             label3.AutoSize = true;
-            label3.Location = new Point(606, 33);
+            label3.Location = new Point(556, 33);
             label3.Name = "label3";
             label3.Size = new Size(89, 20);
             label3.TabIndex = 2;
@@ -62,38 +62,61 @@ namespace QuanLyVanTai.UI.UserControls
             dateTimePicker1.Size = new Size(250, 27);
             dateTimePicker1.TabIndex = 3;
             // dateTimePicker2
-            dateTimePicker2.Location = new Point(325, 82);
+            dateTimePicker2.Location = new Point(295, 82);
             dateTimePicker2.Name = "dateTimePicker2";
             dateTimePicker2.Size = new Size(250, 27);
             dateTimePicker2.TabIndex = 4;
             // comboBox1
             comboBox1.FormattingEnabled = true;
-            comboBox1.Location = new Point(606, 81);
+            comboBox1.Location = new Point(556, 81);
             comboBox1.Name = "comboBox1";
             comboBox1.Size = new Size(151, 28);
             comboBox1.TabIndex = 5;
             // btnTimKiem
-            btnTimKiem.Location = new Point(815, 83);
+            btnTimKiem.Location = new Point(717, 83);
             btnTimKiem.Name = "btnTimKiem";
             btnTimKiem.Size = new Size(94, 29);
             btnTimKiem.TabIndex = 6;
             btnTimKiem.Text = "Tìm kiếm";
             btnTimKiem.UseVisualStyleBackColor = true;
             // btnXuat
-            btnXuat.Location = new Point(815, 139);
+            btnXuat.Location = new Point(821, 83);
             btnXuat.Name = "btnXuat";
             btnXuat.Size = new Size(94, 29);
             btnXuat.TabIndex = 7;
             btnXuat.Text = "Xuất";
             btnXuat.UseVisualStyleBackColor = true;
             // dgvAuditLog
+            dgvAuditLog.AllowUserToAddRows = false;
+            dgvAuditLog.AllowUserToDeleteRows = false;
+            dgvAuditLog.AllowUserToResizeColumns = false;
+            dgvAuditLog.AllowUserToResizeRows = false;
+            dgvAuditLog.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(248, 249, 250);
+            dgvAuditLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             dgvAuditLog.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dgvAuditLog.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvAuditLog.BorderStyle = BorderStyle.FixedSingle;
+            dgvAuditLog.CellBorderStyle = DataGridViewCellBorderStyle.Single;
+            dgvAuditLog.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
+            dgvAuditLog.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dgvAuditLog.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(241, 245, 249);
+            dgvAuditLog.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            dgvAuditLog.ColumnHeadersDefaultCellStyle.ForeColor = Color.FromArgb(15, 23, 42);
+            dgvAuditLog.ColumnHeadersHeight = 44;
+            dgvAuditLog.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dgvAuditLog.Columns.AddRange(new DataGridViewColumn[] { colThoiGian, colNguoiDung, colVaiTro, colHanhDong, colDoiTuong, colDiaChiIP });
+            dgvAuditLog.DefaultCellStyle.Font = new Font("Segoe UI", 9.5F);
+            dgvAuditLog.DefaultCellStyle.SelectionBackColor = Color.FromArgb(225, 235, 255);
+            dgvAuditLog.DefaultCellStyle.SelectionForeColor = Color.Black;
+            dgvAuditLog.EnableHeadersVisualStyles = false;
+            dgvAuditLog.GridColor = Color.FromArgb(226, 232, 240);
             dgvAuditLog.Location = new Point(34, 215);
+            dgvAuditLog.MultiSelect = false;
             dgvAuditLog.Name = "dgvAuditLog";
+            dgvAuditLog.ReadOnly = true;
             dgvAuditLog.RowHeadersVisible = false;
             dgvAuditLog.RowHeadersWidth = 51;
+            dgvAuditLog.RowTemplate.Height = 40;
+            dgvAuditLog.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgvAuditLog.Size = new Size(875, 429);
             dgvAuditLog.TabIndex = 8;
             // colThoiGian

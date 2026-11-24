@@ -572,11 +572,13 @@ namespace QuanLyVanTai.UI.UserControls
         /// </summary>
         private IProgress<int> CreateProgressReporter()
         {
+            var host = FindForm() as FormMain;
             return new Progress<int>(pct =>
             {
                 int clamped = Math.Clamp(pct, 0, 100);
                 pbExcelProgress.Value = clamped;
                 lblExcelProgress.Text = string.Format(UiTranslator.Translate("Tiến độ: {0}%"), clamped);
+                host?.SetStatusProgress(clamped);
             });
         }
 
@@ -587,6 +589,7 @@ namespace QuanLyVanTai.UI.UserControls
             lblExcelProgress.Text = string.Format(UiTranslator.Translate("Tiến độ: {0}%"), 0);
             pbExcelProgress.Visible = enabled;
             lblExcelProgress.Visible = enabled;
+            (FindForm() as FormMain)?.SetStatusProgress(enabled ? 0 : (int?)null);
 
             btnImport.Enabled = !enabled;
             btnExport.Enabled = !enabled;

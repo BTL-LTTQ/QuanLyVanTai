@@ -21,7 +21,7 @@ namespace QuanLyVanTai.BLL.Services
     //      Rollback TOÀN BỘ và ném ExcelImportException kèm danh sách dòng lỗi.
     // =========================================================================
 
-    public class RouteExcelService
+    public class RouteExcelService : BaseExportService
     {
         // Tiêu đề cột chuẩn khi Export; Import sẽ đối chiếu theo thứ tự này.
         private static readonly string[] ExcelColumns =
@@ -50,9 +50,8 @@ namespace QuanLyVanTai.BLL.Services
             // ── Đọc dữ liệu (async EF) trên luồng hiện tại ────────────────────
             var routes = await LoadRoutesAsync(cancellationToken);
 
-            if (routes.Count == 0)
-                throw new BusinessRuleViolationException(
-                    "Route", "Không có tuyến xe nào để xuất Excel.");
+            EnsureHasData(routes.Count, "Route", "Không có tuyến xe nào để xuất Excel.");
+            EnsureOutputDirectory(filePath);
 
             // ── Snapshot dữ liệu để ghi file trong Task.Run ───────────────────
             var rows = routes

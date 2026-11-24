@@ -61,8 +61,8 @@ namespace QuanLyVanTai.DAL.Repositories
             await using var cmd  = new SqlCommand(sql, conn);
 
             // Thêm tham số an toàn — không bao giờ nối chuỗi người dùng vào SQL
-            cmd.Parameters.Add("@FromDate", SqlDbType.DateTime).Value = fromDate.Date;
-            cmd.Parameters.Add("@ToDate",   SqlDbType.DateTime).Value = toDate.Date.AddDays(1);
+            cmd.Parameters.Add(new SqlParameter("@FromDate", SqlDbType.DateTime) { Value = fromDate.Date });
+            cmd.Parameters.Add(new SqlParameter("@ToDate", SqlDbType.DateTime) { Value = toDate.Date.AddDays(1) });
 
             await conn.OpenAsync(ct);
 
@@ -123,8 +123,8 @@ namespace QuanLyVanTai.DAL.Repositories
                 using var cmd     = new SqlCommand(sql, conn);
                 using var adapter = new SqlDataAdapter(cmd);
 
-                cmd.Parameters.Add("@FromDate", SqlDbType.DateTime).Value = fromDate.Date;
-                cmd.Parameters.Add("@ToDate",   SqlDbType.DateTime).Value = toDate.Date.AddDays(1);
+                cmd.Parameters.Add(new SqlParameter("@FromDate", SqlDbType.DateTime) { Value = fromDate.Date });
+                cmd.Parameters.Add(new SqlParameter("@ToDate", SqlDbType.DateTime) { Value = toDate.Date.AddDays(1) });
 
                 adapter.Fill(table); // Fill tự mở + đóng kết nối
             }, ct);
@@ -167,8 +167,8 @@ namespace QuanLyVanTai.DAL.Repositories
             await using var conn = new SqlConnection(_connectionString);
             await using var cmd  = new SqlCommand(sql, conn);
 
-            cmd.Parameters.Add("@FromDate", SqlDbType.DateTime).Value = fromDate.Date;
-            cmd.Parameters.Add("@ToDate",   SqlDbType.DateTime).Value = toDate.Date.AddDays(1);
+            cmd.Parameters.Add(new SqlParameter("@FromDate", SqlDbType.DateTime) { Value = fromDate.Date });
+            cmd.Parameters.Add(new SqlParameter("@ToDate", SqlDbType.DateTime) { Value = toDate.Date.AddDays(1) });
 
             await conn.OpenAsync(ct);
 
