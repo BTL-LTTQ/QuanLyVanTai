@@ -266,11 +266,11 @@ namespace QuanLyVanTai.UI.UserControls
                 }
                 else
                 {
-                    lblRouteNameVal.Text = "Chưa có dữ liệu tuyến xe";
+                    lblRouteNameVal.Text = UiTranslator.Translate("Chưa có dữ liệu tuyến xe");
                     dgvStations.Rows.Clear();
                 }
 
-                OnStatusChanged?.Invoke("Đã tải xong dữ liệu tuyến và bản đồ lộ trình.", false);
+                OnStatusChanged?.Invoke(UiTranslator.Translate("Đã tải xong dữ liệu tuyến và bản đồ lộ trình."), false);
             }
             catch (Exception ex)
             {
@@ -289,23 +289,23 @@ namespace QuanLyVanTai.UI.UserControls
 
                 if (_currentRouteMap == null)
                 {
-                    lblRouteNameVal.Text = "Không tìm thấy thông tin tuyến";
+                    lblRouteNameVal.Text = UiTranslator.Translate("Không tìm thấy thông tin tuyến");
                     dgvStations.Rows.Clear();
                     return;
                 }
 
                 // Cập nhật thông số lộ trình
                 lblRouteNameVal.Text = $"{_currentRouteMap.RouteCode} - {_currentRouteMap.RouteName}";
-                lblDistanceTimeVal.Text = $"{_currentRouteMap.DistanceKm:N0} km  (~{_currentRouteMap.EstimatedHours:N1} giờ)";
-                lblBasePriceVal.Text = $"{_currentRouteMap.BasePrice:N0} VNĐ";
-                lblStationCountVal.Text = $"{_currentRouteMap.Stations.Count} trạm đón/trả";
+                lblDistanceTimeVal.Text = string.Format(UiTranslator.Translate("{0:N0} km  (~{1:N1} giờ)"), _currentRouteMap.DistanceKm, _currentRouteMap.EstimatedHours);
+                lblBasePriceVal.Text = string.Format(UiTranslator.Translate("{0:N0} VNĐ"), _currentRouteMap.BasePrice);
+                lblStationCountVal.Text = string.Format(UiTranslator.Translate("{0} trạm đón/trả"), _currentRouteMap.Stations.Count);
 
                 // Đổ dữ liệu vào bảng trạm dừng
                 dgvStations.Rows.Clear();
                 foreach (var st in _currentRouteMap.Stations)
                 {
-                    string roleStr = st.IsDeparture ? "🟢 Điểm khởi hành" :
-                                     st.IsDestination ? "🔴 Bến đến" : "🔵 Trạm dừng";
+                    string roleStr = st.IsDeparture ? UiTranslator.Translate("🟢 Điểm khởi hành") :
+                                     st.IsDestination ? UiTranslator.Translate("🔴 Bến đến") : UiTranslator.Translate("🔵 Trạm dừng");
 
                     int rowIdx = dgvStations.Rows.Add(
                         st.StopOrder,
@@ -333,10 +333,10 @@ namespace QuanLyVanTai.UI.UserControls
                 {
                     string html = _routeMapService.GenerateInteractiveMapHtml(_currentRouteMap);
                     webViewMap.NavigateToString(html);
-                    lblMapStatus.Text = $"🗺️ Lộ trình: {_currentRouteMap.Stations.Count} trạm dừng. Click để xem chi tiết.";
+                    lblMapStatus.Text = string.Format(UiTranslator.Translate("🗺️ Lộ trình: {0} trạm dừng. Click để xem chi tiết."), _currentRouteMap.Stations.Count);
                 }
 
-                OnStatusChanged?.Invoke($"Đang xem bản đồ tuyến {_currentRouteMap.RouteCode}", false);
+                OnStatusChanged?.Invoke(string.Format(UiTranslator.Translate("Đang xem bản đồ tuyến {0}"), _currentRouteMap.RouteCode), false);
             }
             catch (Exception ex)
             {
@@ -352,7 +352,7 @@ namespace QuanLyVanTai.UI.UserControls
                 try
                 {
                     await webViewMap.ExecuteScriptAsync($"focusStation({point.StationId});");
-                    lblMapStatus.Text = $"📍 Đã định vị: {point.StationName} ({point.Address}, {point.City})";
+                    lblMapStatus.Text = string.Format(UiTranslator.Translate("📍 Đã định vị: {0} ({1}, {2})"), point.StationName, point.Address, point.City);
                 }
                 catch { }
             }

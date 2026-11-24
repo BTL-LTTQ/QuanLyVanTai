@@ -1,4 +1,5 @@
 using Core.DTOs;
+using Core.Helpers;
 using Microsoft.Extensions.Configuration;
 using QuanLyVanTai.BLL.Services;
 using QuanLyVanTai.DAL.Repositories;
@@ -130,14 +131,24 @@ namespace QuanLyVanTai.UI.UserControls
                     SoVe     = r.TicketCount
                 }).ToList();
 
+                // Tiêu đề cột: DataSource là anonymous type nên phải dịch thủ công
+                dgvMonthly.Columns["MonthLabel"]!.HeaderText = UiTranslator.Translate("Tháng");
+                dgvMonthly.Columns["DoanhThu"]!.HeaderText = UiTranslator.Translate("Doanh thu");
+                dgvMonthly.Columns["SoVe"]!.HeaderText = UiTranslator.Translate("Số vé");
+                dgvMonthly.Columns["TrungBinh"]!.HeaderText = UiTranslator.Translate("Trung bình");
+                dgvRoutes.Columns["RouteCode"]!.HeaderText = UiTranslator.Translate("Mã tuyến");
+                dgvRoutes.Columns["RouteName"]!.HeaderText = UiTranslator.Translate("Tên tuyến");
+                dgvRoutes.Columns["DoanhThu"]!.HeaderText = UiTranslator.Translate("Doanh thu");
+                dgvRoutes.Columns["SoVe"]!.HeaderText = UiTranslator.Translate("Số vé");
+
                 // Tổng
-                lblTotal.Text = $"Tổng doanh thu (ADO.NET): {total:N0} ₫";
+                lblTotal.Text = string.Format(
+                    UiTranslator.Translate("Tổng doanh thu (ADO.NET): {0:N0} ₫"), total);
 
                 // Ghi chú kỹ thuật
-                lblNote.Text = $"✅  Truy vấn bằng SqlCommand + SqlDataReader (doanh thu tháng) "
-                             + $"và SqlDataAdapter + DataTable (theo tuyến). "
-                             + $"Khoảng: {from:dd/MM/yyyy} → {to:dd/MM/yyyy}. "
-                             + $"Cập nhật lúc {DateTime.Now:HH:mm:ss}.";
+                lblNote.Text = string.Format(
+                    UiTranslator.Translate("✅  Truy vấn bằng SqlCommand + SqlDataReader (doanh thu tháng) và SqlDataAdapter + DataTable (theo tuyến). Khoảng: {0} → {1}. Cập nhật lúc {2}."),
+                    from.ToString("dd/MM/yyyy"), to.ToString("dd/MM/yyyy"), DateTime.Now.ToString("HH:mm:ss"));
             }
             catch (OperationCanceledException)
             {

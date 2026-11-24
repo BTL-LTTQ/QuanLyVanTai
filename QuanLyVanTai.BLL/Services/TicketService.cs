@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using QuanLyVanTai.DAL;
 using QuanLyVanTai.DAL.Models;
@@ -115,22 +116,34 @@ namespace QuanLyVanTai.BLL.Services
         }
     }
 
-        public async Task<string> GenerateTicketCodeAsync()
+        internal static async Task<List<string>> AllocateTicketCodesAsync(AppDbContext db, int quantity)
         {
-            var db = CreateContext();
-            try
+            string prefix = "TK" + DateTime.Today.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
+            if (db.Database.IsSqlServer())
             {
-                string prefix = "TK" + DateTime.Now.ToString("yyyyMMdd");
-                int count = await db.Tickets.CountAsync(t => t.TicketCode.StartsWith(prefix));
-                return $"{prefix}{(count + 1):D3}";
+                // Giữ khóa tới khi lưu xong để hai phiên đặt vé không cùng đọc một số thứ tự.
+                await db.Database.ExecuteSqlInterpolatedAsync($"""
+                    DECLARE @lockResult int;
+                    EXEC @lockResult = sys.sp_getapplock @Resource = {prefix}, @LockMode = 'Exclusive',
+                        @LockOwner = 'Transaction', @LockTimeout = 10000;
+                    IF @lockResult < 0
+                        THROW 51000, N'Không thể cấp mã vé lúc này. Vui lòng thử lại.', 1;
+                    """);
             }
-            finally
+
+            var issuedCodes = await db.Tickets.IgnoreQueryFilters()
+                .Where(t => t.TicketCode.StartsWith(prefix))
+                .Select(t => t.TicketCode)
+                .ToListAsync();
+
+            long highestNumber = 0;
+            foreach (string code in issuedCodes)
             {
-                if (ShouldDisposeContext)
-                {
-                    await db.DisposeAsync();
-                }
+                if (long.TryParse(code.AsSpan(prefix.Length), NumberStyles.None, CultureInfo.InvariantCulture, out long number))
+                    highestNumber = Math.Max(highestNumber, number);
             }
+
+            return Enumerable.Range(1, quantity).Select(offset => $"{prefix}{highestNumber + offset:D3}").ToList();
         }
 
         public async Task<(bool Success, string Message, Ticket? Ticket)> CreateTicketAsync(Ticket ticket)
@@ -138,10 +151,12 @@ namespace QuanLyVanTai.BLL.Services
             var db = CreateContext();
             try
             {
+                await using var transaction = await db.Database.BeginTransactionAsync();
                 var vehicle = await db.Vehicles.FindAsync(ticket.VehicleId);
                 if (vehicle == null)
                     return (false, "Không tìm thấy phương tiện!", null);
 
+                var ticketCodes = await AllocateTicketCodesAsync(db, 1);
                 // Kiểm tra ghế trùng: cùng xe + cùng số ghế + cùng giờ khởi hành, vé chưa bị hủy
                 bool seatTaken = await db.Tickets.AnyAsync(t =>
                     t.VehicleId == ticket.VehicleId &&
@@ -152,9 +167,10 @@ namespace QuanLyVanTai.BLL.Services
                 if (seatTaken)
                     return (false, $"Ghế {ticket.SeatNumber} đã được đặt trên chuyến này! Vui lòng chọn ghế khác.", null);
 
-                ticket.TicketCode = await GenerateTicketCodeAsync();
+                ticket.TicketCode = ticketCodes[0];
                 db.Tickets.Add(ticket);
                 await db.SaveChangesAsync();
+                await transaction.CommitAsync();
                 return (true, $"Đặt vé thành công! Mã vé: {ticket.TicketCode}", ticket);
             }
             finally

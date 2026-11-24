@@ -267,9 +267,9 @@ namespace QuanLyVanTai.UI.Forms
                 lnkBackToLogin.Text = "← " + CultureHelper.GetString("BackToLogin");
 
                 // Locale Card Demo (Part 3)
-                lblLocaleCurrent.Text = $"Locale: {CultureHelper.CurrentCulture.Name} ({CultureHelper.CurrentCulture.DisplayName})";
-                lblLocaleDate.Text = $"Thời gian: {CultureHelper.FormatDate(DateTime.Now, true)}";
-                lblLocalePrice.Text = $"Giá vé mẫu: {CultureHelper.FormatCurrency(250000m)}";
+                lblLocaleCurrent.Text = $"{UiTranslator.Translate("Locale:")} {CultureHelper.CurrentCulture.Name} ({CultureHelper.CurrentCulture.DisplayName})";
+                lblLocaleDate.Text = $"{UiTranslator.Translate("Thời gian:")} {CultureHelper.FormatDate(DateTime.Now, true)}";
+                lblLocalePrice.Text = $"{UiTranslator.Translate("Giá vé mẫu:")} {CultureHelper.FormatCurrency(250000m)}";
             }
             catch (Exception ex)
             {

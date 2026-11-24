@@ -143,28 +143,28 @@ namespace QuanLyVanTai.UI.UserControls
                     TicketCode = t.TicketCode,
                     CustomerName = t.CustomerName,
                     CustomerPhone = t.CustomerPhone,
-                    RouteName = t.Route?.RouteName ?? "Tuyến liên tỉnh",
-                    LicensePlate = t.Vehicle?.LicensePlate ?? "Chưa xếp xe",
+                    RouteName = t.Route?.RouteName ?? UiTranslator.Translate("Tuyến liên tỉnh"),
+                    LicensePlate = t.Vehicle?.LicensePlate ?? UiTranslator.Translate("Chưa xếp xe"),
                     SeatNumber = t.SeatNumber,
                     DepartureTime = t.DepartureTime,
                     DepartureTimeDisplay = t.DepartureTime.ToString("dd/MM/yyyy HH:mm"),
                     Price = t.Price,
-                    PriceDisplay = $"{t.Price:N0} đ",
+                    PriceDisplay = string.Format(UiTranslator.Translate("{0:N0} VNĐ"), t.Price),
                     TicketStatus = t.TicketStatus,
                     TicketStatusDisplay = t.TicketStatus switch
                     {
-                        "Booked" => "Đã đặt",
-                        "Cancelled" => "Đã hủy",
-                        "Completed" => "Đã hoàn thành",
+                        "Booked" => UiTranslator.Translate("Đã đặt"),
+                        "Cancelled" => UiTranslator.Translate("Đã hủy"),
+                        "Completed" => UiTranslator.Translate("Đã hoàn thành"),
                         _ => t.TicketStatus
                     },
                     PaymentStatus = t.PaymentStatus,
                     PaymentStatusDisplay = t.PaymentStatus switch
                     {
-                        "Paid" or "Đã thanh toán" => "Đã thanh toán",
-                        "Pending" or "Chờ thanh toán" => "Chờ thanh toán",
-                        "Failed" or "Thất bại" => "Thất bại",
-                        "Refunded" or "Đã hoàn tiền" => "Đã hoàn tiền",
+                        "Paid" or "Đã thanh toán" => UiTranslator.Translate("Đã thanh toán"),
+                        "Pending" or "Chờ thanh toán" => UiTranslator.Translate("Chờ thanh toán"),
+                        "Failed" or "Thất bại" => UiTranslator.Translate("Thất bại"),
+                        "Refunded" or "Đã hoàn tiền" => UiTranslator.Translate("Đã hoàn tiền"),
                         _ => t.PaymentStatus
                     },
                     CreatedAt = t.CreatedAt.ToLocalTime(),
@@ -175,7 +175,7 @@ namespace QuanLyVanTai.UI.UserControls
                 dgvTickets.AutoGenerateColumns = false;
                 dgvTickets.DataSource = _displayedTickets;
 
-                SetStatus($"Tổng cộng: {_displayedTickets.Count} vé", false);
+                SetStatus(string.Format(UiTranslator.Translate("Tổng cộng: {0} vé"), _displayedTickets.Count), false);
                 UpdateActionButtonsState();
             }
             catch (Exception ex)

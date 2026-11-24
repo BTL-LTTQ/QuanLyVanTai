@@ -1,4 +1,5 @@
 using Core.Configs;
+using Core.Helpers;
 using Core.Security;
 using FontAwesome.Sharp;
 using LiveChartsCore;
@@ -71,6 +72,9 @@ namespace QuanLyVanTai.UI.UserControls
             _clockTimer = new System.Windows.Forms.Timer { Interval = 1000 };
             _clockTimer.Tick += (_, _) => lblFooterTime.Text = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
             _clockTimer.Start();
+
+            // Dịch lại các nhãn số liệu + biểu đồ khi người dùng đổi ngôn ngữ
+            CultureHelper.CultureChanged += HandleCultureChanged;
 
             // Nạp dữ liệu lần đầu
             ApplySelectedDatePreset();
@@ -161,7 +165,7 @@ namespace QuanLyVanTai.UI.UserControls
         {
             try
             {
-                lblFooterStatus.Text = "⏳ Đang truy vấn và tính toán thống kê giao dịch vé...";
+                lblFooterStatus.Text = UiTranslator.Translate("⏳ Đang truy vấn và tính toán thống kê giao dịch vé...");
                 lblFooterStatus.ForeColor = Color.FromArgb(59, 130, 246);
                 btnRefresh.Enabled = false;
                 btnApplyFilter.Enabled = false;
@@ -187,13 +191,8 @@ namespace QuanLyVanTai.UI.UserControls
                 _lastFromDate = fromDate;
                 _lastToDate = toDate;
 
-                // 1. Cập nhật Stat Cards
-                lblStatRevenue.Text = $"{summary.TotalRevenue:N0} VNĐ";
-                lblStatTickets.Text = $"{summary.TotalTickets:N0} vé";
-                lblStatRoutes.Text = $"{summary.ActiveRoutes} tuyến";
-                lblStatVehicles.Text = $"{summary.ActiveVehicles} xe";
-
-                lblCardRevenueSub.Text = $"Hôm nay: {summary.TodayRevenue:N0} VNĐ ({summary.TodayTickets} vé)";
+                // 1. Cập nhật Stat Cards (dùng template đã dịch theo ngôn ngữ hiện hành)
+                RefreshLocalizedTexts();
 
                 // 2. Cập nhật Biểu đồ (LiveCharts2 hoặc GDI+)
                 if (!_isGdiMode)
@@ -211,14 +210,14 @@ namespace QuanLyVanTai.UI.UserControls
                 dgvRecentTransactions.DataSource = recentTransactions;
 
                 // 4. Cập nhật Footer
-                lblFooterStatus.Text = "● Đã đồng bộ dữ liệu giao dịch vé thực tế từ CSDL";
+                lblFooterStatus.Text = UiTranslator.Translate("● Đã đồng bộ dữ liệu giao dịch vé thực tế từ CSDL");
                 lblFooterStatus.ForeColor = Color.FromArgb(16, 185, 129);
-                lblFooterRecords.Text = $"Tổng ghi nhận: {summary.TotalTickets:N0} vé bán thành công | Giá vé TB: {summary.AverageTicketPrice:N0} VNĐ";
                 lblFooterTime.Text = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
             }
             catch (Exception ex)
             {
-                lblFooterStatus.Text = $"⚠️ Lỗi nạp số liệu: {ex.Message}";
+                lblFooterStatus.Text = string.Format(
+                    UiTranslator.Translate("⚠️ Lỗi nạp số liệu: {0}"), ex.Message);
                 lblFooterStatus.ForeColor = Color.FromArgb(239, 68, 68);
             }
             finally
@@ -309,7 +308,7 @@ namespace QuanLyVanTai.UI.UserControls
             {
                 new ColumnSeries<double>
                 {
-                    Name = "Doanh thu (VNĐ)",
+                    Name = UiTranslator.Translate("Doanh thu (VNĐ)"),
                     Values = revenues,
                     Fill = new SolidColorPaint(new SKColor(16, 185, 129)), // Emerald
                     Stroke = new SolidColorPaint(new SKColor(5, 150, 105), 1.5f),
@@ -325,7 +324,7 @@ namespace QuanLyVanTai.UI.UserControls
                 },
                 new LineSeries<double>
                 {
-                    Name = "Số lượng vé",
+                    Name = UiTranslator.Translate("Số lượng vé"),
                     Values = ticketCounts,
                     Stroke = new SolidColorPaint(new SKColor(59, 130, 246), 2.5f), // Blue
                     GeometryStroke = new SolidColorPaint(new SKColor(59, 130, 246), 2f),
@@ -334,7 +333,9 @@ namespace QuanLyVanTai.UI.UserControls
                     Fill = null,
                     DataLabelsPaint = new SolidColorPaint(new SKColor(59, 130, 246)),
                     DataLabelsSize = 11,
-                    DataLabelsFormatter = p => p.Model > 0 ? $"{p.Model} vé" : "",
+                    DataLabelsFormatter = p => p.Model > 0
+                        ? string.Format(UiTranslator.Translate("{0} vé"), p.Model)
+                        : "",
                     ScalesYAt = 1
                 }
             };
@@ -354,7 +355,7 @@ namespace QuanLyVanTai.UI.UserControls
             {
                 new Axis
                 {
-                    Name = "Doanh thu (VNĐ)",
+                    Name = UiTranslator.Translate("Doanh thu (VNĐ)"),
                     NamePaint = new SolidColorPaint(new SKColor(16, 185, 129)),
                     NameTextSize = 11,
                     Labeler = value => value >= 1_000_000 ? $"{value / 1_000_000:0.#} tr" : $"{value:N0}",
@@ -364,7 +365,7 @@ namespace QuanLyVanTai.UI.UserControls
                 },
                 new Axis
                 {
-                    Name = "Số vé",
+                    Name = UiTranslator.Translate("Số vé"),
                     NamePaint = new SolidColorPaint(new SKColor(59, 130, 246)),
                     NameTextSize = 11,
                     Labeler = value => $"{value:N0}",
@@ -376,7 +377,7 @@ namespace QuanLyVanTai.UI.UserControls
                 }
             };
 
-            cartesianChartTime.LegendPosition = LiveChartsCore.Measure.LegendPosition.Top;
+            cartesianChartTime.LegendPosition = LiveChartsCore.Measure.LegendPosition.Bottom;
             cartesianChartTime.TooltipPosition = LiveChartsCore.Measure.TooltipPosition.Top;
         }
 
@@ -413,7 +414,9 @@ namespace QuanLyVanTai.UI.UserControls
                     DataLabelsPaint = new SolidColorPaint(SKColors.White),
                     DataLabelsSize = 11,
                     DataLabelsFormatter = p => item.Percentage > 5 ? $"{item.Percentage}%" : "",
-                    ToolTipLabelFormatter = point => $"{item.RouteCode} ({item.RouteName}): {point.Model:N0} VNĐ ({item.Percentage}%)"
+                    ToolTipLabelFormatter = point => string.Format(
+                        UiTranslator.Translate("{0} ({1}): {2:N0} VNĐ ({3}%)"),
+                        item.RouteCode, item.RouteName, point.Model, item.Percentage)
                 });
             }
 
@@ -587,7 +590,7 @@ namespace QuanLyVanTai.UI.UserControls
             using (var tb1 = new SolidBrush(Color.FromArgb(100, 116, 139)))
             using (var tb2 = new SolidBrush(Color.FromArgb(15, 23, 42)))
             {
-                var s1 = "TỔNG CỘNG";
+                var s1 = UiTranslator.Translate("TỔNG CỘNG");
                 string s2 = total >= 1_000_000m ? $"{total / 1_000_000m:0.#} tr" : $"{total:N0}";
                 var sz1 = g.MeasureString(s1, tf1);
                 var sz2 = g.MeasureString(s2, tf2);
@@ -615,7 +618,8 @@ namespace QuanLyVanTai.UI.UserControls
                 }
 
                 string line1 = $"{r.RouteCode} ({r.Percentage:0.#}%)";
-                string line2 = $"{r.Revenue:N0} VNĐ ({r.TicketCount} vé)";
+                string line2 = string.Format(
+                    UiTranslator.Translate("{0:N0} VNĐ ({1} vé)"), r.Revenue, r.TicketCount);
 
                 g.DrawString(line1, nameFont, nameBrush, legX + 16, legY);
                 g.DrawString(line2, subFont, subBrush, legX + 16, legY + 16);
@@ -624,8 +628,49 @@ namespace QuanLyVanTai.UI.UserControls
             }
         }
 
+        /// <summary>Ghi lại nhãn số liệu theo ngôn ngữ hiện hành (template đã dịch trong từ điển).</summary>
+        private void RefreshLocalizedTexts()
+        {
+            if (IsDisposed || Disposing) return;
+
+            lblStatRevenue.Text = string.Format(UiTranslator.Translate("{0:N0} VNĐ"), _summary.TotalRevenue);
+            lblStatTickets.Text = string.Format(UiTranslator.Translate("{0:N0} vé"), _summary.TotalTickets);
+            lblStatRoutes.Text = string.Format(UiTranslator.Translate("{0} tuyến"), _summary.ActiveRoutes);
+            lblStatVehicles.Text = string.Format(UiTranslator.Translate("{0} xe"), _summary.ActiveVehicles);
+
+            lblCardRevenueSub.Text = string.Format(
+                UiTranslator.Translate("Hôm nay: {0:N0} VNĐ ({1} vé)"), _summary.TodayRevenue, _summary.TodayTickets);
+
+            lblFooterRecords.Text = string.Format(
+                UiTranslator.Translate("Tổng ghi nhận: {0:N0} vé bán thành công | Giá vé TB: {1:N0} VNĐ"),
+                _summary.TotalTickets, _summary.AverageTicketPrice);
+        }
+
+        private void HandleCultureChanged()
+        {
+            if (IsDisposed || Disposing) return;
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(HandleCultureChanged));
+                return;
+            }
+
+            RefreshLocalizedTexts();
+            if (!_isGdiMode)
+            {
+                RenderLiveChartsTime(_dateRevenueData);
+                RenderLiveChartsRoutes(_routeRevenueData);
+            }
+            else
+            {
+                pnlTimeChartGdi.Invalidate();
+                pnlRouteChartGdi.Invalidate();
+            }
+        }
+
         protected override void OnHandleDestroyed(EventArgs e)
         {
+            CultureHelper.CultureChanged -= HandleCultureChanged;
             _clockTimer?.Stop();
             _clockTimer?.Dispose();
             base.OnHandleDestroyed(e);
