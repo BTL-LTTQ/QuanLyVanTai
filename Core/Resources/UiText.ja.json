@@ -602,5 +602,21 @@
  "Điểm khởi hành": "出発地",
  "Bến đến": "到着地",
  "Mã trạm:": "停留所コード:",
- "Địa chỉ:": "住所:"
+ "Địa chỉ:": "住所:",
+ "Quét mã QR bằng camera": "カメラでQRコードを読み取る",
+ " Quét bằng camera": " カメラで読み取る",
+ "Camera:": "カメラ:",
+ " Bật camera": " カメラを起動",
+ " Dừng": " 停止",
+ "Đang tìm camera kết nối...": "接続されたカメラを検索中...",
+ "Đang mở camera...": "カメラを起動中...",
+ "Camera đã dừng. Chọn camera rồi bấm Bật camera để quét tiếp.": "カメラを停止しました。カメラを選択して起動すると再び読み取れます。",
+ "Đưa mã QR vào trước camera, giữ vé rõ nét và đủ sáng.\r\nĐọc được mã sẽ tự đóng cửa sổ và xử lý check-in một lần.": "明るい場所でチケットのQRコードをカメラに向けてください。\r\n読み取り後、画面を閉じてチェックインを1回処理します。",
+ "Không tìm thấy camera. Hãy kết nối webcam, đóng cửa sổ rồi mở lại.\r\nBạn vẫn có thể dùng máy quét USB hoặc nhập mã vé.": "カメラが見つかりません。カメラを接続して画面を開き直してください。\r\nUSBスキャナーまたはチケット番号入力を使用できます。",
+ "Không thể tìm camera. Kiểm tra kết nối và quyền camera trong Windows Settings > Privacy & security > Camera.": "カメラを検索できません。接続とWindows設定のプライバシーとセキュリティ > カメラを確認してください。",
+ "Không mở được camera. Hãy đóng ứng dụng đang dùng camera và cho phép desktop apps truy cập camera trong Windows Settings > Privacy & security > Camera.": "カメラを起動できません。カメラを使用中のアプリを閉じ、Windows設定でデスクトップアプリのカメラアクセスを許可してください。",
+ "Không đọc được hình từ camera. Hãy dừng rồi bật lại camera hoặc chọn camera khác.": "カメラの映像を読み取れません。カメラを再起動するか別のカメラを選択してください。",
+ "Camera không gửi hình. Kiểm tra kết nối, quyền camera hoặc chọn camera khác rồi bật lại.": "カメラの映像が届きません。接続とアクセス権を確認するか別のカメラを選択して起動してください。",
+ "Hỗ trợ camera, máy quét QR USB hoặc nhập mã vé.": "カメラ、USB QRスキャナー、チケット番号入力に対応しています。",
+ "Chọn camera rồi bấm Bật camera. Đưa mã QR trên điện thoại hoặc vé giấy trước camera.\r\nĐọc được mã sẽ tự đóng cửa sổ và xử lý check-in một lần.": "カメラを選択して起動してください。スマートフォンや紙のチケットのQRコードをカメラに向けてください。\r\n読み取り後、画面を閉じてチェックインを1回処理します。"
 }

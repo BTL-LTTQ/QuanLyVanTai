@@ -13,7 +13,7 @@ namespace QuanLyVanTai.UI.Forms
         private System.Windows.Forms.Label lblInputHint;
         private System.Windows.Forms.FlowLayoutPanel flpScanActions;
         private FontAwesome.Sharp.IconButton btnCheckIn;
-        private FontAwesome.Sharp.IconButton btnScanFile;
+        private FontAwesome.Sharp.IconButton btnScanCamera;
         private FontAwesome.Sharp.IconButton btnRevert;
         private System.Windows.Forms.GroupBox grpBoardingCard;
         private System.Windows.Forms.Panel pnlCardStatus;
@@ -86,7 +86,7 @@ namespace QuanLyVanTai.UI.Forms
             grpScanner = new System.Windows.Forms.GroupBox();
             flpScanActions = new System.Windows.Forms.FlowLayoutPanel();
             btnCheckIn = new FontAwesome.Sharp.IconButton();
-            btnScanFile = new FontAwesome.Sharp.IconButton();
+            btnScanCamera = new FontAwesome.Sharp.IconButton();
             btnRevert = new FontAwesome.Sharp.IconButton();
             txtQrInput = new System.Windows.Forms.TextBox();
             lblInputHint = new System.Windows.Forms.Label();
@@ -137,7 +137,7 @@ namespace QuanLyVanTai.UI.Forms
             lblHeaderSubtitle.Name = "lblHeaderSubtitle";
             lblHeaderSubtitle.Size = new System.Drawing.Size(567, 20);
             lblHeaderSubtitle.TabIndex = 1;
-            lblHeaderSubtitle.Text = "Hỗ trợ máy quét Barcode USB, nhập trực tiếp mã vé, hoặc giải mã từ ảnh vé điện tử.";
+            lblHeaderSubtitle.Text = "Hỗ trợ camera, máy quét QR USB hoặc nhập mã vé.";
             // 
             // lblHeaderTitle
             // 
@@ -190,10 +190,10 @@ namespace QuanLyVanTai.UI.Forms
             grpBoardingCard.BackColor = System.Drawing.Color.White;
             grpBoardingCard.Controls.Add(tlpCardDetails);
             grpBoardingCard.Controls.Add(pnlCardStatus);
-            grpBoardingCard.Dock = System.Windows.Forms.DockStyle.Fill;
+            grpBoardingCard.Dock = System.Windows.Forms.DockStyle.Top;
             grpBoardingCard.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
             grpBoardingCard.ForeColor = System.Drawing.Color.FromArgb(15, 23, 42);
-            grpBoardingCard.Location = new System.Drawing.Point(0, 160);
+            grpBoardingCard.Location = new System.Drawing.Point(0, 190);
             grpBoardingCard.Name = "grpBoardingCard";
             grpBoardingCard.Padding = new System.Windows.Forms.Padding(10);
             grpBoardingCard.Size = new System.Drawing.Size(436, 390);
@@ -464,7 +464,7 @@ namespace QuanLyVanTai.UI.Forms
             grpScanner.Location = new System.Drawing.Point(0, 0);
             grpScanner.Name = "grpScanner";
             grpScanner.Padding = new System.Windows.Forms.Padding(12, 10, 12, 10);
-            grpScanner.Size = new System.Drawing.Size(436, 160);
+            grpScanner.Size = new System.Drawing.Size(436, 190);
             grpScanner.TabIndex = 0;
             grpScanner.TabStop = false;
             grpScanner.Text = " 1. Nhập / Quét mã QR vé ";
@@ -472,13 +472,14 @@ namespace QuanLyVanTai.UI.Forms
             // flpScanActions
             // 
             flpScanActions.Controls.Add(btnCheckIn);
-            flpScanActions.Controls.Add(btnScanFile);
+            flpScanActions.Controls.Add(btnScanCamera);
             flpScanActions.Controls.Add(btnRevert);
             flpScanActions.Dock = System.Windows.Forms.DockStyle.Fill;
             flpScanActions.Location = new System.Drawing.Point(12, 85);
             flpScanActions.Name = "flpScanActions";
-            flpScanActions.Size = new System.Drawing.Size(412, 65);
+            flpScanActions.Size = new System.Drawing.Size(412, 95);
             flpScanActions.TabIndex = 2;
+            flpScanActions.WrapContents = true;
             // 
             // btnCheckIn
             // 
@@ -499,29 +500,29 @@ namespace QuanLyVanTai.UI.Forms
             btnCheckIn.Text = " Check-in";
             btnCheckIn.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             btnCheckIn.UseVisualStyleBackColor = false;
-            // 
-            // btnScanFile
-            // 
-            btnScanFile.BackColor = System.Drawing.Color.FromArgb(14, 165, 233);
-            btnScanFile.Cursor = System.Windows.Forms.Cursors.Hand;
-            btnScanFile.FlatAppearance.BorderSize = 0;
-            btnScanFile.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnScanFile.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            btnScanFile.ForeColor = System.Drawing.Color.White;
-            btnScanFile.IconChar = FontAwesome.Sharp.IconChar.FolderOpen;
-            btnScanFile.IconColor = System.Drawing.Color.White;
-            btnScanFile.IconFont = FontAwesome.Sharp.IconFont.Auto;
-            btnScanFile.IconSize = 16;
-            btnScanFile.Location = new System.Drawing.Point(139, 3);
-            btnScanFile.Name = "btnScanFile";
-            btnScanFile.Size = new System.Drawing.Size(155, 36);
-            btnScanFile.TabIndex = 1;
-            btnScanFile.Text = " Chọn tệp QR...";
-            btnScanFile.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
-            btnScanFile.UseVisualStyleBackColor = false;
-            // 
+            //
+            // btnScanCamera
+            //
+            btnScanCamera.BackColor = System.Drawing.Color.FromArgb(14, 165, 233);
+            btnScanCamera.Cursor = System.Windows.Forms.Cursors.Hand;
+            btnScanCamera.FlatAppearance.BorderSize = 0;
+            btnScanCamera.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            btnScanCamera.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            btnScanCamera.ForeColor = System.Drawing.Color.White;
+            btnScanCamera.IconChar = FontAwesome.Sharp.IconChar.Camera;
+            btnScanCamera.IconColor = System.Drawing.Color.White;
+            btnScanCamera.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            btnScanCamera.IconSize = 16;
+            btnScanCamera.Location = new System.Drawing.Point(139, 3);
+            btnScanCamera.Name = "btnScanCamera";
+            btnScanCamera.Size = new System.Drawing.Size(180, 36);
+            btnScanCamera.TabIndex = 1;
+            btnScanCamera.Text = " Quét bằng camera";
+            btnScanCamera.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            btnScanCamera.UseVisualStyleBackColor = false;
+            //
             // btnRevert
-            // 
+            //
             btnRevert.BackColor = System.Drawing.Color.FromArgb(241, 245, 249);
             btnRevert.Cursor = System.Windows.Forms.Cursors.Hand;
             btnRevert.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(203, 213, 225);
@@ -532,9 +533,9 @@ namespace QuanLyVanTai.UI.Forms
             btnRevert.IconColor = System.Drawing.Color.FromArgb(100, 116, 139);
             btnRevert.IconFont = FontAwesome.Sharp.IconFont.Auto;
             btnRevert.IconSize = 15;
-            btnRevert.Location = new System.Drawing.Point(300, 3);
+            btnRevert.Location = new System.Drawing.Point(3, 45);
             btnRevert.Name = "btnRevert";
-            btnRevert.Size = new System.Drawing.Size(100, 36);
+            btnRevert.Size = new System.Drawing.Size(130, 36);
             btnRevert.TabIndex = 2;
             btnRevert.Text = " Hoàn tác";
             btnRevert.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;

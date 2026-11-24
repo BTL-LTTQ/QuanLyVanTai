@@ -602,5 +602,21 @@
  "Điểm khởi hành": "Departure point",
  "Bến đến": "Destination",
  "Mã trạm:": "Stop code:",
- "Địa chỉ:": "Address:"
+ "Địa chỉ:": "Address:",
+ "Quét mã QR bằng camera": "Scan QR with camera",
+ " Quét bằng camera": " Scan with camera",
+ "Camera:": "Camera:",
+ " Bật camera": " Start camera",
+ " Dừng": " Stop",
+ "Đang tìm camera kết nối...": "Finding connected cameras...",
+ "Đang mở camera...": "Opening camera...",
+ "Camera đã dừng. Chọn camera rồi bấm Bật camera để quét tiếp.": "Camera stopped. Select a camera and click Start camera to scan again.",
+ "Đưa mã QR vào trước camera, giữ vé rõ nét và đủ sáng.\r\nĐọc được mã sẽ tự đóng cửa sổ và xử lý check-in một lần.": "Hold the QR in front of the camera, keeping the ticket clear and well lit.\r\nOnce read, this window closes and check-in is processed once.",
+ "Không tìm thấy camera. Hãy kết nối webcam, đóng cửa sổ rồi mở lại.\r\nBạn vẫn có thể dùng máy quét USB hoặc nhập mã vé.": "No camera found. Connect a webcam, close this window and reopen it.\r\nYou can still use a USB scanner or enter a ticket code.",
+ "Không thể tìm camera. Kiểm tra kết nối và quyền camera trong Windows Settings > Privacy & security > Camera.": "Cannot find cameras. Check connections and camera permissions in Windows Settings > Privacy & security > Camera.",
+ "Không mở được camera. Hãy đóng ứng dụng đang dùng camera và cho phép desktop apps truy cập camera trong Windows Settings > Privacy & security > Camera.": "Cannot open the camera. Close other apps using it and allow desktop apps to access the camera in Windows Settings > Privacy & security > Camera.",
+ "Không đọc được hình từ camera. Hãy dừng rồi bật lại camera hoặc chọn camera khác.": "Cannot read camera frames. Stop and restart the camera or select another camera.",
+ "Camera không gửi hình. Kiểm tra kết nối, quyền camera hoặc chọn camera khác rồi bật lại.": "No camera frames received. Check connections and permissions, or select another camera and restart.",
+ "Hỗ trợ camera, máy quét QR USB hoặc nhập mã vé.": "Supports camera, USB QR scanner or ticket code entry.",
+ "Chọn camera rồi bấm Bật camera. Đưa mã QR trên điện thoại hoặc vé giấy trước camera.\r\nĐọc được mã sẽ tự đóng cửa sổ và xử lý check-in một lần.": "Select a camera and click Start camera. Hold the QR on your phone or paper ticket in front of the camera.\r\nOnce read, this window closes and check-in is processed once."
 }
