@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using Core.Helpers;
@@ -94,7 +95,8 @@ namespace QuanLyVanTai.BLL.Services
                     DistanceKm = route.DistanceKm,
                     EstimatedHours = route.EstimatedHours,
                     BasePrice = route.BasePrice,
-                    Status = route.Status
+                    Status = route.Status,
+                    MissingCoordinateCount = route.Stations.Count - validStations.Count
                 };
 
                 for (int i = 0; i < orderedStations.Count; i++)
@@ -128,20 +130,42 @@ namespace QuanLyVanTai.BLL.Services
         /// </summary>
         private static List<Station> OrderStationsForRoute(string routeCode, List<Station> stations)
         {
-            return routeCode switch
+            if (stations.Count <= 2)
+                return stations.OrderByDescending(s => s.Latitude).ToList();
+
+            switch (routeCode)
             {
-                "HN-DN-01" or "HN-SG-01" or "HN-HP-01" =>
-                    stations.OrderByDescending(s => s.Latitude).ToList(),
+                case "HN-DN-01":
+                case "HN-SG-01":
+                case "HN-HP-01":
+                case "SG-VT-01":
+                    return stations.OrderByDescending(s => s.Latitude).ToList();
 
-                "SG-DL-01" =>
-                    stations.OrderBy(s => s.Latitude).ToList(),
+                case "SG-DL-01":
+                    return stations.OrderBy(s => s.Latitude).ToList();
+            }
 
-                "SG-VT-01" =>
-                    stations.OrderByDescending(s => s.Latitude).ToList(),
+            // Tuyến chưa khai báo hướng: nối chuỗi trạm gần nhau nhất bắt đầu từ trạm cực Bắc
+            var remaining = stations.OrderByDescending(s => s.Latitude).ToList();
+            var ordered = new List<Station>(remaining.Count) { remaining[0] };
+            remaining.RemoveAt(0);
 
-                _ => stations.OrderByDescending(s => s.Latitude).ToList()
-            };
+            while (remaining.Count > 0)
+            {
+                var last = ordered[^1];
+                var next = remaining
+                    .OrderBy(s => Math.Pow(s.Latitude!.Value - last.Latitude!.Value, 2)
+                                + Math.Pow(s.Longitude!.Value - last.Longitude!.Value, 2))
+                    .First();
+                ordered.Add(next);
+                remaining.Remove(next);
+            }
+
+            return ordered;
         }
+
+        private static string FormatCoordinate(double latitude, double longitude)
+            => string.Create(CultureInfo.InvariantCulture, $"{latitude:0.######},{longitude:0.######}");
 
         /// <summary>
         /// Sinh URL dẫn sang Google Maps Directions để xem chỉ đường trực tiếp trên trình duyệt hoặc Google Maps App.
@@ -153,7 +177,7 @@ namespace QuanLyVanTai.BLL.Services
                 var single = route.Stations.FirstOrDefault();
                 if (single != null)
                 {
-                    return $"https://www.google.com/maps/search/?api=1&query={single.Latitude},{single.Longitude}";
+                    return $"https://www.google.com/maps/search/?api=1&query={FormatCoordinate(single.Latitude, single.Longitude)}";
                 }
                 return "https://www.google.com/maps";
             }
@@ -164,11 +188,11 @@ namespace QuanLyVanTai.BLL.Services
             var waypoints = route.Stations
                 .Skip(1)
                 .Take(route.Stations.Count - 2)
-                .Select(s => $"{s.Latitude},{s.Longitude}");
+                .Select(s => FormatCoordinate(s.Latitude, s.Longitude));
 
             string waypointsParam = waypoints.Any() ? $"&waypoints={Uri.EscapeDataString(string.Join("|", waypoints))}" : "";
 
-            return $"https://www.google.com/maps/dir/?api=1&origin={origin.Latitude},{origin.Longitude}&destination={destination.Latitude},{destination.Longitude}{waypointsParam}&travelmode=driving";
+            return $"https://www.google.com/maps/dir/?api=1&origin={FormatCoordinate(origin.Latitude, origin.Longitude)}&destination={FormatCoordinate(destination.Latitude, destination.Longitude)}{waypointsParam}&travelmode=driving";
         }
 
         /// <summary>
@@ -187,9 +211,6 @@ namespace QuanLyVanTai.BLL.Services
             string statDistance = string.Format(UiTranslator.Translate("{0:N0} km"), routeMap.DistanceKm);
             string statHours = string.Format(UiTranslator.Translate("{0:N1} giờ"), routeMap.EstimatedHours);
             string statPrice = string.Format(UiTranslator.Translate("{0:N0} VNĐ"), routeMap.BasePrice);
-            string layerStreet = UiTranslator.Translate("🗺️ Đường phố (Street Map)");
-            string layerSatellite = UiTranslator.Translate("🛰️ Ảnh vệ tinh (Satellite)");
-            string layerVoyager = UiTranslator.Translate("🎨 Sáng hiện đại (Voyager)");
             string roleWaypoint = UiTranslator.Translate("Trạm trung gian");
             string roleDeparture = UiTranslator.Translate("Điểm khởi hành");
             string roleDestination = UiTranslator.Translate("Bến đến");
@@ -203,6 +224,19 @@ namespace QuanLyVanTai.BLL.Services
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{mapTitle}}</title>
+    <script>
+        function notifyHost(type, message) {
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({ type: type, message: message });
+            }
+        }
+        window.addEventListener('error', function () {
+            // Chỉ báo khi thư viện Leaflet không tải được; lỗi ảnh tile do handleTileError xử lý riêng
+            if (typeof L === 'undefined') {
+                notifyHost('mapError', 'Không tải được thư viện bản đồ (cần kết nối Internet).');
+            }
+        }, true);
+    </script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
@@ -352,12 +386,6 @@ namespace QuanLyVanTai.BLL.Services
             display: inline-block;
         }
 
-        /* Controls góc phải */
-        .leaflet-control-layers {
-            border-radius: 8px !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-            border: 1px solid #cbd5e1 !important;
-        }
     </style>
 </head>
 <body>
@@ -365,10 +393,10 @@ namespace QuanLyVanTai.BLL.Services
         <span class="route-badge">{{routeCodeEscaped}}</span>
         <div class="route-title">{{routeNameEscaped}}</div>
         <div class="route-stats">
-            <span>📍 {{statStations}}</span>
-            <span>📏 {{statDistance}}</span>
-            <span>⏱️ {{statHours}}</span>
-            <span>💵 {{statPrice}}</span>
+            <span>{{statStations}}</span>
+            <span>{{statDistance}}</span>
+            <span>{{statHours}}</span>
+            <span>{{statPrice}}</span>
         </div>
     </div>
 
@@ -378,10 +406,17 @@ namespace QuanLyVanTai.BLL.Services
         const stations = {{stationsJson}};
         const markers = {};
 
+        function escapeHtml(value) {
+            return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+            });
+        }
+
         // 1. Khởi tạo các lớp bản đồ (Base Layers)
-        const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        // OSM chặn request không đúng policy (403 Access blocked) nên dùng Esri World Street Map
+        const streetLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
             maxZoom: 19,
-            attribution: '© OpenStreetMap contributors'
+            attribution: 'Tiles &copy; Esri'
         });
 
         const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
@@ -389,9 +424,10 @@ namespace QuanLyVanTai.BLL.Services
             attribution: 'Tiles &copy; Esri'
         });
 
-        const cartoVoyager = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        // CARTO Voyager nay yêu cầu API key (watermark trong ảnh) nên dùng Esri World Topo Map
+        const topoLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
             maxZoom: 19,
-            attribution: '© CARTO'
+            attribution: 'Tiles &copy; Esri'
         });
 
         // 2. Tạo bản đồ với chế độ mặc định
@@ -401,13 +437,20 @@ namespace QuanLyVanTai.BLL.Services
             layers: [streetLayer]
         });
 
-        const baseMaps = {
-            "{{layerStreet}}": streetLayer,
-            "{{layerSatellite}}": satelliteLayer,
-            "{{layerVoyager}}": cartoVoyager
+        const mapLayers = {
+            street: streetLayer,
+            satellite: satelliteLayer,
+            topo: topoLayer
         };
+        let activeLayer = streetLayer;
 
-        L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
+        let tileErrorNotified = false;
+        function handleTileError() {
+            if (tileErrorNotified) return;
+            tileErrorNotified = true;
+            notifyHost('mapError', 'Không tải được ảnh bản đồ. Vui lòng kiểm tra kết nối Internet.');
+        }
+        Object.values(mapLayers).forEach(layer => layer.on('tileerror', handleTileError));
 
         // 3. Thêm các Marker và đường Polyline kết nối
         const latLngs = [];
@@ -447,9 +490,9 @@ namespace QuanLyVanTai.BLL.Services
             const popupContent = `
                 <div class="station-popup">
                     <span class="station-popup-badge ${badgeClass}">${roleText}</span>
-                    <h4>${st.StopOrder}. ${st.StationName}</h4>
-                    <p><strong>{{stationCodeLabel}}</strong> ${st.StationCode}</p>
-                    <p><strong>{{addressLabel}}</strong> ${st.Address}, ${st.City}</p>
+                    <h4>${st.StopOrder}. ${escapeHtml(st.StationName)}</h4>
+                    <p><strong>{{stationCodeLabel}}</strong> ${escapeHtml(st.StationCode)}</p>
+                    <p><strong>{{addressLabel}}</strong> ${escapeHtml(st.Address)}, ${escapeHtml(st.City)}</p>
                     <div class="coords">GPS: ${st.Latitude.toFixed(6)}, ${st.Longitude.toFixed(6)}</div>
                 </div>
             `;
@@ -511,13 +554,11 @@ namespace QuanLyVanTai.BLL.Services
         }
 
         function setMapLayer(layerName) {
-            if (layerName === 'satellite') {
-                map.removeLayer(streetLayer);
-                map.addLayer(satelliteLayer);
-            } else {
-                map.removeLayer(satelliteLayer);
-                map.addLayer(streetLayer);
-            }
+            const target = mapLayers[layerName] || streetLayer;
+            if (target === activeLayer) return;
+            map.removeLayer(activeLayer);
+            map.addLayer(target);
+            activeLayer = target;
         }
     </script>
 </body>

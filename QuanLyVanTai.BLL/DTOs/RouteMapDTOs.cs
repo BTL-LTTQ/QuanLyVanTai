@@ -13,6 +13,9 @@ namespace QuanLyVanTai.BLL.DTOs
         public decimal BasePrice { get; set; }
         public string Status { get; set; } = "Active";
 
+        /// <summary>Số trạm thuộc tuyến nhưng chưa có tọa độ GPS nên không hiển thị trên bản đồ.</summary>
+        public int MissingCoordinateCount { get; set; }
+
         /// <summary>
         /// Danh sách các trạm dừng được sắp xếp tuần tự theo hành trình từ điểm xuất phát đến đích.
         /// </summary>
