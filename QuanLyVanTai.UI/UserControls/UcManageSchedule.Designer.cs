@@ -17,6 +17,7 @@ namespace QuanLyVanTai.UI.UserControls
 
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.pnlDashboard = new System.Windows.Forms.Panel();
             this.pnlStats = new System.Windows.Forms.Panel();
             this.cardCancelled = new System.Windows.Forms.Panel();
@@ -84,6 +85,7 @@ namespace QuanLyVanTai.UI.UserControls
             this.txtMaChuyen = new System.Windows.Forms.TextBox();
             this.lblMaChuyen = new System.Windows.Forms.Label();
             this.lblDetailTitle = new System.Windows.Forms.Label();
+            this.errorProviderMain = new System.Windows.Forms.ErrorProvider(this.components);
             this.pnlDashboard.SuspendLayout();
             this.pnlStats.SuspendLayout();
             this.cardCancelled.SuspendLayout();
@@ -98,6 +100,7 @@ namespace QuanLyVanTai.UI.UserControls
             this.splitMain.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvSchedules)).BeginInit();
             this.pnlDetail.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.errorProviderMain)).BeginInit();
             this.SuspendLayout();
             // 
             // pnlDashboard
@@ -416,6 +419,7 @@ namespace QuanLyVanTai.UI.UserControls
             // btnCancel
             // 
             this.btnCancel.BackColor = System.Drawing.Color.FromArgb(100, 116, 139);
+            this.btnCancel.CausesValidation = false;
             this.btnCancel.Enabled = false;
             this.btnCancel.FlatAppearance.BorderSize = 0;
             this.btnCancel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
@@ -918,6 +922,11 @@ namespace QuanLyVanTai.UI.UserControls
             this.txtGhiChu.Size = new System.Drawing.Size(406, 70);
             this.txtGhiChu.TabIndex = 18;
             // 
+            // errorProviderMain
+            // 
+            this.errorProviderMain.BlinkStyle = System.Windows.Forms.ErrorBlinkStyle.NeverBlink;
+            this.errorProviderMain.ContainerControl = this;
+            // 
             // UcManageSchedule
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
@@ -950,6 +959,7 @@ namespace QuanLyVanTai.UI.UserControls
             ((System.ComponentModel.ISupportInitialize)(this.dgvSchedules)).EndInit();
             this.pnlDetail.ResumeLayout(false);
             this.pnlDetail.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.errorProviderMain)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -1023,5 +1033,6 @@ namespace QuanLyVanTai.UI.UserControls
         private System.Windows.Forms.ComboBox cboTaiXePhu;
         private System.Windows.Forms.Label lblGhiChu;
         private System.Windows.Forms.TextBox txtGhiChu;
+        private System.Windows.Forms.ErrorProvider errorProviderMain;
     }
 }

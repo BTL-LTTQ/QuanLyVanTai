@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Core.Configs;
 using Core.Helpers;
 using Core.Security;
@@ -111,9 +112,39 @@ namespace QuanLyVanTai.UI.UserControls
 
             // Khi đổi tuyến → nạp lại danh sách xe thuộc tuyến đó và tính lại giờ đến
             cboTuyen.SelectedIndexChanged += async (s, e) => await OnRouteChangedAsync();
+            cboXe.SelectedIndexChanged += (s, e) =>
+            {
+                if (!_suppressComboEvents)
+                    errorProviderMain.SetError(cboXe, string.Empty);
+            };
+            cboTaiXeChinh.SelectedIndexChanged += (s, e) => OnPrimaryDriverChanged();
+            cboTaiXePhu.SelectedIndexChanged += (s, e) =>
+            {
+                if (!_suppressComboEvents)
+                    ValidateSecondaryDriver();
+            };
 
-            // Tính lại giờ dự kiến đến khi đổi giờ khởi hành
-            dtpKhoiHanh.ValueChanged += (s, e) => RecalculateArrival();
+            // Tính lại giờ dự kiến đến khi đổi giờ khởi hành & xóa/cập nhật lỗi khi sửa giờ
+            dtpKhoiHanh.ValueChanged += (s, e) =>
+            {
+                if (_suppressComboEvents)
+                    return;
+                RecalculateArrival();
+                ValidateArrivalTime();
+            };
+            dtpDuKienDen.ValueChanged += (s, e) =>
+            {
+                if (!_suppressComboEvents)
+                    ValidateArrivalTime();
+            };
+
+            // Validation qua ErrorProvider
+            cboTuyen.Validating += cboTuyen_Validating;
+            cboXe.Validating += cboXe_Validating;
+            cboTaiXeChinh.Validating += cboTaiXeChinh_Validating;
+            cboTaiXePhu.Validating += cboTaiXePhu_Validating;
+            dtpKhoiHanh.Validating += dtpKhoiHanh_Validating;
+            dtpDuKienDen.Validating += dtpDuKienDen_Validating;
         }
 
         private void ApplySecurity()
@@ -207,9 +238,22 @@ namespace QuanLyVanTai.UI.UserControls
             if (_suppressComboEvents)
                 return;
 
+            errorProviderMain.SetError(cboTuyen, string.Empty);
+            errorProviderMain.SetError(cboXe, string.Empty);
+
             int keepVehicleId = GetSelectedId(cboXe);
             await LoadVehiclesForRouteAsync(GetSelectedId(cboTuyen), keepVehicleId > 0 ? keepVehicleId : null);
             RecalculateArrival();
+            ValidateArrivalTime();
+        }
+
+        private void OnPrimaryDriverChanged()
+        {
+            if (_suppressComboEvents)
+                return;
+
+            errorProviderMain.SetError(cboTaiXeChinh, string.Empty);
+            ValidateSecondaryDriver();
         }
 
         /// <summary>Nạp cboXe theo tuyến. keepVehicleId dùng để giữ lại lựa chọn khi chỉ đổi bộ lọc.</summary>
@@ -353,6 +397,8 @@ namespace QuanLyVanTai.UI.UserControls
             if (_isAddingNew || dgvSchedules.SelectedRows.Count == 0)
                 return;
 
+            ClearErrors();
+
             var row = dgvSchedules.SelectedRows[0];
             int scheduleId = Convert.ToInt32(row.Cells["colId"].Value);
             _selectedScheduleId = scheduleId;
@@ -405,6 +451,7 @@ namespace QuanLyVanTai.UI.UserControls
                 _suppressComboEvents = false;
             }
 
+            ClearErrors();
             SetFormEditable(false);
         }
 
@@ -466,6 +513,7 @@ namespace QuanLyVanTai.UI.UserControls
             }
 
             _routeVehicles = [];
+            ClearErrors();
             SetFormEditable(true);
             cboTuyen.Focus();
         }
@@ -482,6 +530,7 @@ namespace QuanLyVanTai.UI.UserControls
             }
 
             _isAddingNew = false;
+            ClearErrors();
             SetFormEditable(true);
             cboTuyen.Focus();
         }
@@ -489,43 +538,129 @@ namespace QuanLyVanTai.UI.UserControls
         private void CancelEdit()
         {
             _isAddingNew = false;
+            ClearErrors();
             SetFormEditable(false);
             dgvSchedules_SelectionChanged(null, EventArgs.Empty);
+        }
+
+        // ── Validation ────────────────────────────────────────────────────────
+
+        private void cboTuyen_Validating(object? sender, CancelEventArgs e) => ValidateRoute();
+
+        private void cboXe_Validating(object? sender, CancelEventArgs e) => ValidateVehicle();
+
+        private void cboTaiXeChinh_Validating(object? sender, CancelEventArgs e) => ValidatePrimaryDriver();
+
+        private void cboTaiXePhu_Validating(object? sender, CancelEventArgs e) => ValidateSecondaryDriver();
+
+        private void dtpKhoiHanh_Validating(object? sender, CancelEventArgs e) => ValidateArrivalTime();
+
+        private void dtpDuKienDen_Validating(object? sender, CancelEventArgs e) => ValidateArrivalTime();
+
+        private bool ValidateRoute()
+        {
+            if (GetSelectedId(cboTuyen) <= 0)
+            {
+                errorProviderMain.SetError(cboTuyen, "Vui lòng chọn tuyến xe");
+                return false;
+            }
+
+            errorProviderMain.SetError(cboTuyen, string.Empty);
+            return true;
+        }
+
+        private bool ValidateVehicle()
+        {
+            if (GetSelectedId(cboXe) <= 0)
+            {
+                errorProviderMain.SetError(cboXe, "Vui lòng chọn phương tiện");
+                return false;
+            }
+
+            errorProviderMain.SetError(cboXe, string.Empty);
+            return true;
+        }
+
+        private bool ValidatePrimaryDriver()
+        {
+            if (GetSelectedId(cboTaiXeChinh) <= 0)
+            {
+                errorProviderMain.SetError(cboTaiXeChinh, "Vui lòng chọn tài xế chính");
+                return false;
+            }
+
+            errorProviderMain.SetError(cboTaiXeChinh, string.Empty);
+            return true;
+        }
+
+        private bool ValidateSecondaryDriver()
+        {
+            int primaryId = GetSelectedId(cboTaiXeChinh);
+            int secondaryId = GetSelectedId(cboTaiXePhu);
+
+            if (secondaryId > 0 && secondaryId == primaryId)
+            {
+                errorProviderMain.SetError(cboTaiXePhu, "Tài xế phụ không được trùng với tài xế chính");
+                return false;
+            }
+
+            errorProviderMain.SetError(cboTaiXePhu, string.Empty);
+            return true;
+        }
+
+        private bool ValidateArrivalTime()
+        {
+            if (dtpDuKienDen.Value <= dtpKhoiHanh.Value)
+            {
+                errorProviderMain.SetError(dtpDuKienDen, "Giờ đến phải sau giờ khởi hành");
+                return false;
+            }
+
+            errorProviderMain.SetError(dtpDuKienDen, string.Empty);
+            return true;
+        }
+
+        private bool ValidateFormInputs()
+        {
+            bool isRouteValid = ValidateRoute();
+            bool isVehicleValid = ValidateVehicle();
+            bool isArrivalValid = ValidateArrivalTime();
+            bool isPrimaryValid = ValidatePrimaryDriver();
+            bool isSecondaryValid = ValidateSecondaryDriver();
+
+            Control? firstInvalid =
+                !isRouteValid ? cboTuyen :
+                !isVehicleValid ? cboXe :
+                !isArrivalValid ? dtpDuKienDen :
+                !isPrimaryValid ? cboTaiXeChinh :
+                !isSecondaryValid ? cboTaiXePhu :
+                null;
+
+            if (firstInvalid != null)
+            {
+                firstInvalid.Focus();
+                return false;
+            }
+
+            return true;
+        }
+
+        private void ClearErrors()
+        {
+            errorProviderMain.Clear();
         }
 
         // ── Lưu ───────────────────────────────────────────────────────────────
 
         private async Task SaveScheduleAsync()
         {
+            if (!ValidateFormInputs())
+                return;
+
             int routeId = GetSelectedId(cboTuyen);
             int vehicleId = GetSelectedId(cboXe);
             int primaryDriverId = GetSelectedId(cboTaiXeChinh);
             int secondaryDriverId = GetSelectedId(cboTaiXePhu);
-
-            if (routeId <= 0)
-            {
-                MessageBox.Show("Vui lòng chọn tuyến xe!", "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                cboTuyen.Focus();
-                return;
-            }
-            if (vehicleId <= 0)
-            {
-                MessageBox.Show("Vui lòng chọn phương tiện!", "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                cboXe.Focus();
-                return;
-            }
-            if (primaryDriverId <= 0)
-            {
-                MessageBox.Show("Vui lòng chọn tài xế chính cho chuyến!", "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                cboTaiXeChinh.Focus();
-                return;
-            }
-            if (secondaryDriverId > 0 && secondaryDriverId == primaryDriverId)
-            {
-                MessageBox.Show("Tài xế phụ không được trùng với tài xế chính!", "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                cboTaiXePhu.Focus();
-                return;
-            }
 
             var dto = new CreateScheduleDto
             {
@@ -568,6 +703,7 @@ namespace QuanLyVanTai.UI.UserControls
                 }
 
                 _isAddingNew = false;
+                ClearErrors();
                 SetFormEditable(false);
                 await ReloadSchedulesAsync();
             }
