@@ -1,3 +1,4 @@
+using System.Globalization;
 using Core.Configs;
 using Core.Helpers;
 using Core.Security;
@@ -471,7 +472,9 @@ namespace QuanLyVanTai.UI.UserControls
                         s.Address,
                         s.City,
                         s.RouteCount,
-                        s.Status
+                        s.Status,
+                        s.Latitude,
+                        s.Longitude
                     );
 
                     var statusCell = dgvStations.Rows[idx].Cells["colStStatus"];
@@ -507,6 +510,12 @@ namespace QuanLyVanTai.UI.UserControls
             txtStAddress.Text = row.Cells["colStAddress"].Value?.ToString() ?? "";
             cboStEditCity.SelectedItem = row.Cells["colStCity"].Value?.ToString() ?? "Hà Nội";
             cboStEditStatus.SelectedItem = row.Cells["colStStatus"].Value?.ToString() ?? "Active";
+            txtStLatitude.Text = row.Cells["colStLatitude"].Value is double lat
+                ? lat.ToString("0.######", CultureInfo.InvariantCulture)
+                : "";
+            txtStLongitude.Text = row.Cells["colStLongitude"].Value is double lng
+                ? lng.ToString("0.######", CultureInfo.InvariantCulture)
+                : "";
         }
 
         private void StartStAdd()
@@ -518,6 +527,8 @@ namespace QuanLyVanTai.UI.UserControls
             txtStCode.Clear();
             txtStName.Clear();
             txtStAddress.Clear();
+            txtStLatitude.Clear();
+            txtStLongitude.Clear();
             btnStSave.Enabled = true;
             btnStCancel.Enabled = true;
             txtStCode.Focus();
@@ -545,6 +556,14 @@ namespace QuanLyVanTai.UI.UserControls
                 return;
             }
 
+            if (!TryParseCoordinate(txtStLatitude.Text, -90, 90, "Vĩ độ", out double? latitude)) return;
+            if (!TryParseCoordinate(txtStLongitude.Text, -180, 180, "Kinh độ", out double? longitude)) return;
+            if (latitude.HasValue != longitude.HasValue)
+            {
+                MessageBox.Show("Vui lòng nhập đủ cả Vĩ độ và Kinh độ, hoặc để trống cả hai!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             var dto = new StationFormDto
             {
                 Id          = _selectedStId ?? 0,
@@ -552,7 +571,9 @@ namespace QuanLyVanTai.UI.UserControls
                 StationName = name,
                 Address     = txtStAddress.Text.Trim(),
                 City        = cboStEditCity.SelectedItem?.ToString() ?? "Hà Nội",
-                Status      = cboStEditStatus.SelectedItem?.ToString() ?? "Active"
+                Status      = cboStEditStatus.SelectedItem?.ToString() ?? "Active",
+                Latitude    = latitude,
+                Longitude   = longitude
             };
 
             try
@@ -647,9 +668,29 @@ namespace QuanLyVanTai.UI.UserControls
             txtStCode.Clear();
             txtStName.Clear();
             txtStAddress.Clear();
+            txtStLatitude.Clear();
+            txtStLongitude.Clear();
             btnStSave.Enabled = false;
             btnStCancel.Enabled = false;
             dgvStations.ClearSelection();
+        }
+
+        private static bool TryParseCoordinate(string input, double min, double max, string fieldName, out double? value)
+        {
+            value = null;
+            string text = input.Trim();
+            if (text.Length == 0) return true;
+
+            bool parsedOk = double.TryParse(text.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out double parsed);
+            if (!parsedOk || parsed < min || parsed > max)
+            {
+                MessageBox.Show($"{fieldName} không hợp lệ. Nhập số trong khoảng {min} đến {max} (dùng dấu chấm thập phân).",
+                    "Dữ liệu không hợp lệ", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            value = parsed;
+            return true;
         }
 
         private async Task ExportVehiclesAsync()

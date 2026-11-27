@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Text.Json;
 using Core.Configs;
@@ -17,6 +17,9 @@ namespace QuanLyVanTai.UI.UserControls
         private RouteMapDto? _currentRouteMap;
         private bool _isWebViewReady = false;
         private int? _targetRouteId;
+        private bool _suppressRouteSelectionChange;
+        private bool _suppressStationSelectionChange;
+        private int _routeLoadVersion;
 
         public event Action<string, bool>? OnStatusChanged;
         public event Action<int>? OnNavigateToBooking;
@@ -53,7 +56,7 @@ namespace QuanLyVanTai.UI.UserControls
 
             StyleLayerButton(btnLayerStreet, true);
             StyleLayerButton(btnLayerSatellite, false);
-            StyleLayerButton(btnLayerVoyager, false);
+            StyleLayerButton(btnLayerTopo, false);
         }
 
         private void StyleLayerButton(FontAwesome.Sharp.IconButton btn, bool isActive)
@@ -84,6 +87,7 @@ namespace QuanLyVanTai.UI.UserControls
 
             cboTuyenXe.SelectedIndexChanged += async (s, e) =>
             {
+                if (_suppressRouteSelectionChange) return;
                 if (cboTuyenXe.SelectedValue is int routeId)
                 {
                     await LoadSelectedRouteMapAsync(routeId);
@@ -97,20 +101,15 @@ namespace QuanLyVanTai.UI.UserControls
 
             dgvStations.SelectionChanged += (s, e) =>
             {
+                if (_suppressStationSelectionChange) return;
                 OnStationRowSelected();
             };
 
             btnFitBounds.Click += async (s, e) =>
             {
-                if (_isWebViewReady)
-                {
-                    try
-                    {
-                        await webViewMap.ExecuteScriptAsync("fitRouteBounds();");
-                        lblMapStatus.Text = "🔍 Đã căn chỉnh hiển thị toàn bộ lộ trình";
-                    }
-                    catch { }
-                }
+                await RunMapScriptAsync("fitRouteBounds();");
+                lblMapStatus.ForeColor = Color.FromArgb(100, 116, 139);
+                lblMapStatus.Text = UiTranslator.Translate("Đã căn chỉnh hiển thị toàn bộ lộ trình");
             };
 
             btnDatVeTuyenNay.Click += (s, e) =>
@@ -127,38 +126,31 @@ namespace QuanLyVanTai.UI.UserControls
             };
 
             // Chuyển đổi lớp bản đồ
-            btnLayerStreet.Click += async (s, e) =>
-            {
-                StyleLayerButton(btnLayerStreet, true);
-                StyleLayerButton(btnLayerSatellite, false);
-                StyleLayerButton(btnLayerVoyager, false);
-                if (_isWebViewReady)
-                {
-                    await webViewMap.ExecuteScriptAsync("setMapLayer('street');");
-                }
-            };
+            btnLayerStreet.Click += async (s, e) => await SwitchLayerAsync(btnLayerStreet, "street");
+            btnLayerSatellite.Click += async (s, e) => await SwitchLayerAsync(btnLayerSatellite, "satellite");
+            btnLayerTopo.Click += async (s, e) => await SwitchLayerAsync(btnLayerTopo, "topo");
+        }
 
-            btnLayerSatellite.Click += async (s, e) =>
-            {
-                StyleLayerButton(btnLayerStreet, false);
-                StyleLayerButton(btnLayerSatellite, true);
-                StyleLayerButton(btnLayerVoyager, false);
-                if (_isWebViewReady)
-                {
-                    await webViewMap.ExecuteScriptAsync("setMapLayer('satellite');");
-                }
-            };
+        private async Task SwitchLayerAsync(FontAwesome.Sharp.IconButton activeButton, string layerName)
+        {
+            StyleLayerButton(btnLayerStreet, activeButton == btnLayerStreet);
+            StyleLayerButton(btnLayerSatellite, activeButton == btnLayerSatellite);
+            StyleLayerButton(btnLayerTopo, activeButton == btnLayerTopo);
+            await RunMapScriptAsync($"setMapLayer('{layerName}');");
+        }
 
-            btnLayerVoyager.Click += async (s, e) =>
+        private async Task RunMapScriptAsync(string script)
+        {
+            if (!_isWebViewReady) return;
+
+            try
             {
-                StyleLayerButton(btnLayerStreet, false);
-                StyleLayerButton(btnLayerSatellite, false);
-                StyleLayerButton(btnLayerVoyager, true);
-                if (_isWebViewReady)
-                {
-                    await webViewMap.ExecuteScriptAsync("setMapLayer('street');");
-                }
-            };
+                await webViewMap.ExecuteScriptAsync(script);
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Error(ex, "Lỗi thực thi JavaScript trên bản đồ");
+            }
         }
 
         private async Task InitializeWebViewAsync()
@@ -166,7 +158,7 @@ namespace QuanLyVanTai.UI.UserControls
             try
             {
                 lblLoading.Visible = true;
-                lblLoading.Text = "⏳ Đang khởi tạo môi trường Bản đồ số WebView2...";
+                lblLoading.Text = UiTranslator.Translate("Đang khởi tạo môi trường Bản đồ số WebView2...");
 
                 // Lưu UserData ở LocalApplicationData để tránh lỗi phân quyền thư mục
                 string userDataFolder = Path.Combine(
@@ -193,7 +185,7 @@ namespace QuanLyVanTai.UI.UserControls
             {
                 LoggerService.Error(ex, "Lỗi khi khởi tạo Microsoft WebView2");
                 lblLoading.Visible = true;
-                lblLoading.Text = "⚠️ Không thể tải WebView2. Vui lòng đảm bảo máy tính đã cài đặt Microsoft Edge WebView2 Runtime.";
+                lblLoading.Text = UiTranslator.Translate("Không thể tải WebView2. Vui lòng đảm bảo máy tính đã cài đặt Microsoft Edge WebView2 Runtime.");
             }
         }
 
@@ -201,19 +193,30 @@ namespace QuanLyVanTai.UI.UserControls
         {
             try
             {
-                string rawJson = e.TryGetWebMessageAsString();
+                // JS gửi object JSON; TryGetWebMessageAsString() sẽ ném lỗi với message dạng JSON
+                string rawJson = e.WebMessageAsJson;
                 if (string.IsNullOrWhiteSpace(rawJson)) return;
 
                 using var doc = JsonDocument.Parse(rawJson);
                 var root = doc.RootElement;
 
-                if (root.TryGetProperty("type", out var typeProp) && typeProp.GetString() == "stationSelected")
+                if (!root.TryGetProperty("type", out var typeProp)) return;
+
+                switch (typeProp.GetString())
                 {
-                    if (root.TryGetProperty("stationId", out var idProp))
-                    {
-                        int stId = idProp.GetInt32();
-                        SelectStationInGrid(stId);
-                    }
+                    case "stationSelected" when root.TryGetProperty("stationId", out var idProp):
+                        SelectStationInGrid(idProp.GetInt32());
+                        break;
+
+                    case "mapError":
+                        string detail = root.TryGetProperty("message", out var msgProp)
+                            ? msgProp.GetString() ?? string.Empty
+                            : string.Empty;
+                        lblMapStatus.ForeColor = Color.FromArgb(220, 38, 38);
+                        lblMapStatus.Text = string.IsNullOrWhiteSpace(detail)
+                            ? UiTranslator.Translate("Không tải được bản đồ. Vui lòng kiểm tra kết nối Internet.")
+                            : detail;
+                        break;
                 }
             }
             catch (Exception ex)
@@ -228,12 +231,32 @@ namespace QuanLyVanTai.UI.UserControls
             {
                 if (row.Tag is RouteStationMapPointDto point && point.StationId == stationId)
                 {
-                    row.Selected = true;
-                    dgvStations.CurrentCell = row.Cells[1];
-                    lblMapStatus.Text = $"📍 Đã chọn trạm: {point.StationName} ({point.City})";
+                    // Chặn SelectionChanged tạm thời: đổi Selected rồi CurrentCell sẽ bắn 2 sự kiện
+                    // và lần ghi sau có thể lấy nhầm CurrentRow cũ (bản đồ nhảy về trạm đầu).
+                    _suppressStationSelectionChange = true;
+                    try
+                    {
+                        row.Selected = true;
+                        dgvStations.CurrentCell = row.Cells[1];
+                    }
+                    finally
+                    {
+                        _suppressStationSelectionChange = false;
+                    }
+
+                    FocusStationOnMap(point);
                     break;
                 }
             }
+        }
+
+        private async void FocusStationOnMap(RouteStationMapPointDto point)
+        {
+            if (!_isWebViewReady) return;
+
+            await RunMapScriptAsync($"focusStation({point.StationId});");
+            lblMapStatus.ForeColor = Color.FromArgb(100, 116, 139);
+            lblMapStatus.Text = string.Format(UiTranslator.Translate("Đã định vị: {0} ({1}, {2})"), point.StationName, point.Address, point.City);
         }
 
         public async Task LoadRoutesAsync()
@@ -243,26 +266,33 @@ namespace QuanLyVanTai.UI.UserControls
                 OnStatusChanged?.Invoke("Đang nạp danh sách tuyến xe...", true);
                 _routes = await _routeMapService.GetActiveRoutesWithStationsAsync();
 
-                cboTuyenXe.DataSource = null;
-                cboTuyenXe.DisplayMember = "RouteName";
-                cboTuyenXe.ValueMember = "Id";
-                cboTuyenXe.DataSource = _routes;
+                // Ưu tiên tuyến được yêu cầu mở, sau đó giữ tuyến đang chọn khi làm mới
+                int? preferredId = _targetRouteId ?? cboTuyenXe.SelectedValue as int?;
+                _targetRouteId = null;
 
-                if (_routes.Any())
+                _suppressRouteSelectionChange = true;
+                try
                 {
-                    if (_targetRouteId.HasValue && _routes.Any(r => r.Id == _targetRouteId.Value))
-                    {
-                        cboTuyenXe.SelectedValue = _targetRouteId.Value;
-                    }
-                    else
-                    {
-                        cboTuyenXe.SelectedIndex = 0;
-                    }
+                    cboTuyenXe.DataSource = null;
+                    cboTuyenXe.DisplayMember = "RouteName";
+                    cboTuyenXe.ValueMember = "Id";
+                    cboTuyenXe.DataSource = _routes;
 
-                    if (cboTuyenXe.SelectedValue is int selectedId)
+                    if (_routes.Any())
                     {
-                        await LoadSelectedRouteMapAsync(selectedId);
+                        cboTuyenXe.SelectedValue = preferredId.HasValue && _routes.Any(r => r.Id == preferredId.Value)
+                            ? preferredId.Value
+                            : _routes[0].Id;
                     }
+                }
+                finally
+                {
+                    _suppressRouteSelectionChange = false;
+                }
+
+                if (cboTuyenXe.SelectedValue is int selectedId)
+                {
+                    await LoadSelectedRouteMapAsync(selectedId);
                 }
                 else
                 {
@@ -284,8 +314,14 @@ namespace QuanLyVanTai.UI.UserControls
         {
             try
             {
+                int loadVersion = ++_routeLoadVersion;
                 OnStatusChanged?.Invoke("Đang tải dữ liệu tọa độ lộ trình...", true);
-                _currentRouteMap = await _routeMapService.GetRouteMapDataAsync(routeId);
+                var routeMap = await _routeMapService.GetRouteMapDataAsync(routeId);
+
+                // Người dùng đã chọn tuyến khác trong lúc chờ dữ liệu
+                if (loadVersion != _routeLoadVersion) return;
+
+                _currentRouteMap = routeMap;
 
                 if (_currentRouteMap == null)
                 {
@@ -298,14 +334,16 @@ namespace QuanLyVanTai.UI.UserControls
                 lblRouteNameVal.Text = $"{_currentRouteMap.RouteCode} - {_currentRouteMap.RouteName}";
                 lblDistanceTimeVal.Text = string.Format(UiTranslator.Translate("{0:N0} km  (~{1:N1} giờ)"), _currentRouteMap.DistanceKm, _currentRouteMap.EstimatedHours);
                 lblBasePriceVal.Text = string.Format(UiTranslator.Translate("{0:N0} VNĐ"), _currentRouteMap.BasePrice);
-                lblStationCountVal.Text = string.Format(UiTranslator.Translate("{0} trạm đón/trả"), _currentRouteMap.Stations.Count);
+                lblStationCountVal.Text = _currentRouteMap.MissingCoordinateCount > 0
+                    ? string.Format(UiTranslator.Translate("{0} trạm đón/trả ({1} trạm chưa có GPS)"), _currentRouteMap.Stations.Count, _currentRouteMap.MissingCoordinateCount)
+                    : string.Format(UiTranslator.Translate("{0} trạm đón/trả"), _currentRouteMap.Stations.Count);
 
                 // Đổ dữ liệu vào bảng trạm dừng
                 dgvStations.Rows.Clear();
                 foreach (var st in _currentRouteMap.Stations)
                 {
-                    string roleStr = st.IsDeparture ? UiTranslator.Translate("🟢 Điểm khởi hành") :
-                                     st.IsDestination ? UiTranslator.Translate("🔴 Bến đến") : UiTranslator.Translate("🔵 Trạm dừng");
+                    string roleStr = st.IsDeparture ? UiTranslator.Translate("Điểm khởi hành") :
+                                     st.IsDestination ? UiTranslator.Translate("Bến đến") : UiTranslator.Translate("Trạm dừng");
 
                     int rowIdx = dgvStations.Rows.Add(
                         st.StopOrder,
@@ -333,7 +371,11 @@ namespace QuanLyVanTai.UI.UserControls
                 {
                     string html = _routeMapService.GenerateInteractiveMapHtml(_currentRouteMap);
                     webViewMap.NavigateToString(html);
-                    lblMapStatus.Text = string.Format(UiTranslator.Translate("🗺️ Lộ trình: {0} trạm dừng. Click để xem chi tiết."), _currentRouteMap.Stations.Count);
+
+                    lblMapStatus.ForeColor = Color.FromArgb(100, 116, 139);
+                    lblMapStatus.Text = _currentRouteMap.MissingCoordinateCount > 0
+                        ? string.Format(UiTranslator.Translate("Lộ trình: {0} trạm dừng. {1} trạm chưa có GPS nên không hiển thị."), _currentRouteMap.Stations.Count, _currentRouteMap.MissingCoordinateCount)
+                        : string.Format(UiTranslator.Translate("Lộ trình: {0} trạm dừng. Click vào marker để xem chi tiết."), _currentRouteMap.Stations.Count);
                 }
 
                 OnStatusChanged?.Invoke(string.Format(UiTranslator.Translate("Đang xem bản đồ tuyến {0}"), _currentRouteMap.RouteCode), false);
@@ -345,16 +387,11 @@ namespace QuanLyVanTai.UI.UserControls
             }
         }
 
-        private async void OnStationRowSelected()
+        private void OnStationRowSelected()
         {
-            if (dgvStations.CurrentRow?.Tag is RouteStationMapPointDto point && _isWebViewReady)
+            if (dgvStations.CurrentRow?.Tag is RouteStationMapPointDto point)
             {
-                try
-                {
-                    await webViewMap.ExecuteScriptAsync($"focusStation({point.StationId});");
-                    lblMapStatus.Text = string.Format(UiTranslator.Translate("📍 Đã định vị: {0} ({1}, {2})"), point.StationName, point.Address, point.City);
-                }
-                catch { }
+                FocusStationOnMap(point);
             }
         }
 

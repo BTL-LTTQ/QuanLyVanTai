@@ -66,6 +66,8 @@ namespace QuanLyVanTai.UI.UserControls
             this.colStCity = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colStRoutes = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colStStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colStLatitude = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colStLongitude = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.pnlStDetail = new System.Windows.Forms.Panel();
             this.btnStCancel = new FontAwesome.Sharp.IconButton();
             this.btnStSave = new FontAwesome.Sharp.IconButton();
@@ -83,6 +85,11 @@ namespace QuanLyVanTai.UI.UserControls
             this.txtStCode = new System.Windows.Forms.TextBox();
             this.lblStCode = new System.Windows.Forms.Label();
             this.lblStTitle = new System.Windows.Forms.Label();
+            this.lblStLatitude = new System.Windows.Forms.Label();
+            this.txtStLatitude = new System.Windows.Forms.TextBox();
+            this.lblStLongitude = new System.Windows.Forms.Label();
+            this.txtStLongitude = new System.Windows.Forms.TextBox();
+            this.lblStGpsHint = new System.Windows.Forms.Label();
             this.pnlStationsFilter = new System.Windows.Forms.Panel();
             this.btnStExport = new FontAwesome.Sharp.IconButton();
             this.btnStReset = new FontAwesome.Sharp.IconButton();
@@ -712,7 +719,9 @@ namespace QuanLyVanTai.UI.UserControls
             this.colStAddress,
             this.colStCity,
             this.colStRoutes,
-            this.colStStatus});
+            this.colStStatus,
+            this.colStLatitude,
+            this.colStLongitude});
             this.dgvStations.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvStations.EnableHeadersVisualStyles = false;
             this.dgvStations.Location = new System.Drawing.Point(0, 0);
@@ -783,6 +792,24 @@ namespace QuanLyVanTai.UI.UserControls
             this.colStStatus.ReadOnly = true;
             this.colStStatus.Width = 110;
             // 
+            // colStLatitude
+            // 
+            this.colStLatitude.HeaderText = "Vĩ Độ";
+            this.colStLatitude.MinimumWidth = 6;
+            this.colStLatitude.Name = "colStLatitude";
+            this.colStLatitude.ReadOnly = true;
+            this.colStLatitude.Visible = false;
+            this.colStLatitude.Width = 125;
+            // 
+            // colStLongitude
+            // 
+            this.colStLongitude.HeaderText = "Kinh Độ";
+            this.colStLongitude.MinimumWidth = 6;
+            this.colStLongitude.Name = "colStLongitude";
+            this.colStLongitude.ReadOnly = true;
+            this.colStLongitude.Visible = false;
+            this.colStLongitude.Width = 125;
+            // 
             // pnlStDetail
             // 
             this.pnlStDetail.AutoScroll = true;
@@ -802,6 +829,11 @@ namespace QuanLyVanTai.UI.UserControls
             this.pnlStDetail.Controls.Add(this.lblStName);
             this.pnlStDetail.Controls.Add(this.txtStCode);
             this.pnlStDetail.Controls.Add(this.lblStCode);
+            this.pnlStDetail.Controls.Add(this.lblStGpsHint);
+            this.pnlStDetail.Controls.Add(this.txtStLongitude);
+            this.pnlStDetail.Controls.Add(this.lblStLongitude);
+            this.pnlStDetail.Controls.Add(this.txtStLatitude);
+            this.pnlStDetail.Controls.Add(this.lblStLatitude);
             this.pnlStDetail.Controls.Add(this.lblStTitle);
             this.pnlStDetail.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlStDetail.Location = new System.Drawing.Point(0, 0);
@@ -823,10 +855,10 @@ namespace QuanLyVanTai.UI.UserControls
             this.btnStCancel.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnStCancel.IconSize = 18;
             this.btnStCancel.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnStCancel.Location = new System.Drawing.Point(364, 320);
+            this.btnStCancel.Location = new System.Drawing.Point(364, 380);
             this.btnStCancel.Name = "btnStCancel";
             this.btnStCancel.Size = new System.Drawing.Size(82, 36);
-            this.btnStCancel.TabIndex = 15;
+            this.btnStCancel.TabIndex = 20;
             this.btnStCancel.Text = " Hủy";
             this.btnStCancel.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.btnStCancel.UseVisualStyleBackColor = false;
@@ -844,10 +876,10 @@ namespace QuanLyVanTai.UI.UserControls
             this.btnStSave.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnStSave.IconSize = 18;
             this.btnStSave.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnStSave.Location = new System.Drawing.Point(276, 320);
+            this.btnStSave.Location = new System.Drawing.Point(276, 380);
             this.btnStSave.Name = "btnStSave";
             this.btnStSave.Size = new System.Drawing.Size(82, 36);
-            this.btnStSave.TabIndex = 14;
+            this.btnStSave.TabIndex = 19;
             this.btnStSave.Text = " Lưu";
             this.btnStSave.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.btnStSave.UseVisualStyleBackColor = false;
@@ -864,10 +896,10 @@ namespace QuanLyVanTai.UI.UserControls
             this.btnStDelete.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnStDelete.IconSize = 18;
             this.btnStDelete.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnStDelete.Location = new System.Drawing.Point(188, 320);
+            this.btnStDelete.Location = new System.Drawing.Point(188, 380);
             this.btnStDelete.Name = "btnStDelete";
             this.btnStDelete.Size = new System.Drawing.Size(82, 36);
-            this.btnStDelete.TabIndex = 13;
+            this.btnStDelete.TabIndex = 18;
             this.btnStDelete.Text = " Xóa";
             this.btnStDelete.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.btnStDelete.UseVisualStyleBackColor = false;
@@ -884,10 +916,10 @@ namespace QuanLyVanTai.UI.UserControls
             this.btnStEdit.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnStEdit.IconSize = 18;
             this.btnStEdit.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnStEdit.Location = new System.Drawing.Point(100, 320);
+            this.btnStEdit.Location = new System.Drawing.Point(100, 380);
             this.btnStEdit.Name = "btnStEdit";
             this.btnStEdit.Size = new System.Drawing.Size(82, 36);
-            this.btnStEdit.TabIndex = 12;
+            this.btnStEdit.TabIndex = 17;
             this.btnStEdit.Text = " Sửa";
             this.btnStEdit.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.btnStEdit.UseVisualStyleBackColor = false;
@@ -904,10 +936,10 @@ namespace QuanLyVanTai.UI.UserControls
             this.btnStAdd.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnStAdd.IconSize = 18;
             this.btnStAdd.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnStAdd.Location = new System.Drawing.Point(12, 320);
+            this.btnStAdd.Location = new System.Drawing.Point(12, 380);
             this.btnStAdd.Name = "btnStAdd";
             this.btnStAdd.Size = new System.Drawing.Size(82, 36);
-            this.btnStAdd.TabIndex = 11;
+            this.btnStAdd.TabIndex = 16;
             this.btnStAdd.Text = " Thêm";
             this.btnStAdd.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.btnStAdd.UseVisualStyleBackColor = false;
@@ -964,6 +996,57 @@ namespace QuanLyVanTai.UI.UserControls
             this.lblStCity.Size = new System.Drawing.Size(127, 20);
             this.lblStCity.TabIndex = 7;
             this.lblStCity.Text = "Tỉnh / Thành Phố:";
+            // 
+            // lblStLatitude
+            // 
+            this.lblStLatitude.AutoSize = true;
+            this.lblStLatitude.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.lblStLatitude.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(85)))), ((int)(((byte)(105)))));
+            this.lblStLatitude.Location = new System.Drawing.Point(18, 290);
+            this.lblStLatitude.Name = "lblStLatitude";
+            this.lblStLatitude.Size = new System.Drawing.Size(89, 20);
+            this.lblStLatitude.TabIndex = 11;
+            this.lblStLatitude.Text = "Vĩ Độ (Lat):";
+            // 
+            // txtStLatitude
+            // 
+            this.txtStLatitude.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            this.txtStLatitude.Location = new System.Drawing.Point(18, 312);
+            this.txtStLatitude.Name = "txtStLatitude";
+            this.txtStLatitude.PlaceholderText = "VD: 21.027764";
+            this.txtStLatitude.Size = new System.Drawing.Size(160, 29);
+            this.txtStLatitude.TabIndex = 12;
+            // 
+            // lblStLongitude
+            // 
+            this.lblStLongitude.AutoSize = true;
+            this.lblStLongitude.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.lblStLongitude.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(85)))), ((int)(((byte)(105)))));
+            this.lblStLongitude.Location = new System.Drawing.Point(188, 290);
+            this.lblStLongitude.Name = "lblStLongitude";
+            this.lblStLongitude.Size = new System.Drawing.Size(101, 20);
+            this.lblStLongitude.TabIndex = 13;
+            this.lblStLongitude.Text = "Kinh Độ (Lng):";
+            // 
+            // txtStLongitude
+            // 
+            this.txtStLongitude.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            this.txtStLongitude.Location = new System.Drawing.Point(188, 312);
+            this.txtStLongitude.Name = "txtStLongitude";
+            this.txtStLongitude.PlaceholderText = "VD: 105.834160";
+            this.txtStLongitude.Size = new System.Drawing.Size(160, 29);
+            this.txtStLongitude.TabIndex = 14;
+            // 
+            // lblStGpsHint
+            // 
+            this.lblStGpsHint.AutoSize = false;
+            this.lblStGpsHint.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Italic);
+            this.lblStGpsHint.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(116)))), ((int)(((byte)(139)))));
+            this.lblStGpsHint.Location = new System.Drawing.Point(18, 348);
+            this.lblStGpsHint.Name = "lblStGpsHint";
+            this.lblStGpsHint.Size = new System.Drawing.Size(430, 18);
+            this.lblStGpsHint.TabIndex = 15;
+            this.lblStGpsHint.Text = "Để trống nếu chưa có GPS - trạm sẽ không hiển thị trên bản đồ.";
             // 
             // txtStAddress
             // 
@@ -1241,6 +1324,8 @@ namespace QuanLyVanTai.UI.UserControls
         private System.Windows.Forms.DataGridViewTextBoxColumn colStCity;
         private System.Windows.Forms.DataGridViewTextBoxColumn colStRoutes;
         private System.Windows.Forms.DataGridViewTextBoxColumn colStStatus;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colStLatitude;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colStLongitude;
         private System.Windows.Forms.Panel pnlStDetail;
         private FontAwesome.Sharp.IconButton btnStCancel;
         private FontAwesome.Sharp.IconButton btnStSave;
@@ -1258,6 +1343,11 @@ namespace QuanLyVanTai.UI.UserControls
         private System.Windows.Forms.TextBox txtStCode;
         private System.Windows.Forms.Label lblStCode;
         private System.Windows.Forms.Label lblStTitle;
+        private System.Windows.Forms.Label lblStLatitude;
+        private System.Windows.Forms.TextBox txtStLatitude;
+        private System.Windows.Forms.Label lblStLongitude;
+        private System.Windows.Forms.TextBox txtStLongitude;
+        private System.Windows.Forms.Label lblStGpsHint;
         private System.Windows.Forms.Panel pnlStationsFilter;
         private FontAwesome.Sharp.IconButton btnStExport;
         private FontAwesome.Sharp.IconButton btnStReset;

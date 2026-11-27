@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Core.Configs;
 using Core.Helpers;
 using Core.Security;
@@ -121,17 +122,6 @@ namespace QuanLyVanTai.UI.UserControls
             SetDetailMode(false);
         }
 
-        private static void AddDetailLabel(string text, int y, Panel parent, int x = 18)
-        {
-            parent.Controls.Add(new Label
-            {
-                Text = text,
-                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-                Location = new Point(x, y),
-                AutoSize = true
-            });
-        }
-
         private Panel CreateStatCard(string title, string value, Color accent, int x, out Label valueLabel)
         {
             var card = new Panel
@@ -199,7 +189,26 @@ namespace QuanLyVanTai.UI.UserControls
             btnCheckInQr.Click += async (s, e) => await OpenCheckInDialogAsync();
 
             dgvTickets.SelectionChanged += DgvTickets_SelectionChanged;
-            cboDetailRoute.SelectedIndexChanged += async (s, e) => await LoadVehiclesForSelectedRouteAsync();
+            cboDetailRoute.SelectedIndexChanged += async (s, e) =>
+            {
+                errorProviderMain.SetError(cboDetailRoute, string.Empty);
+                errorProviderMain.SetError(cboDetailVehicle, string.Empty);
+                await LoadVehiclesForSelectedRouteAsync();
+            };
+            cboDetailVehicle.SelectedIndexChanged += (s, e) => errorProviderMain.SetError(cboDetailVehicle, string.Empty);
+
+            txtCustomerName.TextChanged += (s, e) => errorProviderMain.SetError(txtCustomerName, string.Empty);
+            txtCustomerPhone.TextChanged += (s, e) => errorProviderMain.SetError(txtCustomerPhone, string.Empty);
+            txtSeatNumber.TextChanged += (s, e) => errorProviderMain.SetError(txtSeatNumber, string.Empty);
+            numPrice.ValueChanged += (s, e) => errorProviderMain.SetError(numPrice, string.Empty);
+            numPrice.TextChanged += (s, e) => errorProviderMain.SetError(numPrice, string.Empty);
+
+            txtCustomerName.Validating += (s, e) => ValidateCustomerName();
+            txtCustomerPhone.Validating += (s, e) => ValidateCustomerPhone();
+            txtSeatNumber.Validating += (s, e) => ValidateSeatNumber();
+            numPrice.Validating += (s, e) => ValidatePrice();
+            cboDetailRoute.Validating += (s, e) => ValidateRoute();
+            cboDetailVehicle.Validating += (s, e) => ValidateVehicle();
 
             btnSave.Click += async (s, e) => await SaveAsync();
             btnCancel.Click += (s, e) => CancelEdit();
@@ -399,6 +408,8 @@ namespace QuanLyVanTai.UI.UserControls
         {
             if (_isAdding || dgvTickets.SelectedRows.Count == 0) return;
 
+            ClearErrors();
+
             var row = dgvTickets.SelectedRows[0];
             _selectedTicketId = Convert.ToInt32(row.Cells["colId"].Value);
 
@@ -481,6 +492,7 @@ namespace QuanLyVanTai.UI.UserControls
             cboDetailPayStatus.SelectedIndex = 0;
             cboDetailTicketStatus.SelectedIndex = 0;
 
+            ClearErrors();
             SetDetailMode(isEditing: true);
             txtCustomerName.Focus();
         }
@@ -496,6 +508,7 @@ namespace QuanLyVanTai.UI.UserControls
 
         private void ClearDetailPanel()
         {
+            ClearErrors();
             txtTicketCode.Text = "";
             txtCustomerName.Text = "";
             txtCustomerPhone.Text = "";
@@ -545,18 +558,6 @@ namespace QuanLyVanTai.UI.UserControls
             int routeIdx = cboDetailRoute.SelectedIndex;
             int vehicleIdx = cboDetailVehicle.SelectedIndex;
 
-            if (routeIdx < 0 || routeIdx >= _routes.Count)
-            {
-                MessageBox.Show("Vui lòng chọn tuyến xe!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            if (vehicleIdx < 0 || vehicleIdx >= _vehiclesForRoute.Count)
-            {
-                MessageBox.Show("Vui lòng chọn phương tiện!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
             var ticket = new Ticket
             {
                 Id = _selectedTicketId ?? 0,
@@ -578,6 +579,7 @@ namespace QuanLyVanTai.UI.UserControls
                 var (ok, msg, created) = await _ticketService.CreateTicketAsync(ticket);
                 if (ok)
                 {
+                    ClearErrors();
                     _ = WriteAuditAsync("Thêm", created!.Id.ToString(), $"Thêm vé [{created.TicketCode}] cho [{created.CustomerName}]");
                     MessageBox.Show(msg, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     _isAdding = false;
@@ -596,6 +598,7 @@ namespace QuanLyVanTai.UI.UserControls
                 var (ok, msg) = await _ticketService.UpdateTicketAsync(ticket);
                 if (ok)
                 {
+                    ClearErrors();
                     _ = WriteAuditAsync("Sửa", ticket.Id.ToString(), $"Cập nhật vé #{ticket.Id}");
                     MessageBox.Show(msg, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     await RefreshGridAsync();
@@ -679,33 +682,107 @@ namespace QuanLyVanTai.UI.UserControls
         // ==========================================
         // VALIDATION
         // ==========================================
-        private bool ValidateInput()
+        private bool ValidateCustomerName()
         {
             if (string.IsNullOrWhiteSpace(txtCustomerName.Text))
             {
-                MessageBox.Show("Vui lòng nhập tên hành khách!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txtCustomerName.Focus();
+                errorProviderMain.SetError(txtCustomerName, "Vui lòng nhập tên hành khách");
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(txtCustomerPhone.Text) || txtCustomerPhone.Text.Length < 9)
+            errorProviderMain.SetError(txtCustomerName, string.Empty);
+            return true;
+        }
+
+        private bool ValidateCustomerPhone()
+        {
+            string phone = txtCustomerPhone.Text.Trim();
+            if (!Regex.IsMatch(phone, @"^[0-9]{9,11}$"))
             {
-                MessageBox.Show("Số điện thoại không hợp lệ!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txtCustomerPhone.Focus();
+                errorProviderMain.SetError(txtCustomerPhone, "Số điện thoại không hợp lệ");
                 return false;
             }
 
+            errorProviderMain.SetError(txtCustomerPhone, string.Empty);
+            return true;
+        }
+
+        private bool ValidateSeatNumber()
+        {
             if (string.IsNullOrWhiteSpace(txtSeatNumber.Text))
             {
-                MessageBox.Show("Vui lòng nhập số ghế!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txtSeatNumber.Focus();
+                errorProviderMain.SetError(txtSeatNumber, "Vui lòng nhập số ghế");
                 return false;
             }
 
+            errorProviderMain.SetError(txtSeatNumber, string.Empty);
+            return true;
+        }
+
+        private bool ValidatePrice()
+        {
             if (numPrice.Value <= 0)
             {
-                MessageBox.Show("Giá vé phải lớn hơn 0!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                numPrice.Focus();
+                errorProviderMain.SetError(numPrice, "Giá vé phải lớn hơn 0");
+                return false;
+            }
+
+            errorProviderMain.SetError(numPrice, string.Empty);
+            return true;
+        }
+
+        private bool ValidateRoute()
+        {
+            int routeIdx = cboDetailRoute.SelectedIndex;
+            if (routeIdx < 0 || routeIdx >= _routes.Count)
+            {
+                errorProviderMain.SetError(cboDetailRoute, "Vui lòng chọn tuyến xe");
+                return false;
+            }
+
+            errorProviderMain.SetError(cboDetailRoute, string.Empty);
+            return true;
+        }
+
+        private bool ValidateVehicle()
+        {
+            int vehicleIdx = cboDetailVehicle.SelectedIndex;
+            if (vehicleIdx < 0 || vehicleIdx >= _vehiclesForRoute.Count)
+            {
+                errorProviderMain.SetError(cboDetailVehicle, "Vui lòng chọn phương tiện");
+                return false;
+            }
+
+            errorProviderMain.SetError(cboDetailVehicle, string.Empty);
+            return true;
+        }
+
+        private void ClearErrors()
+        {
+            errorProviderMain.Clear();
+        }
+
+        private bool ValidateInput()
+        {
+            bool isNameValid = ValidateCustomerName();
+            bool isPhoneValid = ValidateCustomerPhone();
+            bool isSeatValid = ValidateSeatNumber();
+            bool isRouteValid = ValidateRoute();
+            bool isVehicleValid = ValidateVehicle();
+            bool isPriceValid = ValidatePrice();
+
+            Control? firstInvalid =
+                !isNameValid ? txtCustomerName :
+                !isPhoneValid ? txtCustomerPhone :
+                !isSeatValid ? txtSeatNumber :
+                !isRouteValid ? cboDetailRoute :
+                !isVehicleValid ? cboDetailVehicle :
+                !isPriceValid ? numPrice :
+                null;
+
+            if (firstInvalid != null)
+            {
+                firstInvalid.Focus();
                 return false;
             }
 

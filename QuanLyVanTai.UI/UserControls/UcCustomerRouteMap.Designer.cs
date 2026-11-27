@@ -1,4 +1,4 @@
-namespace QuanLyVanTai.UI.UserControls
+﻿namespace QuanLyVanTai.UI.UserControls
 {
     partial class UcCustomerRouteMap
     {
@@ -51,10 +51,11 @@ namespace QuanLyVanTai.UI.UserControls
             webViewMap = new Microsoft.Web.WebView2.WinForms.WebView2();
             lblLoading = new Label();
             pnlRightToolbar = new Panel();
+            tlpMapToolbar = new TableLayoutPanel();
             flpMapControls = new FlowLayoutPanel();
             btnLayerStreet = new FontAwesome.Sharp.IconButton();
             btnLayerSatellite = new FontAwesome.Sharp.IconButton();
-            btnLayerVoyager = new FontAwesome.Sharp.IconButton();
+            btnLayerTopo = new FontAwesome.Sharp.IconButton();
             lblMapStatus = new Label();
             ((System.ComponentModel.ISupportInitialize)splitMain).BeginInit();
             splitMain.Panel1.SuspendLayout();
@@ -72,6 +73,7 @@ namespace QuanLyVanTai.UI.UserControls
             pnlWebContainer.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)webViewMap).BeginInit();
             pnlRightToolbar.SuspendLayout();
+            tlpMapToolbar.SuspendLayout();
             flpMapControls.SuspendLayout();
             SuspendLayout();
             // 
@@ -174,7 +176,7 @@ namespace QuanLyVanTai.UI.UserControls
             // 
             // colOrder
             // 
-            colOrder.FillWeight = 15F;
+            colOrder.FillWeight = 11F;
             colOrder.HeaderText = "STT";
             colOrder.MinimumWidth = 45;
             colOrder.Name = "colOrder";
@@ -182,7 +184,7 @@ namespace QuanLyVanTai.UI.UserControls
             // 
             // colStationName
             // 
-            colStationName.FillWeight = 45F;
+            colStationName.FillWeight = 40F;
             colStationName.HeaderText = "Tên Trạm Dừng";
             colStationName.MinimumWidth = 120;
             colStationName.Name = "colStationName";
@@ -190,7 +192,7 @@ namespace QuanLyVanTai.UI.UserControls
             // 
             // colCity
             // 
-            colCity.FillWeight = 22F;
+            colCity.FillWeight = 20F;
             colCity.HeaderText = "Tỉnh / TP";
             colCity.MinimumWidth = 80;
             colCity.Name = "colCity";
@@ -198,9 +200,9 @@ namespace QuanLyVanTai.UI.UserControls
             // 
             // colRole
             // 
-            colRole.FillWeight = 18F;
+            colRole.FillWeight = 29F;
             colRole.HeaderText = "Vai Trò";
-            colRole.MinimumWidth = 70;
+            colRole.MinimumWidth = 90;
             colRole.Name = "colRole";
             colRole.ReadOnly = true;
             // 
@@ -259,7 +261,7 @@ namespace QuanLyVanTai.UI.UserControls
             btnFitBounds.Padding = new Padding(8, 0, 10, 0);
             btnFitBounds.Size = new Size(125, 42);
             btnFitBounds.TabIndex = 1;
-            btnFitBounds.Text = "  Phóng To";
+            btnFitBounds.Text = "  Vừa Khung";
             btnFitBounds.TextAlign = ContentAlignment.MiddleRight;
             btnFitBounds.TextImageRelation = TextImageRelation.ImageBeforeText;
             btnFitBounds.UseVisualStyleBackColor = false;
@@ -362,7 +364,7 @@ namespace QuanLyVanTai.UI.UserControls
             lblDistanceTitle.Name = "lblDistanceTitle";
             lblDistanceTitle.Size = new Size(83, 34);
             lblDistanceTitle.TabIndex = 2;
-            lblDistanceTitle.Text = "Cự ly & Thời gian:";
+            lblDistanceTitle.Text = "Cự ly:";
             // 
             // lblDistanceTimeVal
             // 
@@ -541,15 +543,14 @@ namespace QuanLyVanTai.UI.UserControls
             lblLoading.Name = "lblLoading";
             lblLoading.Size = new Size(824, 802);
             lblLoading.TabIndex = 1;
-            lblLoading.Text = "⏳ Đang tải dữ liệu bản đồ lộ trình trực tuyến...";
+            lblLoading.Text = "Đang tải dữ liệu bản đồ lộ trình trực tuyến...";
             lblLoading.TextAlign = ContentAlignment.MiddleCenter;
             lblLoading.Visible = false;
             // 
             // pnlRightToolbar
             // 
             pnlRightToolbar.BackColor = Color.White;
-            pnlRightToolbar.Controls.Add(flpMapControls);
-            pnlRightToolbar.Controls.Add(lblMapStatus);
+            pnlRightToolbar.Controls.Add(tlpMapToolbar);
             pnlRightToolbar.Dock = DockStyle.Top;
             pnlRightToolbar.Location = new Point(0, 0);
             pnlRightToolbar.Name = "pnlRightToolbar";
@@ -557,16 +558,33 @@ namespace QuanLyVanTai.UI.UserControls
             pnlRightToolbar.Size = new Size(824, 48);
             pnlRightToolbar.TabIndex = 0;
             // 
+            // tlpMapToolbar
+            // 
+            tlpMapToolbar.ColumnCount = 2;
+            tlpMapToolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 396F));
+            tlpMapToolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            tlpMapToolbar.Controls.Add(flpMapControls, 0, 0);
+            tlpMapToolbar.Controls.Add(lblMapStatus, 1, 0);
+            tlpMapToolbar.Dock = DockStyle.Fill;
+            tlpMapToolbar.Location = new Point(8, 6);
+            tlpMapToolbar.Margin = new Padding(0);
+            tlpMapToolbar.Name = "tlpMapToolbar";
+            tlpMapToolbar.RowCount = 1;
+            tlpMapToolbar.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            tlpMapToolbar.Size = new Size(804, 36);
+            tlpMapToolbar.TabIndex = 0;
+            // 
             // flpMapControls
             // 
             flpMapControls.Controls.Add(btnLayerStreet);
             flpMapControls.Controls.Add(btnLayerSatellite);
-            flpMapControls.Controls.Add(btnLayerVoyager);
-            flpMapControls.Dock = DockStyle.Left;
-            flpMapControls.Location = new Point(8, 6);
+            flpMapControls.Controls.Add(btnLayerTopo);
+            flpMapControls.Dock = DockStyle.Fill;
+            flpMapControls.Margin = new Padding(0);
             flpMapControls.Name = "flpMapControls";
             flpMapControls.Size = new Size(396, 36);
             flpMapControls.TabIndex = 0;
+            flpMapControls.WrapContents = false;
             // 
             // btnLayerStreet
             // 
@@ -616,41 +634,44 @@ namespace QuanLyVanTai.UI.UserControls
             btnLayerSatellite.TextImageRelation = TextImageRelation.ImageBeforeText;
             btnLayerSatellite.UseVisualStyleBackColor = false;
             // 
-            // btnLayerVoyager
+            // btnLayerTopo
             // 
-            btnLayerVoyager.BackColor = Color.FromArgb(241, 245, 249);
-            btnLayerVoyager.Cursor = Cursors.Hand;
-            btnLayerVoyager.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
-            btnLayerVoyager.FlatStyle = FlatStyle.Flat;
-            btnLayerVoyager.Font = new Font("Segoe UI", 8.5F);
-            btnLayerVoyager.ForeColor = Color.FromArgb(71, 85, 105);
-            btnLayerVoyager.IconChar = FontAwesome.Sharp.IconChar.Compass;
-            btnLayerVoyager.IconColor = Color.FromArgb(71, 85, 105);
-            btnLayerVoyager.IconFont = FontAwesome.Sharp.IconFont.Auto;
-            btnLayerVoyager.IconSize = 16;
-            btnLayerVoyager.ImageAlign = ContentAlignment.MiddleLeft;
-            btnLayerVoyager.Location = new Point(252, 2);
-            btnLayerVoyager.Margin = new Padding(3, 2, 6, 2);
-            btnLayerVoyager.Name = "btnLayerVoyager";
-            btnLayerVoyager.Padding = new Padding(6, 0, 8, 0);
-            btnLayerVoyager.Size = new Size(111, 32);
-            btnLayerVoyager.TabIndex = 2;
-            btnLayerVoyager.Text = " Hiện đại";
-            btnLayerVoyager.TextAlign = ContentAlignment.MiddleRight;
-            btnLayerVoyager.TextImageRelation = TextImageRelation.ImageBeforeText;
-            btnLayerVoyager.UseVisualStyleBackColor = false;
+            btnLayerTopo.BackColor = Color.FromArgb(241, 245, 249);
+            btnLayerTopo.Cursor = Cursors.Hand;
+            btnLayerTopo.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
+            btnLayerTopo.FlatStyle = FlatStyle.Flat;
+            btnLayerTopo.Font = new Font("Segoe UI", 8.5F);
+            btnLayerTopo.ForeColor = Color.FromArgb(71, 85, 105);
+            btnLayerTopo.IconChar = FontAwesome.Sharp.IconChar.Compass;
+            btnLayerTopo.IconColor = Color.FromArgb(71, 85, 105);
+            btnLayerTopo.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            btnLayerTopo.IconSize = 16;
+            btnLayerTopo.ImageAlign = ContentAlignment.MiddleLeft;
+            btnLayerTopo.Location = new Point(252, 2);
+            btnLayerTopo.Margin = new Padding(3, 2, 6, 2);
+            btnLayerTopo.Name = "btnLayerTopo";
+            btnLayerTopo.Padding = new Padding(6, 0, 8, 0);
+            btnLayerTopo.Size = new Size(111, 32);
+            btnLayerTopo.TabIndex = 2;
+            btnLayerTopo.Text = " Địa hình";
+            btnLayerTopo.TextAlign = ContentAlignment.MiddleRight;
+            btnLayerTopo.TextImageRelation = TextImageRelation.ImageBeforeText;
+            btnLayerTopo.UseVisualStyleBackColor = false;
             // 
             // lblMapStatus
             // 
-            lblMapStatus.Anchor = AnchorStyles.Right;
-            lblMapStatus.AutoSize = true;
+            lblMapStatus.AutoEllipsis = true;
+            lblMapStatus.AutoSize = false;
+            lblMapStatus.Dock = DockStyle.Fill;
             lblMapStatus.Font = new Font("Segoe UI", 8.5F);
             lblMapStatus.ForeColor = Color.FromArgb(100, 116, 139);
-            lblMapStatus.Location = new Point(410, 14);
+            lblMapStatus.Location = new Point(396, 0);
+            lblMapStatus.Margin = new Padding(0);
             lblMapStatus.Name = "lblMapStatus";
-            lblMapStatus.Size = new Size(399, 20);
+            lblMapStatus.Padding = new Padding(8, 0, 0, 0);
+            lblMapStatus.Size = new Size(408, 36);
             lblMapStatus.TabIndex = 1;
-            lblMapStatus.Text = "💡 Click vào một trạm trên bảng hoặc marker để phóng to";
+            lblMapStatus.Text = "Click vào một trạm trên bảng hoặc marker để phóng to";
             lblMapStatus.TextAlign = ContentAlignment.MiddleRight;
             // 
             // UcCustomerRouteMap
@@ -678,9 +699,10 @@ namespace QuanLyVanTai.UI.UserControls
             pnlRightMap.ResumeLayout(false);
             pnlWebContainer.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)webViewMap).EndInit();
-            pnlRightToolbar.ResumeLayout(false);
-            pnlRightToolbar.PerformLayout();
             flpMapControls.ResumeLayout(false);
+            tlpMapToolbar.ResumeLayout(false);
+            tlpMapToolbar.PerformLayout();
+            pnlRightToolbar.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -715,10 +737,11 @@ namespace QuanLyVanTai.UI.UserControls
         private FontAwesome.Sharp.IconButton btnMoGoogleMaps;
         private Panel pnlRightMap;
         private Panel pnlRightToolbar;
+        private TableLayoutPanel tlpMapToolbar;
         private FlowLayoutPanel flpMapControls;
         private FontAwesome.Sharp.IconButton btnLayerStreet;
         private FontAwesome.Sharp.IconButton btnLayerSatellite;
-        private FontAwesome.Sharp.IconButton btnLayerVoyager;
+        private FontAwesome.Sharp.IconButton btnLayerTopo;
         private Label lblMapStatus;
         private Panel pnlWebContainer;
         private Microsoft.Web.WebView2.WinForms.WebView2 webViewMap;
