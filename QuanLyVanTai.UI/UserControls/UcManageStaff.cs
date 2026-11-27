@@ -1,3 +1,5 @@
+using System.Net.Mail;
+using System.Text.RegularExpressions;
 using Core.Configs;
 using Core.Helpers;
 using Core.Security;
@@ -76,6 +78,7 @@ namespace QuanLyVanTai.UI.UserControls
 
             ThemeConfig.StyleSecondaryButton(btnRefresh, IconChar.RotateLeft);
             ThemeConfig.StyleSuccessButton(btnAdd, IconChar.UserPlus);
+            ThemeConfig.StylePrimaryButton(btnEdit, IconChar.PenToSquare);
             ThemeConfig.StyleSecondaryButton(btnExport, IconChar.FileExcel);
 
             // DataGridView setup
@@ -109,17 +112,6 @@ namespace QuanLyVanTai.UI.UserControls
             ThemeConfig.StyleSecondaryButton(btnResetPwd, IconChar.Key);
 
             SetDetailMode(false);
-        }
-
-        private static void AddLabel(string text, int y, Panel parent, int x = 18)
-        {
-            parent.Controls.Add(new Label
-            {
-                Text = text,
-                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-                Location = new Point(x, y),
-                AutoSize = true
-            });
         }
 
         private Panel CreateStatCard(string title, string value, Color accent, int x, out Label valueLabel)
@@ -170,9 +162,22 @@ namespace QuanLyVanTai.UI.UserControls
 
             btnRefresh.Click += async (s, e) => await LoadDataAsync();
             btnAdd.Click += (s, e) => StartAdd();
+            btnEdit.Click += (s, e) => StartEdit();
             btnExport.Click += async (s, e) => await ExportAsync();
 
             dgvStaff.SelectionChanged += DgvStaff_SelectionChanged;
+
+            txtUsername.TextChanged += (s, e) => errorProviderMain.SetError(txtUsername, string.Empty);
+            txtFullName.TextChanged += (s, e) => errorProviderMain.SetError(txtFullName, string.Empty);
+            txtEmail.TextChanged += (s, e) => errorProviderMain.SetError(txtEmail, string.Empty);
+            txtPhone.TextChanged += (s, e) => errorProviderMain.SetError(txtPhone, string.Empty);
+            txtNewPassword.TextChanged += (s, e) => errorProviderMain.SetError(txtNewPassword, string.Empty);
+
+            txtUsername.Validating += (s, e) => ValidateUsername();
+            txtFullName.Validating += (s, e) => ValidateFullName();
+            txtEmail.Validating += (s, e) => ValidateEmail();
+            txtPhone.Validating += (s, e) => ValidatePhone();
+            txtNewPassword.Validating += (s, e) => ValidatePassword();
 
             btnSave.Click += async (s, e) => await SaveAsync();
             btnCancel.Click += (s, e) => CancelEdit();
@@ -202,7 +207,7 @@ namespace QuanLyVanTai.UI.UserControls
         {
             AuthorizationGuard.ApplyControlSecurity(
                 SystemMenus.Staff,
-                btnAdd, btnExport,
+                btnAdd: btnAdd, btnEdit: btnEdit, btnExport: btnExport,
                 hideWhenDenied: true);
         }
 
@@ -299,6 +304,8 @@ namespace QuanLyVanTai.UI.UserControls
         {
             if (_isAdding || dgvStaff.SelectedRows.Count == 0) return;
 
+            ClearErrors();
+
             var row = dgvStaff.SelectedRows[0];
             _selectedAccountId = Convert.ToInt32(row.Cells["colId"].Value);
             FillDetailFromRow(row);
@@ -338,6 +345,8 @@ namespace QuanLyVanTai.UI.UserControls
             txtNewPassword.Visible = fieldsEnabled || !_isAdding;
             lblPasswordHint.Visible = !_isAdding && fieldsEnabled;
 
+            btnAdd.Enabled = !fieldsEnabled && UserSession.HasPermission(SystemMenus.Staff, PermissionAction.Add);
+            btnEdit.Enabled = !fieldsEnabled && _selectedAccountId.HasValue && canEdit;
             btnSave.Enabled = fieldsEnabled;
             btnCancel.Enabled = fieldsEnabled;
             btnDelete.Enabled = !fieldsEnabled && _selectedAccountId.HasValue && canDelete;
@@ -361,13 +370,31 @@ namespace QuanLyVanTai.UI.UserControls
             cboRole2.SelectedIndex = cboRole2.Items.Count - 1;
             cboDetailStatus.SelectedIndex = 0;
 
+            ClearErrors();
             SetDetailMode(isEditing: true);
             txtUsername.Focus();
+        }
+
+        private void StartEdit()
+        {
+            if (!AuthorizationGuard.CheckAccess(SystemMenus.Staff, PermissionAction.Edit)) return;
+            if (!_selectedAccountId.HasValue)
+            {
+                MessageBox.Show("Vui lòng chọn tài khoản cần sửa!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            _isAdding = false;
+            lblDetailTitle.Text = "CẬP NHẬT TÀI KHOẢN";
+            ClearErrors();
+            SetDetailMode(isEditing: true);
+            txtFullName.Focus();
         }
 
         private void CancelEdit()
         {
             _isAdding = false;
+            _selectedAccountId = null;
             lblDetailTitle.Text = "CHI TIẾT TÀI KHOẢN";
             SetDetailMode(isEditing: false);
             dgvStaff.ClearSelection();
@@ -376,6 +403,7 @@ namespace QuanLyVanTai.UI.UserControls
 
         private void ClearDetail()
         {
+            ClearErrors();
             txtUsername.Text = "";
             txtFullName.Text = "";
             txtEmail.Text = "";
@@ -406,16 +434,10 @@ namespace QuanLyVanTai.UI.UserControls
                 if (!AuthorizationGuard.CheckAccess(SystemMenus.Staff, PermissionAction.Add)) return;
 
                 string password = txtNewPassword.Text;
-                if (string.IsNullOrWhiteSpace(password) || password.Length < 6)
-                {
-                    MessageBox.Show("Mật khẩu phải có ít nhất 6 ký tự!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    txtNewPassword.Focus();
-                    return;
-                }
-
                 var (ok, msg, created) = await _accountService.CreateAccountAsync(account, password);
                 if (ok)
                 {
+                    ClearErrors();
                     _ = WriteAuditAsync("Thêm", created!.Id.ToString(), $"Thêm tài khoản [{created.Username}] vai trò [{created.Role}]");
                     MessageBox.Show(msg, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     _isAdding = false;
@@ -435,6 +457,8 @@ namespace QuanLyVanTai.UI.UserControls
                 var (ok, msg) = await _accountService.UpdateAccountAsync(account);
                 if (ok)
                 {
+                    ClearErrors();
+                    lblDetailTitle.Text = "CHI TIẾT TÀI KHOẢN";
                     _ = WriteAuditAsync("Sửa", account.Id.ToString(), $"Cập nhật tài khoản [{account.Username}]");
                     MessageBox.Show(msg, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     await RefreshGridAsync();
@@ -536,19 +560,107 @@ namespace QuanLyVanTai.UI.UserControls
         // ==========================================
         // VALIDATION
         // ==========================================
-        private bool ValidateInput()
+        private bool ValidateUsername()
         {
             if (string.IsNullOrWhiteSpace(txtUsername.Text))
             {
-                MessageBox.Show("Vui lòng nhập tên đăng nhập!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txtUsername.Focus();
+                errorProviderMain.SetError(txtUsername, "Vui lòng nhập tên đăng nhập");
                 return false;
             }
 
+            errorProviderMain.SetError(txtUsername, string.Empty);
+            return true;
+        }
+
+        private bool ValidateFullName()
+        {
             if (string.IsNullOrWhiteSpace(txtFullName.Text))
             {
-                MessageBox.Show("Vui lòng nhập họ và tên!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txtFullName.Focus();
+                errorProviderMain.SetError(txtFullName, "Vui lòng nhập họ và tên");
+                return false;
+            }
+
+            errorProviderMain.SetError(txtFullName, string.Empty);
+            return true;
+        }
+
+        private bool ValidateEmail()
+        {
+            string email = txtEmail.Text.Trim();
+            if (!string.IsNullOrEmpty(email) &&
+                (!MailAddress.TryCreate(email, out var addr) ||
+                 !string.Equals(addr.Address, email, StringComparison.OrdinalIgnoreCase)))
+            {
+                errorProviderMain.SetError(txtEmail, "Email không hợp lệ");
+                return false;
+            }
+
+            errorProviderMain.SetError(txtEmail, string.Empty);
+            return true;
+        }
+
+        private bool ValidatePhone()
+        {
+            string phone = txtPhone.Text.Trim();
+            if (!string.IsNullOrEmpty(phone) && !Regex.IsMatch(phone, @"^[0-9]{9,11}$"))
+            {
+                errorProviderMain.SetError(txtPhone, "Số điện thoại không hợp lệ");
+                return false;
+            }
+
+            errorProviderMain.SetError(txtPhone, string.Empty);
+            return true;
+        }
+
+        private bool ValidatePassword()
+        {
+            if (!_isAdding)
+            {
+                errorProviderMain.SetError(txtNewPassword, string.Empty);
+                return true;
+            }
+
+            string password = txtNewPassword.Text;
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                errorProviderMain.SetError(txtNewPassword, "Vui lòng nhập mật khẩu");
+                return false;
+            }
+
+            if (password.Length < 6)
+            {
+                errorProviderMain.SetError(txtNewPassword, "Mật khẩu phải có ít nhất 6 ký tự");
+                return false;
+            }
+
+            errorProviderMain.SetError(txtNewPassword, string.Empty);
+            return true;
+        }
+
+        private void ClearErrors()
+        {
+            errorProviderMain.Clear();
+        }
+
+        private bool ValidateInput()
+        {
+            bool isUsernameValid = ValidateUsername();
+            bool isFullNameValid = ValidateFullName();
+            bool isEmailValid = ValidateEmail();
+            bool isPhoneValid = ValidatePhone();
+            bool isPasswordValid = ValidatePassword();
+
+            Control? firstInvalid =
+                !isUsernameValid ? txtUsername :
+                !isFullNameValid ? txtFullName :
+                !isEmailValid ? txtEmail :
+                !isPhoneValid ? txtPhone :
+                !isPasswordValid ? txtNewPassword :
+                null;
+
+            if (firstInvalid != null)
+            {
+                firstInvalid.Focus();
                 return false;
             }
 

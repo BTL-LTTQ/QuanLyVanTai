@@ -16,23 +16,32 @@ namespace QuanLyVanTai.UI.UserControls
         private System.Windows.Forms.ComboBox cboStatus;
         private FontAwesome.Sharp.IconButton btnRefresh;
         private FontAwesome.Sharp.IconButton btnAdd;
+        private FontAwesome.Sharp.IconButton btnEdit;
         private FontAwesome.Sharp.IconButton btnExport;
         private System.Windows.Forms.SplitContainer splitMain;
         private System.Windows.Forms.DataGridView dgvStaff;
         private System.Windows.Forms.Panel pnlDetail;
         private System.Windows.Forms.Label lblDetailTitle;
+        private System.Windows.Forms.Label lblUsername;
         private System.Windows.Forms.TextBox txtUsername;
+        private System.Windows.Forms.Label lblFullName;
         private System.Windows.Forms.TextBox txtFullName;
+        private System.Windows.Forms.Label lblEmail;
         private System.Windows.Forms.TextBox txtEmail;
+        private System.Windows.Forms.Label lblPhone;
         private System.Windows.Forms.TextBox txtPhone;
+        private System.Windows.Forms.Label lblRole;
         private System.Windows.Forms.ComboBox cboRole2;
+        private System.Windows.Forms.Label lblDetailStatus;
         private System.Windows.Forms.ComboBox cboDetailStatus;
+        private System.Windows.Forms.Label lblNewPassword;
         private System.Windows.Forms.TextBox txtNewPassword;
         private System.Windows.Forms.Label lblPasswordHint;
         private FontAwesome.Sharp.IconButton btnSave;
         private FontAwesome.Sharp.IconButton btnCancel;
         private FontAwesome.Sharp.IconButton btnDelete;
         private FontAwesome.Sharp.IconButton btnResetPwd;
+        private System.Windows.Forms.ErrorProvider errorProviderMain;
 
         protected override void Dispose(bool disposing)
         {
@@ -47,6 +56,7 @@ namespace QuanLyVanTai.UI.UserControls
 
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             pnlHeader = new System.Windows.Forms.Panel();
             lblHeaderTitle = new System.Windows.Forms.Label();
             pnlStats = new System.Windows.Forms.Panel();
@@ -56,23 +66,32 @@ namespace QuanLyVanTai.UI.UserControls
             cboStatus = new System.Windows.Forms.ComboBox();
             btnRefresh = new FontAwesome.Sharp.IconButton();
             btnAdd = new FontAwesome.Sharp.IconButton();
+            btnEdit = new FontAwesome.Sharp.IconButton();
             btnExport = new FontAwesome.Sharp.IconButton();
             splitMain = new System.Windows.Forms.SplitContainer();
             dgvStaff = new System.Windows.Forms.DataGridView();
             pnlDetail = new System.Windows.Forms.Panel();
             lblDetailTitle = new System.Windows.Forms.Label();
+            lblUsername = new System.Windows.Forms.Label();
             txtUsername = new System.Windows.Forms.TextBox();
+            lblFullName = new System.Windows.Forms.Label();
             txtFullName = new System.Windows.Forms.TextBox();
+            lblEmail = new System.Windows.Forms.Label();
             txtEmail = new System.Windows.Forms.TextBox();
+            lblPhone = new System.Windows.Forms.Label();
             txtPhone = new System.Windows.Forms.TextBox();
+            lblRole = new System.Windows.Forms.Label();
             cboRole2 = new System.Windows.Forms.ComboBox();
+            lblDetailStatus = new System.Windows.Forms.Label();
             cboDetailStatus = new System.Windows.Forms.ComboBox();
+            lblNewPassword = new System.Windows.Forms.Label();
             txtNewPassword = new System.Windows.Forms.TextBox();
             lblPasswordHint = new System.Windows.Forms.Label();
             btnSave = new FontAwesome.Sharp.IconButton();
             btnCancel = new FontAwesome.Sharp.IconButton();
             btnDelete = new FontAwesome.Sharp.IconButton();
             btnResetPwd = new FontAwesome.Sharp.IconButton();
+            errorProviderMain = new System.Windows.Forms.ErrorProvider(components);
             pnlHeader.SuspendLayout();
             pnlToolbar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitMain).BeginInit();
@@ -81,6 +100,7 @@ namespace QuanLyVanTai.UI.UserControls
             splitMain.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvStaff).BeginInit();
             pnlDetail.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)errorProviderMain).BeginInit();
             SuspendLayout();
             // 
             // pnlHeader
@@ -120,6 +140,7 @@ namespace QuanLyVanTai.UI.UserControls
             // 
             pnlToolbar.BackColor = System.Drawing.Color.White;
             pnlToolbar.Controls.Add(btnExport);
+            pnlToolbar.Controls.Add(btnEdit);
             pnlToolbar.Controls.Add(btnAdd);
             pnlToolbar.Controls.Add(btnRefresh);
             pnlToolbar.Controls.Add(cboStatus);
@@ -198,6 +219,26 @@ namespace QuanLyVanTai.UI.UserControls
             btnAdd.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             btnAdd.UseVisualStyleBackColor = false;
             // 
+            // btnEdit
+            // 
+            btnEdit.BackColor = System.Drawing.Color.FromArgb(59, 130, 246);
+            btnEdit.Cursor = System.Windows.Forms.Cursors.Hand;
+            btnEdit.FlatAppearance.BorderSize = 0;
+            btnEdit.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            btnEdit.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            btnEdit.ForeColor = System.Drawing.Color.White;
+            btnEdit.IconChar = FontAwesome.Sharp.IconChar.PenToSquare;
+            btnEdit.IconColor = System.Drawing.Color.White;
+            btnEdit.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            btnEdit.IconSize = 16;
+            btnEdit.Location = new System.Drawing.Point(751, 13);
+            btnEdit.Name = "btnEdit";
+            btnEdit.Size = new System.Drawing.Size(95, 30);
+            btnEdit.TabIndex = 5;
+            btnEdit.Text = " Sửa";
+            btnEdit.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            btnEdit.UseVisualStyleBackColor = false;
+            // 
             // btnExport
             // 
             btnExport.BackColor = System.Drawing.Color.FromArgb(16, 185, 129);
@@ -210,10 +251,10 @@ namespace QuanLyVanTai.UI.UserControls
             btnExport.IconColor = System.Drawing.Color.White;
             btnExport.IconFont = FontAwesome.Sharp.IconFont.Auto;
             btnExport.IconSize = 16;
-            btnExport.Location = new System.Drawing.Point(750, 13);
+            btnExport.Location = new System.Drawing.Point(854, 13);
             btnExport.Name = "btnExport";
             btnExport.Size = new System.Drawing.Size(110, 30);
-            btnExport.TabIndex = 5;
+            btnExport.TabIndex = 6;
             btnExport.Text = " Xuất file";
             btnExport.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             btnExport.UseVisualStyleBackColor = false;
@@ -269,12 +310,19 @@ namespace QuanLyVanTai.UI.UserControls
             pnlDetail.Controls.Add(btnSave);
             pnlDetail.Controls.Add(lblPasswordHint);
             pnlDetail.Controls.Add(txtNewPassword);
+            pnlDetail.Controls.Add(lblNewPassword);
             pnlDetail.Controls.Add(cboDetailStatus);
+            pnlDetail.Controls.Add(lblDetailStatus);
             pnlDetail.Controls.Add(cboRole2);
+            pnlDetail.Controls.Add(lblRole);
             pnlDetail.Controls.Add(txtPhone);
+            pnlDetail.Controls.Add(lblPhone);
             pnlDetail.Controls.Add(txtEmail);
+            pnlDetail.Controls.Add(lblEmail);
             pnlDetail.Controls.Add(txtFullName);
+            pnlDetail.Controls.Add(lblFullName);
             pnlDetail.Controls.Add(txtUsername);
+            pnlDetail.Controls.Add(lblUsername);
             pnlDetail.Controls.Add(lblDetailTitle);
             pnlDetail.Dock = System.Windows.Forms.DockStyle.Fill;
             pnlDetail.Location = new System.Drawing.Point(0, 0);
@@ -294,33 +342,88 @@ namespace QuanLyVanTai.UI.UserControls
             lblDetailTitle.TabIndex = 0;
             lblDetailTitle.Text = "CHI TIẾT TÀI KHOẢN";
             // 
+            // lblUsername
+            // 
+            lblUsername.AutoSize = true;
+            lblUsername.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            lblUsername.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
+            lblUsername.Location = new System.Drawing.Point(18, 50);
+            lblUsername.Name = "lblUsername";
+            lblUsername.Size = new System.Drawing.Size(134, 20);
+            lblUsername.TabIndex = 1;
+            lblUsername.Text = "Tên Đăng Nhập *:";
+            // 
             // txtUsername
             // 
             txtUsername.Location = new System.Drawing.Point(18, 72);
             txtUsername.Name = "txtUsername";
             txtUsername.Size = new System.Drawing.Size(330, 27);
-            txtUsername.TabIndex = 1;
+            txtUsername.TabIndex = 2;
+            // 
+            // lblFullName
+            // 
+            lblFullName.AutoSize = true;
+            lblFullName.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            lblFullName.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
+            lblFullName.Location = new System.Drawing.Point(18, 110);
+            lblFullName.Name = "lblFullName";
+            lblFullName.Size = new System.Drawing.Size(96, 20);
+            lblFullName.TabIndex = 3;
+            lblFullName.Text = "Họ Và Tên *:";
             // 
             // txtFullName
             // 
             txtFullName.Location = new System.Drawing.Point(18, 132);
             txtFullName.Name = "txtFullName";
             txtFullName.Size = new System.Drawing.Size(330, 27);
-            txtFullName.TabIndex = 2;
+            txtFullName.TabIndex = 4;
+            // 
+            // lblEmail
+            // 
+            lblEmail.AutoSize = true;
+            lblEmail.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            lblEmail.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
+            lblEmail.Location = new System.Drawing.Point(18, 170);
+            lblEmail.Name = "lblEmail";
+            lblEmail.Size = new System.Drawing.Size(52, 20);
+            lblEmail.TabIndex = 5;
+            lblEmail.Text = "Email:";
             // 
             // txtEmail
             // 
             txtEmail.Location = new System.Drawing.Point(18, 192);
             txtEmail.Name = "txtEmail";
             txtEmail.Size = new System.Drawing.Size(330, 27);
-            txtEmail.TabIndex = 3;
+            txtEmail.TabIndex = 6;
+            // 
+            // lblPhone
+            // 
+            lblPhone.AutoSize = true;
+            lblPhone.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            lblPhone.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
+            lblPhone.Location = new System.Drawing.Point(18, 230);
+            lblPhone.Name = "lblPhone";
+            lblPhone.Size = new System.Drawing.Size(112, 20);
+            lblPhone.TabIndex = 7;
+            lblPhone.Text = "Số Điện Thoại:";
             // 
             // txtPhone
             // 
             txtPhone.Location = new System.Drawing.Point(18, 252);
             txtPhone.Name = "txtPhone";
             txtPhone.Size = new System.Drawing.Size(330, 27);
-            txtPhone.TabIndex = 4;
+            txtPhone.TabIndex = 8;
+            // 
+            // lblRole
+            // 
+            lblRole.AutoSize = true;
+            lblRole.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            lblRole.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
+            lblRole.Location = new System.Drawing.Point(18, 290);
+            lblRole.Name = "lblRole";
+            lblRole.Size = new System.Drawing.Size(65, 20);
+            lblRole.TabIndex = 9;
+            lblRole.Text = "Vai Trò:";
             // 
             // cboRole2
             // 
@@ -329,7 +432,18 @@ namespace QuanLyVanTai.UI.UserControls
             cboRole2.Location = new System.Drawing.Point(18, 312);
             cboRole2.Name = "cboRole2";
             cboRole2.Size = new System.Drawing.Size(330, 28);
-            cboRole2.TabIndex = 5;
+            cboRole2.TabIndex = 10;
+            // 
+            // lblDetailStatus
+            // 
+            lblDetailStatus.AutoSize = true;
+            lblDetailStatus.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            lblDetailStatus.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
+            lblDetailStatus.Location = new System.Drawing.Point(18, 350);
+            lblDetailStatus.Name = "lblDetailStatus";
+            lblDetailStatus.Size = new System.Drawing.Size(89, 20);
+            lblDetailStatus.TabIndex = 11;
+            lblDetailStatus.Text = "Trạng Thái:";
             // 
             // cboDetailStatus
             // 
@@ -338,14 +452,25 @@ namespace QuanLyVanTai.UI.UserControls
             cboDetailStatus.Location = new System.Drawing.Point(18, 372);
             cboDetailStatus.Name = "cboDetailStatus";
             cboDetailStatus.Size = new System.Drawing.Size(330, 28);
-            cboDetailStatus.TabIndex = 6;
+            cboDetailStatus.TabIndex = 12;
+            // 
+            // lblNewPassword
+            // 
+            lblNewPassword.AutoSize = true;
+            lblNewPassword.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            lblNewPassword.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
+            lblNewPassword.Location = new System.Drawing.Point(18, 410);
+            lblNewPassword.Name = "lblNewPassword";
+            lblNewPassword.Size = new System.Drawing.Size(81, 20);
+            lblNewPassword.TabIndex = 13;
+            lblNewPassword.Text = "Mật Khẩu:";
             // 
             // txtNewPassword
             // 
             txtNewPassword.Location = new System.Drawing.Point(18, 432);
             txtNewPassword.Name = "txtNewPassword";
             txtNewPassword.Size = new System.Drawing.Size(330, 27);
-            txtNewPassword.TabIndex = 7;
+            txtNewPassword.TabIndex = 14;
             txtNewPassword.UseSystemPasswordChar = true;
             // 
             // lblPasswordHint
@@ -356,7 +481,7 @@ namespace QuanLyVanTai.UI.UserControls
             lblPasswordHint.Location = new System.Drawing.Point(18, 462);
             lblPasswordHint.Name = "lblPasswordHint";
             lblPasswordHint.Size = new System.Drawing.Size(262, 19);
-            lblPasswordHint.TabIndex = 8;
+            lblPasswordHint.TabIndex = 15;
             lblPasswordHint.Text = "Để trống nếu không muốn đổi mật khẩu";
             // 
             // btnSave
@@ -374,7 +499,7 @@ namespace QuanLyVanTai.UI.UserControls
             btnSave.Location = new System.Drawing.Point(18, 492);
             btnSave.Name = "btnSave";
             btnSave.Size = new System.Drawing.Size(85, 36);
-            btnSave.TabIndex = 9;
+            btnSave.TabIndex = 16;
             btnSave.Text = " Lưu";
             btnSave.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             btnSave.UseVisualStyleBackColor = false;
@@ -382,6 +507,7 @@ namespace QuanLyVanTai.UI.UserControls
             // btnCancel
             // 
             btnCancel.BackColor = System.Drawing.Color.FromArgb(100, 116, 139);
+            btnCancel.CausesValidation = false;
             btnCancel.Cursor = System.Windows.Forms.Cursors.Hand;
             btnCancel.FlatAppearance.BorderSize = 0;
             btnCancel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
@@ -394,7 +520,7 @@ namespace QuanLyVanTai.UI.UserControls
             btnCancel.Location = new System.Drawing.Point(109, 492);
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new System.Drawing.Size(85, 36);
-            btnCancel.TabIndex = 10;
+            btnCancel.TabIndex = 17;
             btnCancel.Text = " Hủy";
             btnCancel.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             btnCancel.UseVisualStyleBackColor = false;
@@ -414,7 +540,7 @@ namespace QuanLyVanTai.UI.UserControls
             btnDelete.Location = new System.Drawing.Point(200, 492);
             btnDelete.Name = "btnDelete";
             btnDelete.Size = new System.Drawing.Size(85, 36);
-            btnDelete.TabIndex = 11;
+            btnDelete.TabIndex = 18;
             btnDelete.Text = " Xóa";
             btnDelete.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             btnDelete.UseVisualStyleBackColor = false;
@@ -434,10 +560,15 @@ namespace QuanLyVanTai.UI.UserControls
             btnResetPwd.Location = new System.Drawing.Point(291, 492);
             btnResetPwd.Name = "btnResetPwd";
             btnResetPwd.Size = new System.Drawing.Size(110, 36);
-            btnResetPwd.TabIndex = 12;
+            btnResetPwd.TabIndex = 19;
             btnResetPwd.Text = " Đặt lại MK";
             btnResetPwd.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             btnResetPwd.UseVisualStyleBackColor = false;
+            // 
+            // errorProviderMain
+            // 
+            errorProviderMain.BlinkStyle = System.Windows.Forms.ErrorBlinkStyle.NeverBlink;
+            errorProviderMain.ContainerControl = this;
             // 
             // UcManageStaff
             // 
@@ -462,6 +593,7 @@ namespace QuanLyVanTai.UI.UserControls
             ((System.ComponentModel.ISupportInitialize)dgvStaff).EndInit();
             pnlDetail.ResumeLayout(false);
             pnlDetail.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)errorProviderMain).EndInit();
             ResumeLayout(false);
         }
 
