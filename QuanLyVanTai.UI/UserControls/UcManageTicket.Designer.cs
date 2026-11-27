@@ -28,20 +28,31 @@ namespace QuanLyVanTai.UI.UserControls
         private System.Windows.Forms.DataGridView dgvTickets;
         private System.Windows.Forms.Panel pnlDetail;
         private System.Windows.Forms.Label lblDetailTitle;
+        private System.Windows.Forms.Label lblTicketCode;
         private System.Windows.Forms.TextBox txtTicketCode;
+        private System.Windows.Forms.Label lblCustomerName;
         private System.Windows.Forms.TextBox txtCustomerName;
+        private System.Windows.Forms.Label lblCustomerPhone;
         private System.Windows.Forms.TextBox txtCustomerPhone;
+        private System.Windows.Forms.Label lblSeatNumber;
         private System.Windows.Forms.TextBox txtSeatNumber;
+        private System.Windows.Forms.Label lblDetailRoute;
         private System.Windows.Forms.ComboBox cboDetailRoute;
+        private System.Windows.Forms.Label lblDetailVehicle;
         private System.Windows.Forms.ComboBox cboDetailVehicle;
+        private System.Windows.Forms.Label lblPrice;
         private System.Windows.Forms.NumericUpDown numPrice;
+        private System.Windows.Forms.Label lblDeparture;
         private System.Windows.Forms.DateTimePicker dtpDeparture;
+        private System.Windows.Forms.Label lblDetailPayStatus;
         private System.Windows.Forms.ComboBox cboDetailPayStatus;
+        private System.Windows.Forms.Label lblDetailTicketStatus;
         private System.Windows.Forms.ComboBox cboDetailTicketStatus;
         private FontAwesome.Sharp.IconButton btnSave;
         private FontAwesome.Sharp.IconButton btnCancel;
         private FontAwesome.Sharp.IconButton btnDelete;
         private FontAwesome.Sharp.IconButton btnCancelTicket;
+        private System.Windows.Forms.ErrorProvider errorProviderMain;
 
         protected override void Dispose(bool disposing)
         {
@@ -56,6 +67,7 @@ namespace QuanLyVanTai.UI.UserControls
 
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             pnlHeader = new System.Windows.Forms.Panel();
             lblHeaderTitle = new System.Windows.Forms.Label();
             pnlStats = new System.Windows.Forms.Panel();
@@ -77,20 +89,31 @@ namespace QuanLyVanTai.UI.UserControls
             dgvTickets = new System.Windows.Forms.DataGridView();
             pnlDetail = new System.Windows.Forms.Panel();
             lblDetailTitle = new System.Windows.Forms.Label();
+            lblTicketCode = new System.Windows.Forms.Label();
             txtTicketCode = new System.Windows.Forms.TextBox();
+            lblCustomerName = new System.Windows.Forms.Label();
             txtCustomerName = new System.Windows.Forms.TextBox();
+            lblCustomerPhone = new System.Windows.Forms.Label();
             txtCustomerPhone = new System.Windows.Forms.TextBox();
+            lblSeatNumber = new System.Windows.Forms.Label();
             txtSeatNumber = new System.Windows.Forms.TextBox();
+            lblDetailRoute = new System.Windows.Forms.Label();
             cboDetailRoute = new System.Windows.Forms.ComboBox();
+            lblDetailVehicle = new System.Windows.Forms.Label();
             cboDetailVehicle = new System.Windows.Forms.ComboBox();
+            lblPrice = new System.Windows.Forms.Label();
             numPrice = new System.Windows.Forms.NumericUpDown();
+            lblDeparture = new System.Windows.Forms.Label();
             dtpDeparture = new System.Windows.Forms.DateTimePicker();
+            lblDetailPayStatus = new System.Windows.Forms.Label();
             cboDetailPayStatus = new System.Windows.Forms.ComboBox();
+            lblDetailTicketStatus = new System.Windows.Forms.Label();
             cboDetailTicketStatus = new System.Windows.Forms.ComboBox();
             btnSave = new FontAwesome.Sharp.IconButton();
             btnCancel = new FontAwesome.Sharp.IconButton();
             btnDelete = new FontAwesome.Sharp.IconButton();
             btnCancelTicket = new FontAwesome.Sharp.IconButton();
+            errorProviderMain = new System.Windows.Forms.ErrorProvider(components);
             pnlHeader.SuspendLayout();
             pnlToolbar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitMain).BeginInit();
@@ -100,6 +123,7 @@ namespace QuanLyVanTai.UI.UserControls
             ((System.ComponentModel.ISupportInitialize)dgvTickets).BeginInit();
             pnlDetail.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numPrice).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)errorProviderMain).BeginInit();
             SuspendLayout();
             // 
             // pnlHeader
@@ -368,15 +392,25 @@ namespace QuanLyVanTai.UI.UserControls
             pnlDetail.Controls.Add(btnCancel);
             pnlDetail.Controls.Add(btnSave);
             pnlDetail.Controls.Add(cboDetailTicketStatus);
+            pnlDetail.Controls.Add(lblDetailTicketStatus);
             pnlDetail.Controls.Add(cboDetailPayStatus);
+            pnlDetail.Controls.Add(lblDetailPayStatus);
             pnlDetail.Controls.Add(dtpDeparture);
+            pnlDetail.Controls.Add(lblDeparture);
             pnlDetail.Controls.Add(numPrice);
+            pnlDetail.Controls.Add(lblPrice);
             pnlDetail.Controls.Add(cboDetailVehicle);
+            pnlDetail.Controls.Add(lblDetailVehicle);
             pnlDetail.Controls.Add(cboDetailRoute);
+            pnlDetail.Controls.Add(lblDetailRoute);
             pnlDetail.Controls.Add(txtSeatNumber);
+            pnlDetail.Controls.Add(lblSeatNumber);
             pnlDetail.Controls.Add(txtCustomerPhone);
+            pnlDetail.Controls.Add(lblCustomerPhone);
             pnlDetail.Controls.Add(txtCustomerName);
+            pnlDetail.Controls.Add(lblCustomerName);
             pnlDetail.Controls.Add(txtTicketCode);
+            pnlDetail.Controls.Add(lblTicketCode);
             pnlDetail.Controls.Add(lblDetailTitle);
             pnlDetail.Dock = System.Windows.Forms.DockStyle.Fill;
             pnlDetail.Location = new System.Drawing.Point(0, 0);
@@ -396,6 +430,17 @@ namespace QuanLyVanTai.UI.UserControls
             lblDetailTitle.TabIndex = 0;
             lblDetailTitle.Text = "CHI TIẾT VÉ XE";
             // 
+            // lblTicketCode
+            // 
+            lblTicketCode.AutoSize = true;
+            lblTicketCode.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            lblTicketCode.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
+            lblTicketCode.Location = new System.Drawing.Point(18, 50);
+            lblTicketCode.Name = "lblTicketCode";
+            lblTicketCode.Size = new System.Drawing.Size(58, 20);
+            lblTicketCode.TabIndex = 1;
+            lblTicketCode.Text = "Mã Vé:";
+            // 
             // txtTicketCode
             // 
             txtTicketCode.BackColor = System.Drawing.Color.FromArgb(241, 245, 249);
@@ -403,21 +448,54 @@ namespace QuanLyVanTai.UI.UserControls
             txtTicketCode.Name = "txtTicketCode";
             txtTicketCode.ReadOnly = true;
             txtTicketCode.Size = new System.Drawing.Size(330, 27);
-            txtTicketCode.TabIndex = 1;
+            txtTicketCode.TabIndex = 2;
+            // 
+            // lblCustomerName
+            // 
+            lblCustomerName.AutoSize = true;
+            lblCustomerName.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            lblCustomerName.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
+            lblCustomerName.Location = new System.Drawing.Point(18, 110);
+            lblCustomerName.Name = "lblCustomerName";
+            lblCustomerName.Size = new System.Drawing.Size(134, 20);
+            lblCustomerName.TabIndex = 3;
+            lblCustomerName.Text = "Tên Hành Khách *:";
             // 
             // txtCustomerName
             // 
             txtCustomerName.Location = new System.Drawing.Point(18, 132);
             txtCustomerName.Name = "txtCustomerName";
             txtCustomerName.Size = new System.Drawing.Size(330, 27);
-            txtCustomerName.TabIndex = 2;
+            txtCustomerName.TabIndex = 4;
+            // 
+            // lblCustomerPhone
+            // 
+            lblCustomerPhone.AutoSize = true;
+            lblCustomerPhone.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            lblCustomerPhone.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
+            lblCustomerPhone.Location = new System.Drawing.Point(18, 170);
+            lblCustomerPhone.Name = "lblCustomerPhone";
+            lblCustomerPhone.Size = new System.Drawing.Size(123, 20);
+            lblCustomerPhone.TabIndex = 5;
+            lblCustomerPhone.Text = "Số Điện Thoại *:";
             // 
             // txtCustomerPhone
             // 
             txtCustomerPhone.Location = new System.Drawing.Point(18, 192);
             txtCustomerPhone.Name = "txtCustomerPhone";
             txtCustomerPhone.Size = new System.Drawing.Size(160, 27);
-            txtCustomerPhone.TabIndex = 3;
+            txtCustomerPhone.TabIndex = 6;
+            // 
+            // lblSeatNumber
+            // 
+            lblSeatNumber.AutoSize = true;
+            lblSeatNumber.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            lblSeatNumber.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
+            lblSeatNumber.Location = new System.Drawing.Point(195, 170);
+            lblSeatNumber.Name = "lblSeatNumber";
+            lblSeatNumber.Size = new System.Drawing.Size(72, 20);
+            lblSeatNumber.TabIndex = 7;
+            lblSeatNumber.Text = "Số Ghế *:";
             // 
             // txtSeatNumber
             // 
@@ -425,7 +503,18 @@ namespace QuanLyVanTai.UI.UserControls
             txtSeatNumber.Name = "txtSeatNumber";
             txtSeatNumber.PlaceholderText = "VD: A01";
             txtSeatNumber.Size = new System.Drawing.Size(153, 27);
-            txtSeatNumber.TabIndex = 4;
+            txtSeatNumber.TabIndex = 8;
+            // 
+            // lblDetailRoute
+            // 
+            lblDetailRoute.AutoSize = true;
+            lblDetailRoute.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            lblDetailRoute.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
+            lblDetailRoute.Location = new System.Drawing.Point(18, 230);
+            lblDetailRoute.Name = "lblDetailRoute";
+            lblDetailRoute.Size = new System.Drawing.Size(87, 20);
+            lblDetailRoute.TabIndex = 9;
+            lblDetailRoute.Text = "Tuyến Xe *:";
             // 
             // cboDetailRoute
             // 
@@ -434,7 +523,18 @@ namespace QuanLyVanTai.UI.UserControls
             cboDetailRoute.Location = new System.Drawing.Point(18, 252);
             cboDetailRoute.Name = "cboDetailRoute";
             cboDetailRoute.Size = new System.Drawing.Size(330, 28);
-            cboDetailRoute.TabIndex = 5;
+            cboDetailRoute.TabIndex = 10;
+            // 
+            // lblDetailVehicle
+            // 
+            lblDetailVehicle.AutoSize = true;
+            lblDetailVehicle.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            lblDetailVehicle.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
+            lblDetailVehicle.Location = new System.Drawing.Point(18, 290);
+            lblDetailVehicle.Name = "lblDetailVehicle";
+            lblDetailVehicle.Size = new System.Drawing.Size(113, 20);
+            lblDetailVehicle.TabIndex = 11;
+            lblDetailVehicle.Text = "Phương Tiện *:";
             // 
             // cboDetailVehicle
             // 
@@ -443,7 +543,18 @@ namespace QuanLyVanTai.UI.UserControls
             cboDetailVehicle.Location = new System.Drawing.Point(18, 312);
             cboDetailVehicle.Name = "cboDetailVehicle";
             cboDetailVehicle.Size = new System.Drawing.Size(330, 28);
-            cboDetailVehicle.TabIndex = 6;
+            cboDetailVehicle.TabIndex = 12;
+            // 
+            // lblPrice
+            // 
+            lblPrice.AutoSize = true;
+            lblPrice.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            lblPrice.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
+            lblPrice.Location = new System.Drawing.Point(18, 350);
+            lblPrice.Name = "lblPrice";
+            lblPrice.Size = new System.Drawing.Size(112, 20);
+            lblPrice.TabIndex = 13;
+            lblPrice.Text = "Giá Vé (VNĐ) *:";
             // 
             // numPrice
             // 
@@ -452,8 +563,19 @@ namespace QuanLyVanTai.UI.UserControls
             numPrice.Maximum = new decimal(new int[] { 10000000, 0, 0, 0 });
             numPrice.Name = "numPrice";
             numPrice.Size = new System.Drawing.Size(160, 27);
-            numPrice.TabIndex = 7;
+            numPrice.TabIndex = 14;
             numPrice.ThousandsSeparator = true;
+            // 
+            // lblDeparture
+            // 
+            lblDeparture.AutoSize = true;
+            lblDeparture.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            lblDeparture.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
+            lblDeparture.Location = new System.Drawing.Point(18, 410);
+            lblDeparture.Name = "lblDeparture";
+            lblDeparture.Size = new System.Drawing.Size(156, 20);
+            lblDeparture.TabIndex = 15;
+            lblDeparture.Text = "Thời Gian Khởi Hành:";
             // 
             // dtpDeparture
             // 
@@ -462,7 +584,18 @@ namespace QuanLyVanTai.UI.UserControls
             dtpDeparture.Location = new System.Drawing.Point(18, 432);
             dtpDeparture.Name = "dtpDeparture";
             dtpDeparture.Size = new System.Drawing.Size(240, 27);
-            dtpDeparture.TabIndex = 8;
+            dtpDeparture.TabIndex = 16;
+            // 
+            // lblDetailPayStatus
+            // 
+            lblDetailPayStatus.AutoSize = true;
+            lblDetailPayStatus.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            lblDetailPayStatus.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
+            lblDetailPayStatus.Location = new System.Drawing.Point(18, 470);
+            lblDetailPayStatus.Name = "lblDetailPayStatus";
+            lblDetailPayStatus.Size = new System.Drawing.Size(96, 20);
+            lblDetailPayStatus.TabIndex = 17;
+            lblDetailPayStatus.Text = "Thanh Toán:";
             // 
             // cboDetailPayStatus
             // 
@@ -471,7 +604,18 @@ namespace QuanLyVanTai.UI.UserControls
             cboDetailPayStatus.Location = new System.Drawing.Point(18, 492);
             cboDetailPayStatus.Name = "cboDetailPayStatus";
             cboDetailPayStatus.Size = new System.Drawing.Size(155, 28);
-            cboDetailPayStatus.TabIndex = 9;
+            cboDetailPayStatus.TabIndex = 18;
+            // 
+            // lblDetailTicketStatus
+            // 
+            lblDetailTicketStatus.AutoSize = true;
+            lblDetailTicketStatus.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            lblDetailTicketStatus.ForeColor = System.Drawing.Color.FromArgb(71, 85, 105);
+            lblDetailTicketStatus.Location = new System.Drawing.Point(185, 470);
+            lblDetailTicketStatus.Name = "lblDetailTicketStatus";
+            lblDetailTicketStatus.Size = new System.Drawing.Size(113, 20);
+            lblDetailTicketStatus.TabIndex = 19;
+            lblDetailTicketStatus.Text = "Trạng Thái Vé:";
             // 
             // cboDetailTicketStatus
             // 
@@ -480,7 +624,7 @@ namespace QuanLyVanTai.UI.UserControls
             cboDetailTicketStatus.Location = new System.Drawing.Point(185, 492);
             cboDetailTicketStatus.Name = "cboDetailTicketStatus";
             cboDetailTicketStatus.Size = new System.Drawing.Size(163, 28);
-            cboDetailTicketStatus.TabIndex = 10;
+            cboDetailTicketStatus.TabIndex = 20;
             // 
             // btnSave
             // 
@@ -497,7 +641,7 @@ namespace QuanLyVanTai.UI.UserControls
             btnSave.Location = new System.Drawing.Point(12, 540);
             btnSave.Name = "btnSave";
             btnSave.Size = new System.Drawing.Size(82, 36);
-            btnSave.TabIndex = 11;
+            btnSave.TabIndex = 21;
             btnSave.Text = " Lưu";
             btnSave.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             btnSave.UseVisualStyleBackColor = false;
@@ -505,6 +649,7 @@ namespace QuanLyVanTai.UI.UserControls
             // btnCancel
             // 
             btnCancel.BackColor = System.Drawing.Color.FromArgb(100, 116, 139);
+            btnCancel.CausesValidation = false;
             btnCancel.Cursor = System.Windows.Forms.Cursors.Hand;
             btnCancel.FlatAppearance.BorderSize = 0;
             btnCancel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
@@ -517,7 +662,7 @@ namespace QuanLyVanTai.UI.UserControls
             btnCancel.Location = new System.Drawing.Point(100, 540);
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new System.Drawing.Size(82, 36);
-            btnCancel.TabIndex = 12;
+            btnCancel.TabIndex = 22;
             btnCancel.Text = " Hủy";
             btnCancel.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             btnCancel.UseVisualStyleBackColor = false;
@@ -537,7 +682,7 @@ namespace QuanLyVanTai.UI.UserControls
             btnDelete.Location = new System.Drawing.Point(188, 540);
             btnDelete.Name = "btnDelete";
             btnDelete.Size = new System.Drawing.Size(82, 36);
-            btnDelete.TabIndex = 13;
+            btnDelete.TabIndex = 23;
             btnDelete.Text = " Xóa";
             btnDelete.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             btnDelete.UseVisualStyleBackColor = false;
@@ -557,10 +702,15 @@ namespace QuanLyVanTai.UI.UserControls
             btnCancelTicket.Location = new System.Drawing.Point(276, 540);
             btnCancelTicket.Name = "btnCancelTicket";
             btnCancelTicket.Size = new System.Drawing.Size(102, 36);
-            btnCancelTicket.TabIndex = 14;
+            btnCancelTicket.TabIndex = 24;
             btnCancelTicket.Text = " Hủy vé";
             btnCancelTicket.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             btnCancelTicket.UseVisualStyleBackColor = false;
+            // 
+            // errorProviderMain
+            // 
+            errorProviderMain.BlinkStyle = System.Windows.Forms.ErrorBlinkStyle.NeverBlink;
+            errorProviderMain.ContainerControl = this;
             // 
             // UcManageTicket
             // 
@@ -586,6 +736,7 @@ namespace QuanLyVanTai.UI.UserControls
             pnlDetail.ResumeLayout(false);
             pnlDetail.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)numPrice).EndInit();
+            ((System.ComponentModel.ISupportInitialize)errorProviderMain).EndInit();
             ResumeLayout(false);
         }
 
